@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grand Horizon Pro PMS - JOD Engine</title>
+    <title>Grand Horizon Pro PMS & Spa Engine - JOD</title>
     <style>
         :root {
             --primary: #1e293b;
             --secondary: #334155;
             --accent: #0284c7;
+            --spa-color: #0d9488;
             --success: #16a34a;
             --danger: #dc2626;
             --warning: #ca8a04;
@@ -27,9 +28,9 @@
         }
 
         .layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media(min-width: 1024px) { .layout { grid-template-columns: 3fr 2fr; } }
+        @media(min-width: 1200px) { .layout { grid-template-columns: 7fr 5fr; } }
 
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
         h2 { margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0; font-size: 1.3rem; }
         h3 { margin: 15px 0 8px; font-size: 1.1rem; color: var(--secondary); }
 
@@ -54,38 +55,41 @@
 
         /* Forms & Fields */
         .form-group { margin-bottom: 12px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px; }
         label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.85em; }
         input, select, textarea { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9em; }
-        textarea { resize: vertical; height: 60px; }
+        textarea { resize: vertical; height: 50px; }
         
-        /* Control Panel Operations */
+        /* Buttons */
         .btn { background: var(--accent); color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; }
         .btn:hover { opacity: 0.9; }
+        .btn-spa { background: var(--spa-color); }
         .btn-danger { background: var(--danger); }
         .btn-warn { background: var(--warning); }
 
         .verification-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 8px; border-radius: 4px; margin-top: 5px; display: none; }
-        .billing-summary { background: #f8fafc; border: 1px dashed var(--border); padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.9em; }
+        .billing-summary { background: #f8fafc; border: 1px dashed var(--border); padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.9em; line-height: 1.5; }
         
-        .sys-log { background: #0f172a; color: #94a3b8; padding: 10px; border-radius: 6px; max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.8em; margin-top: 10px; }
+        .sys-log { background: #0f172a; color: #94a3b8; padding: 10px; border-radius: 6px; max-height: 160px; overflow-y: auto; font-family: monospace; font-size: 0.8em; margin-top: 10px; }
         .log-success { color: #4ade80; }
         .log-danger { color: #f87171; }
+        .log-spa { color: #2dd4bf; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Grand Horizon Pro - Property Management System</h1>
-        <p>Operational Base Room Prices: Room: 200 JD | Suite: 290 JD | Family: 340 JD (+35 JD Sea View Supplement)</p>
+        <h1>Grand Horizon Pro - Property Management & Oasis Spa System</h1>
+        <p>Operational Base Room Prices: Room: 200 JD | Suite: 290 JD | Family: 340 JD (+35 JD Sea View Supplement) | Spa Menu: 60 min (50 JD) / 120 min (90 JD)</p>
     </header>
 
     <div class="layout">
         
+        <!-- LEFT: Dynamic Visual Matrix Board -->
         <div class="left-panel">
             <div class="card">
                 <h2>Interactive Front Desk Map Grid (40 Rooms Total)</h2>
-                <p style="font-size: 0.85em; color:#64748b; margin-bottom:15px;">💡 Click any individual grid unit square block to interact with its billing, check-in, or maintenance states instantly.</p>
+                <p style="font-size: 0.85em; color:#64748b; margin-bottom:15px;">💡 Click any room block directly to view structural cost breakdowns, post spa fees, extend check-ins, or manage cleaning states.</p>
                 
                 <h3>Suites (10)</h3>
                 <div class="room-cluster" id="suiteGrid"></div>
@@ -96,8 +100,37 @@
                 <h3>Family Rooms (10)</h3>
                 <div class="room-cluster" id="familyGrid"></div>
             </div>
+
+            <!-- SPA BOOKING CONSOLE ENGINE -->
+            <div class="card" style="border-top: 4px solid var(--spa-color);">
+                <h2>Oasis Spa Reservation Desk</h2>
+                <form id="spaForm" onsubmit="processSpaBooking(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="spaRoomId">Target Room Number</label>
+                            <input type="number" id="spaRoomId" placeholder="e.g. 101" oninput="validateSpaRoom()">
+                        </div>
+                        <div class="form-group">
+                            <label for="spaAdultsCount">Number of Adults Booking Spa</label>
+                            <input type="number" id="spaAdultsCount" min="1" max="6" value="1" disabled oninput="generateSpaAttendeesFields()">
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Verification Warning Boxes -->
+                    <div id="spaValidationError" style="display:none; color:var(--danger); font-size:0.85em; font-weight:bold; margin-bottom:12px;"></div>
+
+                    <!-- Dynamic Attendee Input Field Container -->
+                    <div id="spaAttendeesContainer"></div>
+
+                    <!-- Live Spa Total Cost Box -->
+                    <div id="spaQuoteBox" class="billing-summary" style="display:none; background:#f0fdfa; border-color:#99f6e4;"></div>
+
+                    <button type="submit" id="spaSubmitBtn" class="btn btn-spa" disabled>Post Spa Session to Room Account</button>
+                </form>
+            </div>
         </div>
 
+        <!-- RIGHT: Live Active Room Control Center Window -->
         <div class="right-panel">
             <div class="card" id="controlPanel" style="position: sticky; top: 20px;">
                 <h2 id="panelTitle">Select a Room to Manage</h2>
@@ -106,6 +139,7 @@
                 </div>
 
                 <div id="panelContents" style="display: none;">
+                    <!-- Status Segment Layer -->
                     <div class="form-row" style="margin-bottom: 15px;">
                         <div class="form-group">
                             <label>Housekeeping Status</label>
@@ -125,6 +159,7 @@
 
                     <hr style="margin: 15px 0; border: 0; border-top: 1px dashed var(--border);">
 
+                    <!-- SCREEN A: OCCUPIED (Display Info, Stay Extension, and Checkout) -->
                     <div id="screenOccupied" style="display: none;">
                         <h3>Active Guest Record & Occupancy Bill</h3>
                         <div class="billing-summary" id="billSummary"></div>
@@ -145,6 +180,7 @@
                         <button class="btn btn-danger" onclick="processCheckOut()">Process Check-Out Settlement</button>
                     </div>
 
+                    <!-- SCREEN B: AVAILABLE (Check-In Entry Engine) -->
                     <div id="screenAvailable" style="display: none;">
                         <h3>New Registration Check-In Form</h3>
                         
@@ -191,6 +227,7 @@
                             </select>
                         </div>
 
+                        <!-- Verification inputs layer -->
                         <div class="verification-box" id="verificationContainer">
                             <label id="verificationLabel">Enter Verification Code:</label>
                             <input type="password" id="verificationInput" oninput="validateOccupancyAndCost()" placeholder="Code verification input...">
@@ -206,10 +243,11 @@
                 </div>
             </div>
 
+            <!-- Transaction Audit Monitor Logging Layer -->
             <div class="card">
                 <h2>Real-Time System Database Audit Logs</h2>
                 <div class="sys-log" id="sysAuditLog">
-                    <div>[SYSTEM INITIALIZED] Base pricing structures securely active in database storage tables.</div>
+                    <div>[SYSTEM INITIALIZED] Base pricing and Spa cross-check parameters active.</div>
                 </div>
             </div>
         </div>
@@ -223,6 +261,7 @@
         const basePrices = { "Room": 200, "Suite": 290, "Family Room": 340 };
         const viewPremiums = { "Sea": 35, "Mountain": 0 };
         const mealAdultPrices = { "None": 0, "Breakfast": 20, "Half-Board": 50, "Full-Board": 70 };
+        const spaPrices = { "60": 50, "120": 90 };
 
         // Generate 40 Room Core Items 
         for(let i=1; i<=10; i++) roomsDb.push({ id: 201+i-1, type: "Suite", view: i<=5 ? "Sea" : "Mountain", status: "Available", clean: "Clean", guest: null });
@@ -276,7 +315,6 @@
             } else {
                 document.getElementById("screenOccupied").style.display = "none";
                 document.getElementById("screenAvailable").style.display = "block";
-                // Reset inputs inside setup forms
                 document.getElementById("inGuestName").value = "";
                 document.getElementById("inDiscount").value = "0";
                 document.getElementById("verificationContainer").style.display = "none";
@@ -297,6 +335,7 @@
             if (rm.guest) {
                 rm.guest.isVip = (statusVal === "VIP");
                 logAction(`Room ${rm.id} guest dynamic VIP profile set to: ${rm.guest.isVip}`, "log-success");
+                if(activeRoomId) renderOccupiedBill(rm);
             } else {
                 logAction(`Note: VIP label will lock dynamically onto reservation form execution.`);
             }
@@ -310,7 +349,6 @@
             }
         }
 
-        // Toggle Display verification conditional requirement parameters inputs fields
         function handleDiscountTypeChange() {
             const discountType = document.getElementById("inDiscount").value;
             const container = document.getElementById("verificationContainer");
@@ -327,7 +365,7 @@
         }
 
         // Central Cost Evaluation Metric Engine & Max Capacity Check rules guard logic
-        function calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct, bypassAuthCheck = false) {
+        function calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct) {
             let baseRate = basePrices[rm.type];
             let viewCost = viewPremiums[rm.view];
             
@@ -335,13 +373,11 @@
             let discountAmount = roomPerNight * (discountPct / 100);
             let finalRoomPerNight = roomPerNight - discountAmount;
             
-            // Meal Calculations Rules: Children eat free! Only charge Adults.
             let mealPerNight = mealAdultPrices[mealPlan] * adults;
             
             let totalPerNight = finalRoomPerNight + mealPerNight;
-            let finalTotalPaid = totalPerNight * nights;
+            let finalRoomTotal = totalPerNight * nights;
 
-            // Maximum Capacity Constraint validation logic loops configuration filters
             let isOccupancyValid = true;
             let err = "";
 
@@ -351,14 +387,13 @@
                     err = `Max Capacity Overload for ${rm.type}! Strict ceiling limit is 2 Adults and 1 Child (2A1C).`;
                 }
             } else if (rm.type === "Family Room") {
-                // Allowed paths explicitly parsed: 4A, 3A1C, 2A1C, 1A1C
                 if (adults > 4) { isOccupancyValid = false; err = "Family Rooms have an absolute ceiling cap limit of 4 Adults."; }
                 else if (children > 1) { isOccupancyValid = false; err = "Family Room layouts cannot exceed a maximum capacity of 1 Child."; }
                 else if (adults === 4 && children > 0) { isOccupancyValid = false; err = "Occupancy combination invalid! 4 Adults leaving 0 slots remaining for Children inside a single unit block space."; }
             }
 
             return {
-                isOccupancyValid, err, roomPerNight, discountAmount, finalRoomPerNight, mealPerNight, totalPerNight, finalTotalPaid
+                isOccupancyValid, err, roomPerNight, discountAmount, finalRoomPerNight, mealPerNight, totalPerNight, finalRoomTotal
             };
         }
 
@@ -375,7 +410,6 @@
 
             const calc = calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct);
             
-            // Check verification requirements
             let isVerified = true;
             if (discountPct === 10 && authInput.trim().length === 0) isVerified = false;
             if (discountPct === 15 && authInput.trim().length === 0) isVerified = false;
@@ -403,31 +437,45 @@
                 Base + View Rate: ${calc.roomPerNight} JOD/night<br>
                 Applied Promo Discount: -${calc.discountAmount.toFixed(0)} JOD/night (${discountPct}%)<br>
                 Meal Supplements (${mealPlan}): +${calc.mealPerNight} JOD/night (${adults} Adults, Children free)<br>
-                <strong>Total Billing Rate: ${calc.totalPerNight.toFixed(0)} JOD per night x ${nights} Nights = ${calc.finalTotalPaid.toFixed(0)} JOD</strong>
+                <strong>Total Lodging Cost: ${calc.finalRoomTotal.toFixed(0)} JOD</strong> (${nights} nights)
             `;
         }
 
-        // UI billing output display formatter 
+        // Detailed live billing output display formatter 
         function renderOccupiedBill(rm) {
             const g = rm.guest;
             const calc = calculateBreakdown(rm, g.adults, g.children, g.mealPlan, g.nights, g.discountPct);
             
+            let spaSubtotal = 0;
+            let spaHtmlList = "";
+            if (g.spaOrders && g.spaOrders.length > 0) {
+                spaHtmlList = "<br><strong>Posted Spa Log Ledger:</strong><br>";
+                g.spaOrders.forEach((ord, index) => {
+                    spaSubtotal += ord.cost;
+                    spaHtmlList += `• Session #${index+1}: ${ord.partySize} Adult(s) (${ord.details}) = +${ord.cost} JOD<br>`;
+                });
+            }
+
+            let grandTotal = calc.finalRoomTotal + spaSubtotal;
+
             document.getElementById("billSummary").innerHTML = `
                 <strong>Guest Principal Name:</strong> ${g.name} ${g.isVip ? '<span style="color:#db2777; font-weight:bold;">[VIP]</span>' : ''}<br>
-                <strong>Allocation Structure:</strong> ${g.adults} Adults, ${g.children} Children<br>
+                <strong>Room Configuration:</strong> ${g.adults} Adults, ${g.children} Children<br>
                 <strong>Meal Package:</strong> ${g.mealPlan}<br>
-                <strong>Stays Plan Duration:</strong> ${g.nights} Nights Total Checked In<br>
+                <strong>Stay Plan Duration:</strong> ${g.nights} Nights Total Checked In<br>
                 <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
                 <strong>Billing Statement Breakdown Ledger:</strong><br>
                 Calculated Base Price: ${basePrices[rm.type]} JOD/night<br>
                 View Premium Surcharge: +${viewPremiums[rm.view]} JOD/night<br>
                 System Rate Reductions: -${calc.discountAmount.toFixed(0)} JOD/night (${g.discountPct}%)<br>
                 Meal Costs Surcharge: +${calc.mealPerNight} JOD/night<br>
-                <strong>Total Paid Balance Amount: <span style="color:var(--success); font-size:1.15em;">${calc.finalTotalPaid.toFixed(0)} JOD</span></strong>
+                Subtotal Room Charges: ${calc.finalRoomTotal.toFixed(0)} JOD
+                ${spaHtmlList}
+                <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
+                <strong>Total Outstanding Balance Due: <span style="color:var(--success); font-size:1.2em; font-weight:bold;">${grandTotal.toFixed(0)} JOD</span></strong>
             `;
         }
 
-        // Action Check-In Handler Execution
         function processCheckIn() {
             const rm = roomsDb.find(r => r.id === activeRoomId);
             const name = document.getElementById("inGuestName").value.trim();
@@ -440,10 +488,9 @@
 
             if (!name) { alert("Please input a valid Guest Registration Name parameters entry."); return; }
 
-            // Assign reservation block metrics down across storage state objects
             rm.status = "Occupied";
-            rm.clean = "Not Clean"; // Set dirty automatically upon checkin use allocations
-            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "" };
+            rm.clean = "Not Clean"; 
+            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "", spaOrders: [] };
 
             logAction(`Check-In Completed: Room ${rm.id} assigned to ${name} for ${nights} nights. Room marked Dirty.`, "log-success");
             
@@ -451,7 +498,6 @@
             selectRoomTarget(rm.id);
         }
 
-        // Action Extend Stay reservation parameter handler process
         function processExtension() {
             const rm = roomsDb.find(r => r.id === activeRoomId);
             const ext = parseInt(document.getElementById("extendNights").value) || 0;
@@ -464,7 +510,6 @@
             renderOccupiedBill(rm);
         }
 
-        // Action Check-Out Handler Processing Settlement 
         function processCheckOut() {
             const rm = roomsDb.find(r => r.id === activeRoomId);
             logAction(`Check-Out Completed: Room ${rm.id} vacated by ${rm.guest.name}. Room remains Dirty until cleared by HK.`, "log-danger");
@@ -474,7 +519,168 @@
 
             renderHotelGrid();
             selectRoomTarget(rm.id);
+            validateSpaRoom(); // Refresh live spa fields state context
         }
+
+
+        /* ================= SPA CORE ENGINE LOGIC FUNCTIONS ================= */
+
+        function validateSpaRoom() {
+            const inputId = parseInt(document.getElementById("spaRoomId").value);
+            const errBox = document.getElementById("spaValidationError");
+            const adultsInput = document.getElementById("spaAdultsCount");
+            const attendeesContainer = document.getElementById("spaAttendeesContainer");
+            const quoteBox = document.getElementById("spaQuoteBox");
+            const submitBtn = document.getElementById("spaSubmitBtn");
+
+            // Reset UI modules elements
+            errBox.style.display = "none";
+            attendeesContainer.innerHTML = "";
+            quoteBox.style.display = "none";
+            submitBtn.disabled = true;
+
+            if (isNaN(inputId)) {
+                adultsInput.disabled = true;
+                return;
+            }
+
+            const targetRoom = roomsDb.find(r => r.id === inputId);
+
+            // Constraint Check 1: Verify if room is actually occupied in database registry
+            if (!targetRoom || targetRoom.status !== "Occupied") {
+                errBox.innerText = `❌ Spa Booking Error: Room ${inputId} is currently empty or doesn't exist in the system registry database.`;
+                errBox.style.display = "block";
+                adultsInput.disabled = true;
+                return;
+            }
+
+            // If room is valid and occupied, unlock guest count limit constraints
+            adultsInput.disabled = false;
+            adultsInput.max = targetRoom.guest.adults; // Max configuration cap match limit
+            
+            // Adjust input value automatically if it exceeds current room composition cap
+            if (parseInt(adultsInput.value) > targetRoom.guest.adults) {
+                adultsInput.value = targetRoom.guest.adults;
+            }
+
+            generateSpaAttendeesFields();
+        }
+
+        function generateSpaAttendeesFields() {
+            const inputId = parseInt(document.getElementById("spaRoomId").value);
+            const adultsCount = parseInt(document.getElementById("spaAdultsCount").value) || 0;
+            const targetRoom = roomsDb.find(r => r.id === inputId);
+            const errBox = document.getElementById("spaValidationError");
+            const container = document.getElementById("spaAttendeesContainer");
+            const submitBtn = document.getElementById("spaSubmitBtn");
+            const quoteBox = document.getElementById("spaQuoteBox");
+
+            container.innerHTML = "";
+            errBox.style.display = "none";
+
+            if (!targetRoom || targetRoom.status !== "Occupied") return;
+
+            // Constraint Check 2: Verify spa adults count does not exceed room composition ceiling
+            if (adultsCount > targetRoom.guest.adults) {
+                errBox.innerText = `⚠️ Count Overflow: Selected spa guest count (${adultsCount}) exceeds total adults currently registered in Room ${targetRoom.id} (${targetRoom.guest.adults} max).`;
+                errBox.style.display = "block";
+                submitBtn.disabled = true;
+                quoteBox.style.display = "none";
+                return;
+            }
+
+            if (adultsCount <= 0) {
+                submitBtn.disabled = true;
+                quoteBox.style.display = "none";
+                return;
+            }
+
+            // Build structural entry field forms rows based on count
+            for (let i = 1; i <= adultsCount; i++) {
+                const row = document.createElement("div");
+                row.className = "form-row";
+                row.innerHTML = `
+                    <div class="form-group">
+                        <label>Attendee #${i} Name</label>
+                        <input type="text" class="spa-name-input" required placeholder="Guest Name ${i}" value="${i === 1 ? targetRoom.guest.name : ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>Treatment Type</label>
+                        <select class="spa-type-select" onchange="calculateLiveSpaQuote()">
+                            <option value="60">60 Min Treatment Session - 50 JOD</option>
+                            <option value="120">120 Min Treatment Session - 90 JOD</option>
+                        </select>
+                    </div>
+                `;
+                container.appendChild(row);
+            }
+
+            submitBtn.disabled = false;
+            calculateLiveSpaQuote();
+        }
+
+        function calculateLiveSpaQuote() {
+            const typeSelectors = document.querySelectorAll(".spa-type-select");
+            const quoteBox = document.getElementById("spaQuoteBox");
+            let totalSpaCost = 0;
+            let breakdownText = "";
+
+            typeSelectors.forEach((sel, idx) => {
+                const duration = sel.value;
+                const cost = spaPrices[duration];
+                totalSpaCost += cost;
+                breakdownText += `Guest #${idx+1}: ${duration} min session (${cost} JOD)<br>`;
+            });
+
+            quoteBox.innerHTML = `
+                <strong>Oasis Spa Session Quote Estimate:</strong><br>
+                ${breakdownText}
+                <strong>Total Spa Cost Added to Room Bill: <span style="color:var(--spa-color);">${totalSpaCost} JOD</span></strong>
+            `;
+            quoteBox.style.display = "block";
+        }
+
+        function processSpaBooking(e) {
+            e.preventDefault();
+            const inputId = parseInt(document.getElementById("spaRoomId").value);
+            const targetRoom = roomsDb.find(r => r.id === inputId);
+            
+            if (!targetRoom || targetRoom.status !== "Occupied") return;
+
+            const nameInputs = document.querySelectorAll(".spa-name-input");
+            const typeSelectors = document.querySelectorAll(".spa-type-select");
+            
+            let totalCost = 0;
+            let detailsArray = [];
+
+            nameInputs.forEach((inp, idx) => {
+                const duration = typeSelectors[idx].value;
+                totalCost += spaPrices[duration];
+                detailsArray.push(`${inp.value} [${duration} Mins]`);
+            });
+
+            // Post spa order data object directly to the active guest profile ledger
+            targetRoom.guest.spaOrders.push({
+                partySize: nameInputs.length,
+                details: detailsArray.join(", "),
+                cost: totalCost
+            });
+
+            logAction(`💆 Spa Charge Posted: ${totalCost} JOD for ${nameInputs.length} guest(s) added to Room ${targetRoom.id} ledger balance.`, "log-spa");
+
+            // Reset Spa input fields safely
+            document.getElementById("spaForm").reset();
+            document.getElementById("spaAttendeesContainer").innerHTML = "";
+            document.getElementById("spaQuoteBox").style.display = "none";
+            document.getElementById("spaSubmitBtn").disabled = true;
+            document.getElementById("spaAdultsCount").disabled = true;
+
+            // Instantly refresh current active profile window if targeted
+            if (activeRoomId === targetRoom.id) {
+                renderOccupiedBill(targetRoom);
+            }
+        }
+
 
         function logAction(msg, cssClass = "") {
             const logBox = document.getElementById("sysAuditLog");
