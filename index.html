@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grand Horizon Pro PMS - Suite, Oasis Spa & Checkout Safety Desk</title>
+    <title>Grand Horizon Pro PMS - Suite, Spa & Payment Terminal Desk</title>
     <style>
         :root {
             --primary: #1e293b;
@@ -83,6 +83,10 @@
         /* Modal Overlay Window */
         .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
         .modal-content { background: white; padding: 25px; border-radius: 8px; max-width: 450px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+        /* Loading Spinner */
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--success); animation: spin 1s ease-in-out infinite; margin-right: 10px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -208,9 +212,9 @@
                             <h4 style="color:var(--danger); font-size:0.95em; margin-bottom:10px;">Mandatory Front Office Checkout Safety Checklist</h4>
                             
                             <div class="check-item">
-                                <input type="checkbox" id="chkPayment" onchange="validateCheckoutRequirements()">
+                                <input type="checkbox" id="chkPayment" disabled>
                                 <label for="chkPayment" style="margin:0; cursor:pointer;">
-                                    💰 <strong>Settlement Check:</strong> Account Balance Paid <span id="paymentStatusText" style="color:var(--danger); font-weight:bold;">(Click To Pay Now)</span>
+                                    💰 <strong>Settlement Check:</strong> Account Fully Cleared <span id="paymentStatusText"></span>
                                 </label>
                             </div>
 
@@ -305,21 +309,35 @@
         </div>
     </div>
 
-    <!-- POPUP LEDGER SETTLEMENT WINDOW MODAL -->
+    <!-- RE-ENGINEERED SETTLEMENT WINDOW MODAL -->
     <div class="modal" id="paymentModal">
         <div class="modal-content">
             <h2 style="color:var(--success); border-bottom-color:var(--success);">Front Desk Settlement Interface</h2>
-            <p style="margin:10px 0; font-size:0.95em; color:var(--secondary);" id="paymentModalDetails"></p>
+            
+            <div class="billing-summary" style="background:#f8fafc; margin: 12px 0;" id="paymentModalDetails"></div>
+            
             <div class="form-group">
-                <label>Target Payment Processing Route Method</label>
-                <select id="paymentRouteMethod">
+                <label for="paymentRouteMethod">Target Payment Method</label>
+                <select id="paymentRouteMethod" onchange="togglePaymentStateUI()">
                     <option value="Visa">Visa/Mastercard Terminal</option>
                     <option value="Amex">American Express Corporate</option>
                     <option value="Cash">Cash Settlement (JOD)</option>
                 </select>
             </div>
-            <button class="btn btn-success" onclick="executePaymentAuthorization()">Authorize & Clear Outstanding Balance</button>
-            <button class="btn btn-danger" style="background:#94a3b8; margin-top:5px;" onclick="closePaymentModal()">Defer Payment Process</button>
+
+            <div class="form-group">
+                <label for="paymentAmountInput">Amount to Pay (JOD)</label>
+                <input type="number" id="paymentAmountInput" min="1" step="any" placeholder="Enter amount..." onkeydown="handlePaymentKeydown(event)">
+                <small style="color:#64748b; display:block; margin-top:4px;">💡 Type amount and press <strong>Enter</strong> to process.</small>
+            </div>
+
+            <!-- Inline Async Feedback Status Indicator Window -->
+            <div id="terminalStatusContainer" style="margin:12px 0; padding:10px; border-radius:4px; font-weight:bold; font-size:0.9em; display:none;"></div>
+
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button class="btn btn-success" id="modalProcessBtn" onclick="initiatePaymentProcessing()" style="margin:0; flex:1;">Authorize Transaction</button>
+                <button class="btn" id="modalCancelBtn" style="background:#94a3b8; margin:0; flex:1;" onclick="closePaymentModal()">Close Terminal</button>
+            </div>
         </div>
     </div>
 
@@ -382,13 +400,10 @@
                 document.getElementById("screenOccupied").style.display = "block";
                 document.getElementById("stayNotes").value = rm.guest.notes || "";
                 
-                // Clear state checkbox interfaces
-                document.getElementById("chkPayment").checked = rm.guest.isSettled;
                 document.getElementById("chkUsage").checked = false;
                 document.getElementById("checkoutSurveyNotes").value = "";
                 document.getElementById("chkSatisfied").value = "Yes";
 
-                updatePaymentLinkStatusText(rm.guest.isSettled);
                 renderOccupiedBill(rm);
                 validateCheckoutRequirements();
             } else {
@@ -552,14 +567,27 @@
             let spaSubtotal = 0;
             let spaHtmlList = "";
             if (g.spaOrders && g.spaOrders.length > 0) {
-                spaHtmlList = "<br><strong>Posted Spa Log Ledger (Itemized After Applied Spa Discounts):</strong><br>";
+                spaHtmlList = "<br><strong>Posted Spa Log Ledger:</strong><br>";
                 g.spaOrders.forEach((ord, index) => {
                     spaSubtotal += ord.cost;
                     spaHtmlList += `• Treatment Block #${index+1}: ${ord.partySize} Adult(s) (${ord.details}) = +${ord.cost} JOD <small style="color:var(--spa-color)">(${ord.discText})</small><br>`;
                 });
             }
 
-            let grandTotal = calc.finalRoomTotal + spaSubtotal;
+            let grossTotal = calc.finalRoomTotal + spaSubtotal;
+            let remainingBalance = grossTotal - g.totalPaid;
+            
+            // Adjust checklist verification metrics automatically
+            g.isSettled = (remainingBalance <= 0.01);
+            document.getElementById("chkPayment").checked = g.isSettled;
+
+            // Handle link text creation injection parameters
+            const linkContainer = document.getElementById("paymentStatusText");
+            if (g.isSettled) {
+                linkContainer.innerHTML = `<span style="color:var(--success); font-weight:bold;">(Cleared & Paid)</span>`;
+            } else {
+                linkContainer.innerHTML = `<a href="#" onclick="openPaymentModal(event)" style="color:var(--danger); font-weight:bold; text-decoration:underline;">(Pending: ${remainingBalance.toFixed(0)} JOD - Click to Pay)</a>`;
+            }
 
             document.getElementById("billSummary").innerHTML = `
                 <strong>Guest Principal Name:</strong> ${g.name} ${g.isVip ? '<span style="color:#db2777; font-weight:bold;">[VIP]</span>' : ''}<br>
@@ -568,15 +596,12 @@
                 <strong>Stay Duration:</strong> ${g.nights} Nights Total Checked In<br>
                 <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
                 <strong>Billing Breakdown Ledger:</strong><br>
-                Calculated Base Price: ${basePrices[rm.type]} JOD/night<br>
-                View Premium Surcharge: +${viewPremiums[rm.view]} JOD/night<br>
-                System Room Reductions: -${calc.discountAmount.toFixed(0)} JOD/night (${g.discountPct}%)<br>
-                Meal Costs Surcharge: +${calc.mealPerNight} JOD/night<br>
                 Subtotal Room Charges: ${calc.finalRoomTotal.toFixed(0)} JOD
                 ${spaHtmlList}
                 <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
-                <strong>Total Outstanding Balance Due: <span style="color:var(--success); font-size:1.2em; font-weight:bold;">${grandTotal.toFixed(0)} JOD</span></strong><br>
-                <strong>Payment Ledger Status:</strong> ${g.isSettled ? '<span style="color:var(--success); font-weight:bold;">💰 CLEAR / PAID IN FULL</span>' : '<span style="color:var(--danger); font-weight:bold;">⚠️ PENDING SETTLEMENT</span>'}
+                Gross Total Invoice Amount: <strong>${grossTotal.toFixed(0)} JOD</strong><br>
+                Total Paid To Date: <span style="color:var(--success); font-weight:bold;">-${g.totalPaid.toFixed(0)} JOD</span><br>
+                <strong>Outstanding Due Balance: <span style="color:${g.isSettled ? 'var(--success)' : 'var(--danger)'}; font-size:1.2em; font-weight:bold;">${remainingBalance.toFixed(0)} JOD</span></strong>
             `;
         }
 
@@ -594,9 +619,9 @@
 
             rm.status = "Occupied";
             rm.clean = "Not Clean"; 
-            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "", spaOrders: [], isSettled: false };
+            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "", spaOrders: [], totalPaid: 0, isSettled: false };
 
-            logAction(`Check-In Completed: Room ${rm.id} assigned to ${name} for ${nights} nights. Room marked Dirty.`, "log-success");
+            logAction(`Check-In Completed: Room ${rm.id} assigned to ${name} for ${nights} nights.`, "log-success");
             
             renderHotelGrid();
             selectRoomTarget(rm.id);
@@ -608,78 +633,142 @@
             if (ext <= 0) return;
 
             rm.guest.nights += ext;
-            // Unsettle the room because the bill just changed
-            rm.guest.isSettled = false;
-            document.getElementById("chkPayment").checked = false;
-            updatePaymentLinkStatusText(false);
-
-            logAction(`Stay Extension: Room ${rm.id} extended by +${ext} more nights. Bill updated and payment reset.`, "log-success");
+            logAction(`Stay Extension: Room ${rm.id} extended by +${ext} more nights. Bill metrics structural balance modified.`, "log-success");
             
             renderHotelGrid();
             renderOccupiedBill(rm);
             validateCheckoutRequirements();
         }
 
-        /* ================= MANDATORY FRONT OFFICE CHECKOUT SAFETY CHECKLIST DESK ================= */
+        /* ================= RE-ENGINEERED PAYMENT PORTAL DESK LOGIC ================= */
         
-        function updatePaymentLinkStatusText(settled) {
-            const linkText = document.getElementById("paymentStatusText");
-            if (settled) {
-                linkText.innerHTML = `<span style="color:var(--success); cursor:default;">(Cleared & Paid)</span>`;
-            } else {
-                linkText.innerHTML = `<a href="#" onclick="openPaymentModal(event)" style="color:var(--danger); font-weight:bold; text-decoration:underline;">(UNPAID - Click to Process Payment)</a>`;
-            }
-        }
-
         function openPaymentModal(e) {
             if(e) e.preventDefault();
             const rm = roomsDb.find(r => r.id === activeRoomId);
             if (!rm || !rm.guest) return;
 
-            const totalAmount = getOverallInvoiceTotal(rm);
-            document.getElementById("paymentModalDetails").innerHTML = `
-                <strong>Guest Ledger:</strong> ${rm.guest.name}<br>
-                <strong>Room Target Number:</strong> Room ${rm.id}<br>
-                <strong>Total Outstanding Invoiced Balance:</strong> <span style="font-size:1.2em; color:var(--success); font-weight:bold;">${totalAmount.toFixed(0)} JOD</span>
-            `;
+            const gross = getOverallInvoiceTotal(rm);
+            const remaining = gross - rm.guest.totalPaid;
+
+            // Reset modal feedback UI states elements
+            const statusContainer = document.getElementById("terminalStatusContainer");
+            statusContainer.style.display = "none";
+            statusContainer.className = "";
+            statusContainer.innerHTML = "";
+
+            document.getElementById("paymentAmountInput").value = remaining.toFixed(0);
+            document.getElementById("paymentRouteMethod").value = "Visa";
+
+            updateModalDisplayLabels(rm, gross, remaining);
+            setModalControlsDisabledState(false);
+            
             document.getElementById("paymentModal").style.display = "flex";
+        }
+
+        function updateModalDisplayLabels(rm, gross, remaining) {
+            document.getElementById("paymentModalDetails").innerHTML = `
+                <strong>Guest Profile:</strong> ${rm.guest.name} (Rm ${rm.id})<br>
+                Total Gross Stay Statement: ${gross.toFixed(0)} JOD<br>
+                Accumulated Payments: -${rm.guest.totalPaid.toFixed(0)} JOD<br>
+                <strong>Net Remaining Balance Due: <span style="color:var(--danger); font-weight:bold;">${remaining.toFixed(0)} JOD</span></strong>
+            `;
         }
 
         function closePaymentModal() {
             document.getElementById("paymentModal").style.display = "none";
         }
 
-        function executePaymentAuthorization() {
+        function handlePaymentKeydown(event) {
+            // Trigger authorization engine immediately on Enter key press event down capture loop
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                initiatePaymentProcessing();
+            }
+        }
+
+        function togglePaymentStateUI() {
+            // Can be scaled if structural validation needs to separate fields based on selected drop down asset parameters
+            const method = document.getElementById("paymentRouteMethod").value;
+            const statusContainer = document.getElementById("terminalStatusContainer");
+            statusContainer.style.display = "none";
+        }
+
+        function setModalControlsDisabledState(disabled) {
+            document.getElementById("paymentRouteMethod").disabled = disabled;
+            document.getElementById("paymentAmountInput").disabled = disabled;
+            document.getElementById("modalProcessBtn").disabled = disabled;
+            document.getElementById("modalCancelBtn").disabled = disabled;
+        }
+
+        function initiatePaymentProcessing() {
             const rm = roomsDb.find(r => r.id === activeRoomId);
             const method = document.getElementById("paymentRouteMethod").value;
+            const amtInput = document.getElementById("paymentAmountInput");
+            const amt = parseFloat(amtInput.value) || 0;
+
             if (!rm || !rm.guest) return;
 
-            rm.guest.isSettled = true;
-            document.getElementById("chkPayment").checked = true;
-            updatePaymentLinkStatusText(true);
+            const gross = getOverallInvoiceTotal(rm);
+            const remaining = gross - rm.guest.totalPaid;
+
+            if (amt <= 0) {
+                showTerminalMessage("⚠️ Error: Payment amount parameters must be positive numeric attributes.", "background:#fee2e2; color:var(--danger); border:1px solid #fca5a5;");
+                return;
+            }
+
+            if (amt > (remaining + 0.01)) {
+                showTerminalMessage(`⚠️ Overpayment Lock: Input value exceeds remaining net liability metrics (${remaining.toFixed(0)} JOD max cap).`, "background:#fee2e2; color:var(--danger); border:1px solid #fca5a5;");
+                return;
+            }
+
+            // Route Branch A: Cash Payment Path (Synchronous clearance execution loop)
+            if (method === "Cash") {
+                executeLedgerBalanceCommit(rm, amt, "Cash");
+                return;
+            }
+
+            // Route Branch B: Electronic Card Processing Paths (Asynchronous simulation handling logic loops)
+            setModalControlsDisabledState(true);
+            showTerminalMessage(`<span class="spinner"></span> Contacting External Banking Gateway Terminal... Please Wait.`, "background:#eff6ff; color:var(--accent); border:1px solid #bfdbfe;");
+
+            setTimeout(() => {
+                executeLedgerBalanceCommit(rm, amt, method);
+                setModalControlsDisabledState(false);
+            }, 2500); // Wait exactly 2.5 seconds to simulate external hardware communications handshake networks
+        }
+
+        function showTerminalMessage(htmlContent, styleString) {
+            const container = document.getElementById("terminalStatusContainer");
+            container.style.display = "block";
+            container.style.cssText = `margin:12px 0; padding:10px; border-radius:4px; font-weight:bold; font-size:0.9em; ${styleString}`;
+            container.innerHTML = htmlContent;
+        }
+
+        function executeLedgerBalanceCommit(rm, amount, method) {
+            rm.guest.totalPaid += amount;
             
-            logAction(`💳 Payment Settlement Successful: Room ${rm.id} cleared via [${method}] channel.`, "log-success");
-            
-            closePaymentModal();
+            const gross = getOverallInvoiceTotal(rm);
+            const remaining = gross - rm.guest.totalPaid;
+
+            logAction(`💳 Payment Auth Reference Cleared: +${amount.toFixed(0)} JOD posted via [${method}]. Remaining: ${remaining.toFixed(0)} JOD.`, "log-success");
+
+            showTerminalMessage(`✅ Payment Successful!<br><span style="font-size:0.85em; font-weight:normal;">Authorized collection value: ${amount.toFixed(0)} JOD via pipeline transaction logs.</span>`, "background:#dcfce7; color:var(--success); border:1px solid #bbf7d0;");
+
+            // Instant components dashboard refresh execution metrics map
             renderOccupiedBill(rm);
+            updateModalDisplayLabels(rm, gross, remaining);
             validateCheckoutRequirements();
+
+            // If cash transaction completely paid up the ledger balance, close down modal immediately
+            if (method === "Cash" || remaining <= 0.01) {
+                setTimeout(() => { closePaymentModal(); }, 1200);
+            }
         }
 
         function validateCheckoutRequirements() {
             const payChecked = document.getElementById("chkPayment").checked;
             const usageChecked = document.getElementById("chkUsage").checked;
             const checkoutBtn = document.getElementById("checkoutSubmitBtn");
-
-            // Reflect checkbox forced state adjustments if employee clicks it manually without authentication processing
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            if(rm && rm.guest) {
-                if(payChecked && !rm.guest.isSettled) {
-                    // Prevent cheating the checkbox without authorization prompt trigger
-                    document.getElementById("chkPayment").checked = false;
-                    alert("Account balance must be cleared via the authorization gateway prompt before verifying payment.");
-                    return;
-                }
-            }
 
             if (payChecked && usageChecked) {
                 checkoutBtn.disabled = false;
@@ -696,7 +785,7 @@
             let surveySummary = `[Satisfaction Status: ${satisfaction}]`;
             if(notes) surveySummary += ` Feedback: "${notes}"`;
 
-            logAction(`Check-Out Processing Complete: Room ${rm.id} vacated by ${rm.guest.name}. ${surveySummary}. Room locked in Dirty state.`, "log-danger");
+            logAction(`Check-Out Complete: Room ${rm.id} vacated by ${rm.guest.name}. ${surveySummary}. Room set to Dirty.`, "log-danger");
             
             rm.status = "Available";
             rm.guest = null;
@@ -763,14 +852,13 @@
             if (!targetRoom || targetRoom.status !== "Occupied") return;
 
             if (adultsCount > targetRoom.guest.adults) {
-                errBox.innerText = `⚠️ Count Overflow: Spa configuration (${adultsCount}) exceeds total adults checked into Room ${targetRoom.id} (${targetRoom.guest.adults} max).`;
+                errBox.innerText = `⚠️ Count Overflow: Selected spa guest count (${adultsCount}) exceeds total adults checked into Room ${targetRoom.id}.`;
                 errBox.style.display = "block";
                 submitBtn.disabled = true;
                 quoteBox.style.display = "none";
                 return;
             }
 
-            // Cross check discount authorization parameters 
             let isVerified = true;
             if (spaDiscountPct === 10 && authInput.trim().length === 0) isVerified = false;
             if (spaDiscountPct === 15 && authInput.trim().length === 0) isVerified = false;
@@ -790,7 +878,6 @@
                 return;
             }
 
-            // Generate field structures rows
             for (let i = 1; i <= adultsCount; i++) {
                 const row = document.createElement("div");
                 row.className = "form-row";
@@ -859,7 +946,6 @@
             let discountAmount = baseSpaTotal * (spaDiscountPct / 100);
             let finalCost = baseSpaTotal - discountAmount;
 
-            // Post to structural ledger data metrics matrix object arrays
             targetRoom.guest.spaOrders.push({
                 partySize: nameInputs.length,
                 details: detailsArray.join(", "),
@@ -867,16 +953,9 @@
                 discText: spaDiscountPct > 0 ? `${spaDiscountPct}% Spa Promo Applied` : 'Rack Rate'
             });
 
-            // Re-lock billing settlement flag because total balance increased
-            targetRoom.guest.isSettled = false;
-            if (activeRoomId === targetRoom.id) {
-                document.getElementById("chkPayment").checked = false;
-                updatePaymentLinkStatusText(false);
-            }
+            logAction(`💆 Spa Charge Posted: ${finalCost.toFixed(0)} JOD posted to Room ${targetRoom.id} account ledger. Balance modified.`, "log-spa");
 
-            logAction(`💆 Spa Charge Posted: ${finalCost.toFixed(0)} JOD (After ${spaDiscountPct}% discount) posted to Room ${targetRoom.id} ledger account. Balance status set to Unpaid.`, "log-spa");
-
-            // Clear forms
+            // Reset Spa input fields safely
             document.getElementById("spaForm").reset();
             document.getElementById("spaAttendeesContainer").innerHTML = "";
             document.getElementById("spaQuoteBox").style.display = "none";
