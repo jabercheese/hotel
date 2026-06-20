@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Horizon Hotel - Database & Booking System</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #18bc9c;
+            --dark: #34495e;
+            --light: #ecf0f1;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --sea: #3498db;
+            --mountain: #9b59b6;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 992px) {
+            .container {
+                grid-template-columns: 2fr 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: var(--primary);
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 8px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--light);
+        }
+
+        th {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        /* Badges */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .badge-available { background-color: #d4edda; color: #155724; }
+        .badge-occupied { background-color: #f8d7da; color: #721c24; }
+        .badge-maintenance { background-color: #fff3cd; color: #856404; }
+        
+        .badge-sea { background-color: #e3f2fd; color: var(--sea); }
+        .badge-mountain { background-color: #f3e5f5; color: var(--mountain); }
+
+        /* Pricing Grid */
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .price-card {
+            border: 1px solid var(--light);
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            background: #fafafa;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .price-card.discounted {
+            border-color: var(--warning);
+        }
+
+        .ribbon {
+            position: absolute;
+            top: 10px;
+            right: -30px;
+            background: var(--warning);
+            color: white;
+            transform: rotate(45deg);
+            padding: 4px 30px;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        .price {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+
+        .old-price {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            background-color: var(--secondary);
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1em;
+            font-weight: bold;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Visual Hotel Map Layout */
+        .hotel-map {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            background: #eee;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+        }
+
+        .map-room {
+            padding: 15px 5px;
+            text-align: center;
+            background: white;
+            border-radius: 4px;
+            font-weight: bold;
+            border-bottom: 5px solid #ccc;
+            font-size: 0.9em;
+        }
+
+        .map-room.sea-view { border-bottom-color: var(--sea); }
+        .map-room.mountain-view { border-bottom-color: var(--mountain); }
+        
+        .map-room.occ { opacity: 0.6; background: #e6e6e6; }
+
+        .map-legend {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .color-box {
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Grand Horizon Hotel Management System</h1>
+        <p>Database & Live Operations Portal</p>
+    </header>
+
+    <div class="container">
+        
+        <div class="left-col">
+            
+            <div class="card">
+                <h2>Room Rates & Active Offers</h2>
+                <div class="price-grid">
+                    <div class="price-card">
+                        <h3>Standard Room</h3>
+                        <div class="price">$120<span style="font-size:0.5em;/night"></span></div>
+                        <p>City View, Queen Bed</p>
+                    </div>
+                    <div class="price-card discounted">
+                        <div class="ribbon">15% OFF</div>
+                        <h3>Suite</h3>
+                        <div class="price">
+                            <span class="old-price">$350</span> $295
+                        </div>
+                        <p>Sea View, King Bed, Living Area</p>
+                    </div>
+                    <div class="price-card">
+                        <h3>Family Room</h3>
+                        <div class="price">$220</div>
+                        <p>Mountain View, 2 Double Beds</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Visual Room Inventory Map</h2>
+                <div class="map-legend">
+                    <div class="legend-item"><div class="color-box" style="background: var(--sea)"></div> Sea View</div>
+                    <div class="legend-item"><div class="color-box" style="background: var(--mountain)"></div> Mountain View</div>
+                    <div class="legend-item"><div class="color-box" style="background: #e6e6e6"></div> Occupied</div>
+                </div>
+                
+                <h4 style="margin-top:10px;">Floor 2 (Sea Wing)</h4>
+                <div class="hotel-map">
+                    <div class="map-room sea-view">Room 201</div>
+                    <div class="map-room sea-view occ">Room 202</div>
+                    <div class="map-room sea-view">Room 203 (Suite)</div>
+                    <div class="map-room sea-view occ">Room 204 (Suite)</div>
+                </div>
+
+                <h4 style="margin-top:15px;">Floor 1 (Mountain Wing)</h4>
+                <div class="hotel-map">
+                    <div class="map-room mountain-view occ">Room 101</div>
+                    <div class="map-room mountain-view">Room 102 (Fam)</div>
+                    <div class="map-room mountain-view">Room 103</div>
+                    <div class="map-room mountain-view occ">Room 104 (Fam)</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Database Rooms Inventory</h2>
+                <div style="overflow-x: auto;">
+                    <table id="roomsTable">
+                        <thead>
+                            <tr>
+                                <th>Room No.</th>
+                                <th>Type</th>
+                                <th>View Type</th>
+                                <th>Base Price</th>
+                                <th>Status</th>
+                                <th>Housekeeping</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>101</td>
+                                * <td>Standard</td>
+                                <td><span class="badge badge-mountain">Mountain</span></td>
+                                <td>$120</td>
+                                <td><span class="badge badge-occupied">Occupied</span></td>
+                                <td>Clean</td>
+                            </tr>
+                            <tr>
+                                <td>102</td>
+                                <td>Family Room</td>
+                                <td><span class="badge badge-mountain">Mountain</span></td>
+                                <td>$220</td>
+                                <td><span class="badge badge-available">Available</span></td>
+                                <td>Clean</td>
+                            </tr>
+                            <tr>
+                                <td>201</td>
+                                <td>Standard</td>
+                                <td><span class="badge badge-sea">Sea View</span></td>
+                                <td>$120</td>
+                                <td><span class="badge badge-available">Available</span></td>
+                                <td>Clean</td>
+                            </tr>
+                            <tr>
+                                <td>203</td>
+                                <td>Suite</td>
+                                <td><span class="badge badge-sea">Sea View</span></td>
+                                <td>$295 <small style="color:var(--warning)">(Promo)</small></td>
+                                <td><span class="badge badge-available">Available</span></td>
+                                <td>Touch-up Required</td>
+                            </tr>
+                            <tr>
+                                <td>204</td>
+                                <td>Suite</td>
+                                <td><span class="badge badge-sea">Sea View</span></td>
+                                <td>$295 <small style="color:var(--warning)">(Promo)</small></td>
+                                <td><span class="badge badge-occupied">Occupied</span></td>
+                                <td>Dirty</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="right-col">
+            
+            <div class="card">
+                <h2>Front Desk Booking Engine</h2>
+                <form id="bookingForm" onsubmit="handleBooking(event)">
+                    <div class="form-group">
+                        <label for="guestName">Guest Full Name</label>
+                        <input type="text" id="guestName" required placeholder="John Doe">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="roomSelect">Assign Available Room</label>
+                        <select id="roomSelect" required>
+                            <option value="" disabled selected>Select a room...</option>
+                            <option value="102">Room 102 - Family (Mountain View) - $220</option>
+                            <option value="201">Room 201 - Standard (Sea View) - $120</option>
+                            <option value="203">Room 203 - Suite (Sea View Promo) - $295</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="checkIn">Check-In Date</label>
+                        <input type="date" id="checkIn" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nights">Duration (Nights)</label>
+                        <input type="number" id="nights" min="1" value="1" required>
+                    </div>
+
+                    <button type="submit">Process Check-In</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Database Transactions Log</h2>
+                <ul id="logList" style="list-style: none; font-size: 0.9em; color: #555;">
+                    <li style="padding: 6px 0; border-bottom: 1px dashed #eee;">ℹ️ Room 202 checked out today at 10:00 AM.</li>
+                    <li style="padding: 6px 0; border-bottom: 1px dashed #eee;">ℹ️ Rate adjustment applied automatically to Room 203 & 204.</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Pre-fill today's date into the check-in form field
+        document.getElementById('checkIn').valueAsDate = new Date();
+
+        function handleBooking(event) {
+            event.preventDefault();
+
+            // Fetch inputs
+            const guest = document.getElementById('guestName').value;
+            const roomNo = document.getElementById('roomSelect').value;
+            const nights = document.getElementById('nights').value;
+
+            // Simple Database interaction simulation
+            alert(`SUCCESS:\nRoom ${roomNo} has been successfully assigned to ${guest} for ${nights} night(s). Database updated!`);
+
+            // Append entry to live transaction log
+            const logList = document.getElementById('logList');
+            const newLog = document.createElement('li');
+            newLog.style.padding = "6px 0";
+            newLog.style.borderBottom = "1px dashed #eee";
+            newLog.style.color = "green";
+            newLog.innerHTML = `✅ Successfully booked Room ${roomNo} for ${guest} (${nights} nights).`;
+            logList.insertBefore(newLog, logList.firstChild);
+
+            // Reset form
+            document.getElementById('bookingForm').reset();
+            document.getElementById('checkIn').valueAsDate = new Date();
+        }
+    </script>
+</body>
+</html>
