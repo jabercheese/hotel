@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grand Horizon Pro PMS & Spa Engine - JOD</title>
+    <title>Grand Horizon Pro PMS - Suite, Oasis Spa & Checkout Safety Desk</title>
     <style>
         :root {
             --primary: #1e293b;
@@ -60,12 +60,17 @@
         input, select, textarea { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9em; }
         textarea { resize: vertical; height: 50px; }
         
+        /* Checkbox items */
+        .check-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9em; background: #fff; padding: 8px; border: 1px solid var(--border); border-radius: 4px;}
+        .check-item input[type="checkbox"] { width: auto; cursor: pointer; }
+
         /* Buttons */
         .btn { background: var(--accent); color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; }
         .btn:hover { opacity: 0.9; }
         .btn-spa { background: var(--spa-color); }
         .btn-danger { background: var(--danger); }
         .btn-warn { background: var(--warning); }
+        .btn-success { background: var(--success); }
 
         .verification-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 8px; border-radius: 4px; margin-top: 5px; display: none; }
         .billing-summary { background: #f8fafc; border: 1px dashed var(--border); padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.9em; line-height: 1.5; }
@@ -74,22 +79,26 @@
         .log-success { color: #4ade80; }
         .log-danger { color: #f87171; }
         .log-spa { color: #2dd4bf; }
+
+        /* Modal Overlay Window */
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
+        .modal-content { background: white; padding: 25px; border-radius: 8px; max-width: 450px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Grand Horizon Pro - Property Management & Oasis Spa System</h1>
-        <p>Operational Base Room Prices: Room: 200 JD | Suite: 290 JD | Family: 340 JD (+35 JD Sea View Supplement) | Spa Menu: 60 min (50 JD) / 120 min (90 JD)</p>
+        <h1>Grand Horizon Pro - Premium Property Operations Portal</h1>
+        <p>Core Rooms Inventory: Room: 200 JD | Suite: 290 JD | Family: 340 JD (+35 JD Sea View Supplement) | Spa Menu Base Rates: 60M (50 JD) / 120M (90 JD)</p>
     </header>
 
     <div class="layout">
         
-        <!-- LEFT: Dynamic Visual Matrix Board -->
+        <!-- LEFT: Dynamic Visual Matrix Board & Spa Desk -->
         <div class="left-panel">
             <div class="card">
                 <h2>Interactive Front Desk Map Grid (40 Rooms Total)</h2>
-                <p style="font-size: 0.85em; color:#64748b; margin-bottom:15px;">💡 Click any room block directly to view structural cost breakdowns, post spa fees, extend check-ins, or manage cleaning states.</p>
+                <p style="font-size: 0.85em; color:#64748b; margin-bottom:15px;">💡 Click any room block directly to calculate lodging cost variables, post dynamic spa treatments, track housekeeping states, or initiate checkout checklist safety guards.</p>
                 
                 <h3>Suites (10)</h3>
                 <div class="room-cluster" id="suiteGrid"></div>
@@ -103,7 +112,7 @@
 
             <!-- SPA BOOKING CONSOLE ENGINE -->
             <div class="card" style="border-top: 4px solid var(--spa-color);">
-                <h2>Oasis Spa Reservation Desk</h2>
+                <h2>Oasis Spa Booking Desk</h2>
                 <form id="spaForm" onsubmit="processSpaBooking(event)">
                     <div class="form-row">
                         <div class="form-group">
@@ -114,6 +123,23 @@
                             <label for="spaAdultsCount">Number of Adults Booking Spa</label>
                             <input type="number" id="spaAdultsCount" min="1" max="6" value="1" disabled oninput="generateSpaAttendeesFields()">
                         </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="spaDiscount">Spa Privilege Promotion Tier</label>
+                        <select id="spaDiscount" onchange="handleSpaDiscountTypeChange()">
+                            <option value="0">Standard Spa Rack Rate (0%)</option>
+                            <option value="5">Loyalty Member Tier Promotion (5%)</option>
+                            <option value="10">Known Corporate Member (10%) - Requires Member ID</option>
+                            <option value="15">Internal Employee Wellness Rate (15%) - Requires Employee ID</option>
+                            <option value="20">VIP Manager Special Rate (20%) - Requires Password Bypass</option>
+                        </select>
+                    </div>
+
+                    <!-- Verification Inputs Layer for Spa -->
+                    <div class="verification-box" id="spaVerificationContainer">
+                        <label id="spaVerificationLabel">Enter Verification Code:</label>
+                        <input type="password" id="spaVerificationInput" oninput="generateSpaAttendeesFields()" placeholder="Verification input field...">
                     </div>
 
                     <!-- Dynamic Verification Warning Boxes -->
@@ -159,7 +185,7 @@
 
                     <hr style="margin: 15px 0; border: 0; border-top: 1px dashed var(--border);">
 
-                    <!-- SCREEN A: OCCUPIED (Display Info, Stay Extension, and Checkout) -->
+                    <!-- SCREEN A: OCCUPIED (Display Info, Stay Extension, and Checkout Checklist) -->
                     <div id="screenOccupied" style="display: none;">
                         <h3>Active Guest Record & Occupancy Bill</h3>
                         <div class="billing-summary" id="billSummary"></div>
@@ -177,7 +203,33 @@
                             <textarea id="stayNotes" oninput="saveNotes()" placeholder="Enter custom front desk handling notes here..."></textarea>
                         </div>
 
-                        <button class="btn btn-danger" onclick="processCheckOut()">Process Check-Out Settlement</button>
+                        <!-- MANDATORY CHECKOUT CHECKLIST DESK SECTION -->
+                        <div style="background:#fff1f2; border: 1px solid #fecdd3; padding:15px; border-radius:6px; margin-top:15px; margin-bottom:10px;">
+                            <h4 style="color:var(--danger); font-size:0.95em; margin-bottom:10px;">Mandatory Front Office Checkout Safety Checklist</h4>
+                            
+                            <div class="check-item">
+                                <input type="checkbox" id="chkPayment" onchange="validateCheckoutRequirements()">
+                                <label for="chkPayment" style="margin:0; cursor:pointer;">
+                                    💰 <strong>Settlement Check:</strong> Account Balance Paid <span id="paymentStatusText" style="color:var(--danger); font-weight:bold;">(Click To Pay Now)</span>
+                                </label>
+                            </div>
+
+                            <div class="check-item">
+                                <input type="checkbox" id="chkUsage" onchange="validateCheckoutRequirements()">
+                                <label for="chkUsage" style="margin:0; cursor:pointer;">⚠️ <strong>Minibar & Extra Usage Items Checked?</strong></label>
+                            </div>
+
+                            <div class="form-group">
+                                <label style="font-weight:bold;">Guest Stays Satisfaction Survey</label>
+                                <select id="chkSatisfied" style="background:#fff; margin-bottom:8px;">
+                                    <option value="Yes">Yes - Guest reported highly satisfied experience</option>
+                                    <option value="No">No - Guest logged unresolved service complaints</option>
+                                </select>
+                                <input type="text" id="checkoutSurveyNotes" placeholder="Append structural guest feedback notes here...">
+                            </div>
+                        </div>
+
+                        <button class="btn btn-danger" id="checkoutSubmitBtn" disabled onclick="processCheckOut()">Process Check-Out Settlement</button>
                     </div>
 
                     <!-- SCREEN B: AVAILABLE (Check-In Entry Engine) -->
@@ -227,7 +279,7 @@
                             </select>
                         </div>
 
-                        <!-- Verification inputs layer -->
+                        <!-- Verification Inputs Layer for Room Check-In -->
                         <div class="verification-box" id="verificationContainer">
                             <label id="verificationLabel">Enter Verification Code:</label>
                             <input type="password" id="verificationInput" oninput="validateOccupancyAndCost()" placeholder="Code verification input...">
@@ -247,9 +299,27 @@
             <div class="card">
                 <h2>Real-Time System Database Audit Logs</h2>
                 <div class="sys-log" id="sysAuditLog">
-                    <div>[SYSTEM INITIALIZED] Base pricing and Spa cross-check parameters active.</div>
+                    <div>[SYSTEM INITIALIZED] Base pricing structures active in hotel systems database.</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- POPUP LEDGER SETTLEMENT WINDOW MODAL -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content">
+            <h2 style="color:var(--success); border-bottom-color:var(--success);">Front Desk Settlement Interface</h2>
+            <p style="margin:10px 0; font-size:0.95em; color:var(--secondary);" id="paymentModalDetails"></p>
+            <div class="form-group">
+                <label>Target Payment Processing Route Method</label>
+                <select id="paymentRouteMethod">
+                    <option value="Visa">Visa/Mastercard Terminal</option>
+                    <option value="Amex">American Express Corporate</option>
+                    <option value="Cash">Cash Settlement (JOD)</option>
+                </select>
+            </div>
+            <button class="btn btn-success" onclick="executePaymentAuthorization()">Authorize & Clear Outstanding Balance</button>
+            <button class="btn btn-danger" style="background:#94a3b8; margin-top:5px;" onclick="closePaymentModal()">Defer Payment Process</button>
         </div>
     </div>
 
@@ -311,7 +381,16 @@
                 document.getElementById("screenAvailable").style.display = "none";
                 document.getElementById("screenOccupied").style.display = "block";
                 document.getElementById("stayNotes").value = rm.guest.notes || "";
+                
+                // Clear state checkbox interfaces
+                document.getElementById("chkPayment").checked = rm.guest.isSettled;
+                document.getElementById("chkUsage").checked = false;
+                document.getElementById("checkoutSurveyNotes").value = "";
+                document.getElementById("chkSatisfied").value = "Yes";
+
+                updatePaymentLinkStatusText(rm.guest.isSettled);
                 renderOccupiedBill(rm);
+                validateCheckoutRequirements();
             } else {
                 document.getElementById("screenOccupied").style.display = "none";
                 document.getElementById("screenAvailable").style.display = "block";
@@ -336,8 +415,6 @@
                 rm.guest.isVip = (statusVal === "VIP");
                 logAction(`Room ${rm.id} guest dynamic VIP profile set to: ${rm.guest.isVip}`, "log-success");
                 if(activeRoomId) renderOccupiedBill(rm);
-            } else {
-                logAction(`Note: VIP label will lock dynamically onto reservation form execution.`);
             }
             renderHotelGrid();
         }
@@ -364,7 +441,22 @@
             validateOccupancyAndCost();
         }
 
-        // Central Cost Evaluation Metric Engine & Max Capacity Check rules guard logic
+        function handleSpaDiscountTypeChange() {
+            const spaDiscountType = document.getElementById("spaDiscount").value;
+            const container = document.getElementById("spaVerificationContainer");
+            const label = document.getElementById("spaVerificationLabel");
+            const input = document.getElementById("spaVerificationInput");
+
+            input.value = "";
+            if (spaDiscountType === "10") { container.style.display = "block"; label.innerText = "Spa Access Code: Enter Member ID:"; }
+            else if (spaDiscountType === "15") { container.style.display = "block"; label.innerText = "Spa Access Code: Enter Employee ID:"; }
+            else if (spaDiscountType === "20") { container.style.display = "block"; label.innerText = "Spa Access Code: Enter Manager Password:"; }
+            else { container.style.display = "none"; }
+
+            validateSpaRoom();
+        }
+
+        // Dynamic Calculations Layer
         function calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct) {
             let baseRate = basePrices[rm.type];
             let viewCost = viewPremiums[rm.view];
@@ -384,7 +476,7 @@
             if (rm.type === "Room" || rm.type === "Suite") {
                 if (adults > 2 || children > 1) {
                     isOccupancyValid = false;
-                    err = `Max Capacity Overload for ${rm.type}! Strict ceiling limit is 2 Adults and 1 Child (2A1C).`;
+                    err = `Max Capacity Overload for ${rm.type}! Ceiling limit is 2 Adults and 1 Child (2A1C).`;
                 }
             } else if (rm.type === "Family Room") {
                 if (adults > 4) { isOccupancyValid = false; err = "Family Rooms have an absolute ceiling cap limit of 4 Adults."; }
@@ -442,6 +534,17 @@
         }
 
         // Detailed live billing output display formatter 
+        function getOverallInvoiceTotal(rm) {
+            const g = rm.guest;
+            if (!g) return 0;
+            const calc = calculateBreakdown(rm, g.adults, g.children, g.mealPlan, g.nights, g.discountPct);
+            let spaSubtotal = 0;
+            if (g.spaOrders) {
+                g.spaOrders.forEach(ord => spaSubtotal += ord.cost);
+            }
+            return calc.finalRoomTotal + spaSubtotal;
+        }
+
         function renderOccupiedBill(rm) {
             const g = rm.guest;
             const calc = calculateBreakdown(rm, g.adults, g.children, g.mealPlan, g.nights, g.discountPct);
@@ -449,10 +552,10 @@
             let spaSubtotal = 0;
             let spaHtmlList = "";
             if (g.spaOrders && g.spaOrders.length > 0) {
-                spaHtmlList = "<br><strong>Posted Spa Log Ledger:</strong><br>";
+                spaHtmlList = "<br><strong>Posted Spa Log Ledger (Itemized After Applied Spa Discounts):</strong><br>";
                 g.spaOrders.forEach((ord, index) => {
                     spaSubtotal += ord.cost;
-                    spaHtmlList += `• Session #${index+1}: ${ord.partySize} Adult(s) (${ord.details}) = +${ord.cost} JOD<br>`;
+                    spaHtmlList += `• Treatment Block #${index+1}: ${ord.partySize} Adult(s) (${ord.details}) = +${ord.cost} JOD <small style="color:var(--spa-color)">(${ord.discText})</small><br>`;
                 });
             }
 
@@ -461,18 +564,19 @@
             document.getElementById("billSummary").innerHTML = `
                 <strong>Guest Principal Name:</strong> ${g.name} ${g.isVip ? '<span style="color:#db2777; font-weight:bold;">[VIP]</span>' : ''}<br>
                 <strong>Room Configuration:</strong> ${g.adults} Adults, ${g.children} Children<br>
-                <strong>Meal Package:</strong> ${g.mealPlan}<br>
-                <strong>Stay Plan Duration:</strong> ${g.nights} Nights Total Checked In<br>
+                <strong>Meal Package Plan:</strong> ${g.mealPlan}<br>
+                <strong>Stay Duration:</strong> ${g.nights} Nights Total Checked In<br>
                 <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
-                <strong>Billing Statement Breakdown Ledger:</strong><br>
+                <strong>Billing Breakdown Ledger:</strong><br>
                 Calculated Base Price: ${basePrices[rm.type]} JOD/night<br>
                 View Premium Surcharge: +${viewPremiums[rm.view]} JOD/night<br>
-                System Rate Reductions: -${calc.discountAmount.toFixed(0)} JOD/night (${g.discountPct}%)<br>
+                System Room Reductions: -${calc.discountAmount.toFixed(0)} JOD/night (${g.discountPct}%)<br>
                 Meal Costs Surcharge: +${calc.mealPerNight} JOD/night<br>
                 Subtotal Room Charges: ${calc.finalRoomTotal.toFixed(0)} JOD
                 ${spaHtmlList}
                 <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
-                <strong>Total Outstanding Balance Due: <span style="color:var(--success); font-size:1.2em; font-weight:bold;">${grandTotal.toFixed(0)} JOD</span></strong>
+                <strong>Total Outstanding Balance Due: <span style="color:var(--success); font-size:1.2em; font-weight:bold;">${grandTotal.toFixed(0)} JOD</span></strong><br>
+                <strong>Payment Ledger Status:</strong> ${g.isSettled ? '<span style="color:var(--success); font-weight:bold;">💰 CLEAR / PAID IN FULL</span>' : '<span style="color:var(--danger); font-weight:bold;">⚠️ PENDING SETTLEMENT</span>'}
             `;
         }
 
@@ -486,11 +590,11 @@
             const discountPct = parseInt(document.getElementById("inDiscount").value);
             const isVip = (document.getElementById("vipStatus").value === "VIP");
 
-            if (!name) { alert("Please input a valid Guest Registration Name parameters entry."); return; }
+            if (!name) { alert("Please input a valid Guest Registration Name."); return; }
 
             rm.status = "Occupied";
             rm.clean = "Not Clean"; 
-            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "", spaOrders: [] };
+            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "", spaOrders: [], isSettled: false };
 
             logAction(`Check-In Completed: Room ${rm.id} assigned to ${name} for ${nights} nights. Room marked Dirty.`, "log-success");
             
@@ -504,26 +608,106 @@
             if (ext <= 0) return;
 
             rm.guest.nights += ext;
-            logAction(`Stay Extension: Room ${rm.id} extended by +${ext} more nights. Bill updated.`, "log-success");
+            // Unsettle the room because the bill just changed
+            rm.guest.isSettled = false;
+            document.getElementById("chkPayment").checked = false;
+            updatePaymentLinkStatusText(false);
+
+            logAction(`Stay Extension: Room ${rm.id} extended by +${ext} more nights. Bill updated and payment reset.`, "log-success");
             
             renderHotelGrid();
             renderOccupiedBill(rm);
+            validateCheckoutRequirements();
+        }
+
+        /* ================= MANDATORY FRONT OFFICE CHECKOUT SAFETY CHECKLIST DESK ================= */
+        
+        function updatePaymentLinkStatusText(settled) {
+            const linkText = document.getElementById("paymentStatusText");
+            if (settled) {
+                linkText.innerHTML = `<span style="color:var(--success); cursor:default;">(Cleared & Paid)</span>`;
+            } else {
+                linkText.innerHTML = `<a href="#" onclick="openPaymentModal(event)" style="color:var(--danger); font-weight:bold; text-decoration:underline;">(UNPAID - Click to Process Payment)</a>`;
+            }
+        }
+
+        function openPaymentModal(e) {
+            if(e) e.preventDefault();
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            if (!rm || !rm.guest) return;
+
+            const totalAmount = getOverallInvoiceTotal(rm);
+            document.getElementById("paymentModalDetails").innerHTML = `
+                <strong>Guest Ledger:</strong> ${rm.guest.name}<br>
+                <strong>Room Target Number:</strong> Room ${rm.id}<br>
+                <strong>Total Outstanding Invoiced Balance:</strong> <span style="font-size:1.2em; color:var(--success); font-weight:bold;">${totalAmount.toFixed(0)} JOD</span>
+            `;
+            document.getElementById("paymentModal").style.display = "flex";
+        }
+
+        function closePaymentModal() {
+            document.getElementById("paymentModal").style.display = "none";
+        }
+
+        function executePaymentAuthorization() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            const method = document.getElementById("paymentRouteMethod").value;
+            if (!rm || !rm.guest) return;
+
+            rm.guest.isSettled = true;
+            document.getElementById("chkPayment").checked = true;
+            updatePaymentLinkStatusText(true);
+            
+            logAction(`💳 Payment Settlement Successful: Room ${rm.id} cleared via [${method}] channel.`, "log-success");
+            
+            closePaymentModal();
+            renderOccupiedBill(rm);
+            validateCheckoutRequirements();
+        }
+
+        function validateCheckoutRequirements() {
+            const payChecked = document.getElementById("chkPayment").checked;
+            const usageChecked = document.getElementById("chkUsage").checked;
+            const checkoutBtn = document.getElementById("checkoutSubmitBtn");
+
+            // Reflect checkbox forced state adjustments if employee clicks it manually without authentication processing
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            if(rm && rm.guest) {
+                if(payChecked && !rm.guest.isSettled) {
+                    // Prevent cheating the checkbox without authorization prompt trigger
+                    document.getElementById("chkPayment").checked = false;
+                    alert("Account balance must be cleared via the authorization gateway prompt before verifying payment.");
+                    return;
+                }
+            }
+
+            if (payChecked && usageChecked) {
+                checkoutBtn.disabled = false;
+            } else {
+                checkoutBtn.disabled = true;
+            }
         }
 
         function processCheckOut() {
             const rm = roomsDb.find(r => r.id === activeRoomId);
-            logAction(`Check-Out Completed: Room ${rm.id} vacated by ${rm.guest.name}. Room remains Dirty until cleared by HK.`, "log-danger");
+            const satisfaction = document.getElementById("chkSatisfied").value;
+            const notes = document.getElementById("checkoutSurveyNotes").value.trim();
+            
+            let surveySummary = `[Satisfaction Status: ${satisfaction}]`;
+            if(notes) surveySummary += ` Feedback: "${notes}"`;
+
+            logAction(`Check-Out Processing Complete: Room ${rm.id} vacated by ${rm.guest.name}. ${surveySummary}. Room locked in Dirty state.`, "log-danger");
             
             rm.status = "Available";
             rm.guest = null;
 
             renderHotelGrid();
             selectRoomTarget(rm.id);
-            validateSpaRoom(); // Refresh live spa fields state context
+            validateSpaRoom(); 
         }
 
 
-        /* ================= SPA CORE ENGINE LOGIC FUNCTIONS ================= */
+        /* ================= SPA CORE ENGINE WITH PRIVILEGE DISCOUNTS ================= */
 
         function validateSpaRoom() {
             const inputId = parseInt(document.getElementById("spaRoomId").value);
@@ -533,7 +717,6 @@
             const quoteBox = document.getElementById("spaQuoteBox");
             const submitBtn = document.getElementById("spaSubmitBtn");
 
-            // Reset UI modules elements
             errBox.style.display = "none";
             attendeesContainer.innerHTML = "";
             quoteBox.style.display = "none";
@@ -546,19 +729,16 @@
 
             const targetRoom = roomsDb.find(r => r.id === inputId);
 
-            // Constraint Check 1: Verify if room is actually occupied in database registry
             if (!targetRoom || targetRoom.status !== "Occupied") {
-                errBox.innerText = `❌ Spa Booking Error: Room ${inputId} is currently empty or doesn't exist in the system registry database.`;
+                errBox.innerText = `❌ Spa Booking Error: Room ${inputId} is empty or doesn't exist in the systems directory.`;
                 errBox.style.display = "block";
                 adultsInput.disabled = true;
                 return;
             }
 
-            // If room is valid and occupied, unlock guest count limit constraints
             adultsInput.disabled = false;
-            adultsInput.max = targetRoom.guest.adults; // Max configuration cap match limit
+            adultsInput.max = targetRoom.guest.adults; 
             
-            // Adjust input value automatically if it exceeds current room composition cap
             if (parseInt(adultsInput.value) > targetRoom.guest.adults) {
                 adultsInput.value = targetRoom.guest.adults;
             }
@@ -574,15 +754,30 @@
             const container = document.getElementById("spaAttendeesContainer");
             const submitBtn = document.getElementById("spaSubmitBtn");
             const quoteBox = document.getElementById("spaQuoteBox");
+            const spaDiscountPct = parseInt(document.getElementById("spaDiscount").value) || 0;
+            const authInput = document.getElementById("spaVerificationInput").value;
 
             container.innerHTML = "";
             errBox.style.display = "none";
 
             if (!targetRoom || targetRoom.status !== "Occupied") return;
 
-            // Constraint Check 2: Verify spa adults count does not exceed room composition ceiling
             if (adultsCount > targetRoom.guest.adults) {
-                errBox.innerText = `⚠️ Count Overflow: Selected spa guest count (${adultsCount}) exceeds total adults currently registered in Room ${targetRoom.id} (${targetRoom.guest.adults} max).`;
+                errBox.innerText = `⚠️ Count Overflow: Spa configuration (${adultsCount}) exceeds total adults checked into Room ${targetRoom.id} (${targetRoom.guest.adults} max).`;
+                errBox.style.display = "block";
+                submitBtn.disabled = true;
+                quoteBox.style.display = "none";
+                return;
+            }
+
+            // Cross check discount authorization parameters 
+            let isVerified = true;
+            if (spaDiscountPct === 10 && authInput.trim().length === 0) isVerified = false;
+            if (spaDiscountPct === 15 && authInput.trim().length === 0) isVerified = false;
+            if (spaDiscountPct === 20 && authInput !== "jab123") isVerified = false;
+
+            if (!isVerified && spaDiscountPct > 0) {
+                errBox.innerText = spaDiscountPct === 20 ? "❌ Invalid/Missing Spa Manager Security Override Password." : "⚠️ Identification credentials/Member references string missing spa input parameters.";
                 errBox.style.display = "block";
                 submitBtn.disabled = true;
                 quoteBox.style.display = "none";
@@ -595,7 +790,7 @@
                 return;
             }
 
-            // Build structural entry field forms rows based on count
+            // Generate field structures rows
             for (let i = 1; i <= adultsCount; i++) {
                 const row = document.createElement("div");
                 row.className = "form-row";
@@ -622,20 +817,21 @@
         function calculateLiveSpaQuote() {
             const typeSelectors = document.querySelectorAll(".spa-type-select");
             const quoteBox = document.getElementById("spaQuoteBox");
-            let totalSpaCost = 0;
-            let breakdownText = "";
-
-            typeSelectors.forEach((sel, idx) => {
-                const duration = sel.value;
-                const cost = spaPrices[duration];
-                totalSpaCost += cost;
-                breakdownText += `Guest #${idx+1}: ${duration} min session (${cost} JOD)<br>`;
+            const spaDiscountPct = parseInt(document.getElementById("spaDiscount").value) || 0;
+            
+            let baseSpaTotal = 0;
+            typeSelectors.forEach(sel => {
+                baseSpaTotal += spaPrices[sel.value];
             });
+
+            let discountAmount = baseSpaTotal * (spaDiscountPct / 100);
+            let finalSpaTotal = baseSpaTotal - discountAmount;
 
             quoteBox.innerHTML = `
                 <strong>Oasis Spa Session Quote Estimate:</strong><br>
-                ${breakdownText}
-                <strong>Total Spa Cost Added to Room Bill: <span style="color:var(--spa-color);">${totalSpaCost} JOD</span></strong>
+                Gross Spa Total Base Price: ${baseSpaTotal} JOD<br>
+                Spa Privilege Promotion Discount: -${discountAmount.toFixed(0)} JOD (${spaDiscountPct}%)<br>
+                <strong>Total Net Spa Cost to Post: <span style="color:var(--spa-color);">${finalSpaTotal.toFixed(0)} JOD</span></strong>
             `;
             quoteBox.style.display = "block";
         }
@@ -644,43 +840,55 @@
             e.preventDefault();
             const inputId = parseInt(document.getElementById("spaRoomId").value);
             const targetRoom = roomsDb.find(r => r.id === inputId);
+            const spaDiscountPct = parseInt(document.getElementById("spaDiscount").value) || 0;
             
             if (!targetRoom || targetRoom.status !== "Occupied") return;
 
             const nameInputs = document.querySelectorAll(".spa-name-input");
             const typeSelectors = document.querySelectorAll(".spa-type-select");
             
-            let totalCost = 0;
+            let baseSpaTotal = 0;
             let detailsArray = [];
 
             nameInputs.forEach((inp, idx) => {
                 const duration = typeSelectors[idx].value;
-                totalCost += spaPrices[duration];
+                baseSpaTotal += spaPrices[duration];
                 detailsArray.push(`${inp.value} [${duration} Mins]`);
             });
 
-            // Post spa order data object directly to the active guest profile ledger
+            let discountAmount = baseSpaTotal * (spaDiscountPct / 100);
+            let finalCost = baseSpaTotal - discountAmount;
+
+            // Post to structural ledger data metrics matrix object arrays
             targetRoom.guest.spaOrders.push({
                 partySize: nameInputs.length,
                 details: detailsArray.join(", "),
-                cost: totalCost
+                cost: finalCost,
+                discText: spaDiscountPct > 0 ? `${spaDiscountPct}% Spa Promo Applied` : 'Rack Rate'
             });
 
-            logAction(`💆 Spa Charge Posted: ${totalCost} JOD for ${nameInputs.length} guest(s) added to Room ${targetRoom.id} ledger balance.`, "log-spa");
+            // Re-lock billing settlement flag because total balance increased
+            targetRoom.guest.isSettled = false;
+            if (activeRoomId === targetRoom.id) {
+                document.getElementById("chkPayment").checked = false;
+                updatePaymentLinkStatusText(false);
+            }
 
-            // Reset Spa input fields safely
+            logAction(`💆 Spa Charge Posted: ${finalCost.toFixed(0)} JOD (After ${spaDiscountPct}% discount) posted to Room ${targetRoom.id} ledger account. Balance status set to Unpaid.`, "log-spa");
+
+            // Clear forms
             document.getElementById("spaForm").reset();
             document.getElementById("spaAttendeesContainer").innerHTML = "";
             document.getElementById("spaQuoteBox").style.display = "none";
             document.getElementById("spaSubmitBtn").disabled = true;
             document.getElementById("spaAdultsCount").disabled = true;
+            document.getElementById("spaVerificationContainer").style.display = "none";
 
-            // Instantly refresh current active profile window if targeted
             if (activeRoomId === targetRoom.id) {
                 renderOccupiedBill(targetRoom);
+                validateCheckoutRequirements();
             }
         }
-
 
         function logAction(msg, cssClass = "") {
             const logBox = document.getElementById("sysAuditLog");
@@ -690,7 +898,6 @@
             logBox.insertBefore(row, logBox.firstChild);
         }
 
-        // Initial launch core executions calls
         renderHotelGrid();
     </script>
 </body>
