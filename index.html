@@ -3,424 +3,489 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grand Horizon Portal - JOD Management Engine</title>
+    <title>Grand Horizon Pro PMS - JOD Engine</title>
     <style>
         :root {
-            --primary: #1a252f;
-            --secondary: #2c3e50;
-            --accent: #2980b9;
-            --success: #27ae60;
-            --danger: #c0392b;
-            --warning: #f39c12;
-            --light: #ecf0f1;
-            --sea: #3498db;
-            --mountain: #8e44ad;
+            --primary: #1e293b;
+            --secondary: #334155;
+            --accent: #0284c7;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #ca8a04;
+            --light: #f8fafc;
+            --border: #cbd5e1;
+            --sea: #06b6d4;
+            --mountain: #8b5cf6;
         }
 
         * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f4f6f8; color: var(--primary); padding: 20px; }
+        body { background-color: #f1f5f9; color: var(--primary); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
         
         header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        @media(min-width: 1200px) { .dashboard-grid { grid-template-columns: 3fr 2fr; } }
+        .layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media(min-width: 1024px) { .layout { grid-template-columns: 3fr 2fr; } }
 
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-            margin-bottom: 20px;
-        }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        h2 { margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0; font-size: 1.3rem; }
+        h3 { margin: 15px 0 8px; font-size: 1.1rem; color: var(--secondary); }
 
-        h2 { margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid var(--light); font-size: 1.4rem; }
-        h3 { margin: 15px 0 10px; font-size: 1.1rem; }
-
-        /* Configuration controls */
-        .config-bar {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            background: #edf2f7;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-        }
-
-        /* Forms */
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group.full { grid-column: span 2; }
-        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9em; }
-        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 0.95em; }
-        button { background: var(--accent); color: white; padding: 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.2s; }
-        button:hover { opacity: 0.9; }
-
-        /* Status Badges */
-        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8em; font-weight: bold; display: inline-block; }
-        .badge-clean { background: #e8f5e9; color: #2e7d32; }
-        .badge-dirty { background: #ffebee; color: #c62828; }
-        .badge-touchup { background: #fff8e1; color: #f57f17; }
-        .badge-avail { background: #e3f2fd; color: #0d47a1; }
-        .badge-occ { background: #eee; color: #333; }
-
-        /* Live Room Matrix Visualizer */
-        .matrix-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid var(--light);
-            padding: 10px;
-            background: #fafafa;
-        }
-        .room-cluster {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 8px;
-            margin-bottom: 15px;
-        }
+        /* Room Grid Styling */
+        .room-cluster { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 15px; }
         .room-block {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 0.85em;
-            cursor: pointer;
-            transition: 0.2s;
+            background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px;
+            font-size: 0.85em; cursor: pointer; transition: all 0.2s; position: relative;
         }
-        .room-block:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .room-block.sea { border-left: 5px solid var(--sea); }
-        .room-block.mountain { border-left: 5px solid var(--mountain); }
-        .room-block.occupied { background: #f1f2f6; border-color: #cbd5e0; opacity: 0.7; }
+        .room-block:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .room-block.sea { border-top: 4px solid var(--sea); }
+        .room-block.mountain { border-top: 4px solid var(--mountain); }
+        .room-block.occupied { background: #fee2e2; border-color: #fca5a5; }
+        .vip-tag { position: absolute; top: 2px; right: 2px; background: #db2777; color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 3px; font-weight: bold; }
 
-        /* Dynamic Quote Box */
-        .live-quote {
-            background: #fff9db;
-            border: 1px dashed #f59f00;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
+        /* Badges */
+        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: bold; display: inline-block; margin-top: 3px; }
+        .badge-clean { background: #dcfce7; color: #16a34a; }
+        .badge-dirty { background: #ffeeee; color: #dc2626; }
+        .badge-avail { background: #e0f2fe; color: #0369a1; }
+        .badge-occ { background: #f87171; color: white; }
 
-        /* Log window */
-        .sys-log { background: #2d3748; color: #a0aec0; padding: 12px; border-radius: 6px; max-height: 150px; overflow-y: auto; font-family: monospace; font-size: 0.85em; }
-        .log-entry { margin-bottom: 4px; border-bottom: 1px solid #4a5568; padding-bottom: 4px; }
-        .log-entry.success { color: #68d391; }
+        /* Forms & Fields */
+        .form-group { margin-bottom: 12px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.85em; }
+        input, select, textarea { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9em; }
+        textarea { resize: vertical; height: 60px; }
+        
+        /* Control Panel Operations */
+        .btn { background: var(--accent); color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; }
+        .btn:hover { opacity: 0.9; }
+        .btn-danger { background: var(--danger); }
+        .btn-warn { background: var(--warning); }
+
+        .verification-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 8px; border-radius: 4px; margin-top: 5px; display: none; }
+        .billing-summary { background: #f8fafc; border: 1px dashed var(--border); padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.9em; }
+        
+        .sys-log { background: #0f172a; color: #94a3b8; padding: 10px; border-radius: 6px; max-height: 120px; overflow-y: auto; font-family: monospace; font-size: 0.8em; margin-top: 10px; }
+        .log-success { color: #4ade80; }
+        .log-danger { color: #f87171; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Grand Horizon Operations Engine</h1>
-        <p>Dynamic Database Management Dashboard | Active System Currencies: <strong>JOD</strong></p>
+        <h1>Grand Horizon Pro - Property Management System</h1>
+        <p>Operational Base Room Prices: Room: 200 JD | Suite: 290 JD | Family: 340 JD (+35 JD Sea View Supplement)</p>
     </header>
 
-    <div class="dashboard-grid">
+    <div class="layout">
         
-        <!-- LEFT COLUMN: Live Database Viewers & Status Controls -->
-        <div class="left-side">
-            
+        <div class="left-panel">
             <div class="card">
-                <h2>Dynamic System Rules & Discounts</h2>
-                <div class="config-bar">
-                    <label for="globalDiscount" style="margin:0;">Apply Promo Discount:</label>
-                    <select id="globalDiscount" onchange="recalculateEverything()" style="width:auto; display:inline-block;">
-                        <option value="0" selected>Base Price (0%)</option>
-                        <option value="10">10% Off Base Room Rates</option>
-                        <option value="12">12% Off Base Room Rates</option>
-                        <option value="15">15% Off Base Room Rates</option>
-                    </select>
-                </div>
-                <p style="font-size: 0.85em; color: #718096;">
-                    * Base: Room 100 JOD | Suite 170 JOD | Family Room 180 JOD. Sea View premium: +20 JOD.
-                </p>
-            </div>
-
-            <!-- Interactive Room Status Updater Matrix -->
-            <div class="card">
-                <h2>Interactive Database Status Grid (40 Total Rooms)</h2>
-                <p style="font-size:0.85em; margin-bottom:10px; color:#4a5568;">Click any individual grid square to cycle its Housekeeping Status on the fly.</p>
+                <h2>Interactive Front Desk Map Grid (40 Rooms Total)</h2>
+                <p style="font-size: 0.85em; color:#64748b; margin-bottom:15px;">💡 Click any individual grid unit square block to interact with its billing, check-in, or maintenance states instantly.</p>
                 
-                <h3>Suites (10 Rooms)</h3>
-                <div class="room-cluster" id="suitesCluster"></div>
+                <h3>Suites (10)</h3>
+                <div class="room-cluster" id="suiteGrid"></div>
 
-                <h3>Standard Rooms (20 Rooms)</h3>
-                <div class="room-cluster" id="roomsCluster"></div>
+                <h3>Standard Rooms (20)</h3>
+                <div class="room-cluster" id="roomGrid"></div>
 
-                <h3>Family Rooms (10 Rooms)</h3>
-                <div class="room-cluster" id="familyCluster"></div>
+                <h3>Family Rooms (10)</h3>
+                <div class="room-cluster" id="familyGrid"></div>
             </div>
-
         </div>
 
-        <!-- RIGHT COLUMN: Front Desk Engine & Allocation Checkers -->
-        <div class="right-side">
-            
-            <div class="card">
-                <h2>Front Desk Booking Engine</h2>
-                <form id="engineForm" onsubmit="executeCheckIn(event)">
-                    
-                    <div class="form-group">
-                        <label for="guestName">Guest Registration Name</label>
-                        <input type="text" id="guestName" required placeholder="Ahmad Masri">
-                    </div>
+        <div class="right-panel">
+            <div class="card" id="controlPanel" style="position: sticky; top: 20px;">
+                <h2 id="panelTitle">Select a Room to Manage</h2>
+                <div id="panelPlaceholder" style="color: #64748b; font-style: italic; text-align: center; padding: 4px 0;">
+                    No room data selection targeted. Click any room block directly inside the grid view map layout.
+                </div>
 
-                    <div class="form-grid">
+                <div id="panelContents" style="display: none;">
+                    <div class="form-row" style="margin-bottom: 15px;">
                         <div class="form-group">
-                            <label for="adultCount">Adults</label>
-                            <input type="number" id="adultCount" min="1" max="6" value="2" onchange="runOccupancyValidation()">
+                            <label>Housekeeping Status</label>
+                            <select id="hkStatus" onchange="updateRoomHkStatus()">
+                                <option value="Clean">Clean</option>
+                                <option value="Not Clean">Not Clean</option>
+                            </select>
                         </div>
                         <div class="form-group">
-                            <label for="childCount">Children</label>
-                            <input type="number" id="childCount" min="0" max="4" value="0" onchange="runOccupancyValidation()">
+                            <label>VIP Designation Status</label>
+                            <select id="vipStatus" onchange="toggleVipStatus()">
+                                <option value="Standard">Standard Booking</option>
+                                <option value="VIP">⭐ VIP Status</option>
+                            </select>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="roomSelector">Select Match-Ready Assignment Block</label>
-                        <select id="roomSelector" required onchange="calculateLiveQuote()">
-                            <!-- Generated Dynamically via JS -->
-                        </select>
+                    <hr style="margin: 15px 0; border: 0; border-top: 1px dashed var(--border);">
+
+                    <div id="screenOccupied" style="display: none;">
+                        <h3>Active Guest Record & Occupancy Bill</h3>
+                        <div class="billing-summary" id="billSummary"></div>
+                        
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label>Add Stay Extension (Nights)</label>
+                            <div style="display:flex; gap: 5px;">
+                                <input type="number" id="extendNights" min="1" value="1" style="width: 80px;">
+                                <button class="btn btn-warn" onclick="processExtension()" style="margin:0;">Commit Extension</button>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Operational Stay Notes</label>
+                            <textarea id="stayNotes" oninput="saveNotes()" placeholder="Enter custom front desk handling notes here..."></textarea>
+                        </div>
+
+                        <button class="btn btn-danger" onclick="processCheckOut()">Process Check-Out Settlement</button>
                     </div>
 
-                    <div class="form-group">
-                        <label for="mealOption">Meal Tier Supplement</label>
-                        <select id="mealOption" onchange="calculateLiveQuote()">
-                            <option value="0">Room Only (+0 JOD)</option>
-                            <option value="10">Breakfast (+10 JOD per night)</option>
-                            <option value="25">Half-Board (+25 JOD per night)</option>
-                            <option value="40">Full-Board (+40 JOD per night)</option>
-                        </select>
+                    <div id="screenAvailable" style="display: none;">
+                        <h3>New Registration Check-In Form</h3>
+                        
+                        <div class="form-group">
+                            <label>Guest Name</label>
+                            <input type="text" id="inGuestName" placeholder="Zaid Al-Kamil">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Adults Count</label>
+                                <input type="number" id="inAdults" min="1" max="6" value="2" onchange="validateOccupancyAndCost()">
+                            </div>
+                            <div class="form-group">
+                                <label>Children Count</label>
+                                <input type="number" id="inChildren" min="0" max="4" value="0" onchange="validateOccupancyAndCost()">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Meal Board Package Plan</label>
+                                <select id="inMeal" onchange="validateOccupancyAndCost()">
+                                    <option value="None">Room Only</option>
+                                    <option value="Breakfast">Breakfast</option>
+                                    <option value="Half-Board">Half Board</option>
+                                    <option value="Full-Board">Full Board</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Stay Nights</label>
+                                <input type="number" id="inNights" min="1" value="1" onchange="validateOccupancyAndCost()">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Target Pricing Promo Scheme</label>
+                            <select id="inDiscount" onchange="handleDiscountTypeChange()">
+                                <option value="0">Standard Rack Rate (0%)</option>
+                                <option value="5">Standard Promotion Discount (5%)</option>
+                                <option value="10">Known Member Scheme (10%)</option>
+                                <option value="15">Internal Employee Rate (15%)</option>
+                                <option value="20">VIP Special Discount Rate (20%)</option>
+                            </select>
+                        </div>
+
+                        <div class="verification-box" id="verificationContainer">
+                            <label id="verificationLabel">Enter Verification Code:</label>
+                            <input type="password" id="verificationInput" oninput="validateOccupancyAndCost()" placeholder="Code verification input...">
+                        </div>
+
+                        <div id="occupancyError" style="display:none; color:var(--danger); font-size:0.85em; font-weight:bold; margin-bottom:10px;"></div>
+
+                        <div class="billing-summary" id="liveQuoteSummary" style="background: #f0fdf4; border-color: #bbf7d0;"></div>
+
+                        <button class="btn" id="checkInBtn" onclick="processCheckIn()">Execute Check-In Allocation</button>
                     </div>
 
-                    <div class="form-group">
-                        <label for="stayNights">Nights Reservation Duration</label>
-                        <input type="number" id="stayNights" min="1" value="1" required onchange="calculateLiveQuote()">
-                    </div>
-
-                    <!-- Visual Warning Notice Window Area -->
-                    <div id="validationWarning" style="display:none; background:#fff5f5; border:1px solid #fed7d7; color:#c53030; padding:10px; border-radius:4px; font-size:0.9em; margin-bottom:15px;"></div>
-
-                    <!-- Live Quote Estimator box -->
-                    <div class="live-quote" id="quoteBox">Estimated Cost: Calculating...</div>
-
-                    <button type="submit" id="submitBtn">Commit Check-In Transaction</button>
-                </form>
-            </div>
-
-            <div class="card">
-                <h2>Live Transaction Database Logger</h2>
-                <div class="sys-log" id="systemLog">
-                    <div class="log-entry">⚙️ Hotel Database state initializing framework successfully.</div>
                 </div>
             </div>
 
+            <div class="card">
+                <h2>Real-Time System Database Audit Logs</h2>
+                <div class="sys-log" id="sysAuditLog">
+                    <div>[SYSTEM INITIALIZED] Base pricing structures securely active in database storage tables.</div>
+                </div>
+            </div>
         </div>
-
     </div>
 
     <script>
-        // Generate State Database Matrix Object Model array data maps
-        const db = [];
-        const basePrices = { "Room": 100, "Suite": 170, "Family Room": 180 };
-        const cleanStatuses = ["Clean", "Not Clean", "In Progress"];
+        // Data Schema Models 
+        const roomsDb = [];
+        let activeRoomId = null;
 
-        // Initialization Loops to fill out 40 specific rooms requested
-        // 10 Suites (201 - 210)
-        for(let i=1; i<=10; i++) {
-            db.push({ id: 200+i, type: "Suite", view: i <= 5 ? "Sea" : "Mountain", status: "Available", clean: "Clean" });
-        }
-        // 20 Rooms (101 - 120)
-        for(let i=1; i<=20; i++) {
-            db.push({ id: 100+i, type: "Room", view: i <= 10 ? "Sea" : "Mountain", status: "Available", clean: "Clean" });
-        }
-        // 10 Family Rooms (301 - 310)
-        for(let i=1; i<=10; i++) {
-            db.push({ id: 300+i, type: "Family Room", view: i <= 5 ? "Sea" : "Mountain", status: "Available", clean: "Clean" });
-        }
+        const basePrices = { "Room": 200, "Suite": 290, "Family Room": 340 };
+        const viewPremiums = { "Sea": 35, "Mountain": 0 };
+        const mealAdultPrices = { "None": 0, "Breakfast": 20, "Half-Board": 50, "Full-Board": 70 };
 
-        // Render Matrix grids instantly
-        function renderMatrix() {
-            const suitesC = document.getElementById("suitesCluster");
-            const roomsC = document.getElementById("roomsCluster");
-            const familyC = document.getElementById("familyCluster");
+        // Generate 40 Room Core Items 
+        for(let i=1; i<=10; i++) roomsDb.push({ id: 201+i-1, type: "Suite", view: i<=5 ? "Sea" : "Mountain", status: "Available", clean: "Clean", guest: null });
+        for(let i=1; i<=20; i++) roomsDb.push({ id: 101+i-1, type: "Room", view: i<=10 ? "Sea" : "Mountain", status: "Available", clean: "Clean", guest: null });
+        for(let i=1; i<=10; i++) roomsDb.push({ id: 301+i-1, type: "Family Room", view: i<=5 ? "Sea" : "Mountain", status: "Available", clean: "Clean", guest: null });
 
-            suitesC.innerHTML = ""; roomsC.innerHTML = ""; familyC.innerHTML = "";
+        // Primary Matrix Render UI Component Map 
+        function renderHotelGrid() {
+            const grids = { "Suite": document.getElementById("suiteGrid"), "Room": document.getElementById("roomGrid"), "Family Room": document.getElementById("familyGrid") };
+            Object.values(grids).forEach(g => g.innerHTML = "");
 
-            db.sort((a,b)=>a.id - b.id).forEach(room => {
+            roomsDb.sort((a,b) => a.id - b.id).forEach(rm => {
                 const block = document.createElement("div");
-                block.className = `room-block ${room.view.toLowerCase()} ${room.status === "Occupied" ? "occupied" : ""}`;
+                block.className = `room-block ${rm.view.toLowerCase()} ${rm.status === "Occupied" ? 'occupied' : ''}`;
                 
-                // Set badge visual for cleanliness state
-                let cBadge = "badge-clean";
-                if(room.clean === "Not Clean") cBadge = "badge-dirty";
-                if(room.clean === "In Progress") cBadge = "badge-touchup";
+                let cleanBadge = rm.clean === "Clean" ? "badge-clean" : "badge-dirty";
+                let statusBadge = rm.status === "Occupied" ? "badge-occ" : "badge-avail";
+                
+                let vipBanner = (rm.guest && rm.guest.isVip) ? `<div class="vip-tag">VIP</div>` : '';
 
                 block.innerHTML = `
-                    <strong>Rm ${room.id}</strong><br>
-                    <span style="font-size:0.8em; color:#4a5568;">${room.view} View</span><br>
-                    <span class="badge ${room.status === 'Occupied' ? 'badge-occ' : 'badge-avail'}">${room.status}</span><br>
-                    <span class="badge ${cBadge}" style="margin-top:4px;">${room.clean}</span>
+                    ${vipBanner}
+                    <strong>Rm ${rm.id}</strong><br>
+                    <span style="font-size:0.75em; color:#475569;">${rm.view} View</span><br>
+                    <span class="badge ${statusBadge}">${rm.status}</span><br>
+                    <span class="badge ${cleanBadge}">${rm.clean}</span>
                 `;
 
-                // Handle interactive click behavior to cycle status configurations manually
-                block.onclick = () => {
-                    let nextIdx = (cleanStatuses.indexOf(room.clean) + 1) % cleanStatuses.length;
-                    room.clean = cleanStatuses[nextIdx];
-                    writeLog(`Updated Room ${room.id} status manually to: ${room.clean}`);
-                    recalculateEverything();
-                };
-
-                if(room.type === "Suite") suitesC.appendChild(block);
-                if(room.type === "Room") roomsC.appendChild(block);
-                if(room.type === "Family Room") familyC.appendChild(block);
+                block.onclick = () => selectRoomTarget(rm.id);
+                grids[rm.type].appendChild(block);
             });
         }
 
-        // Populate Booking selectors dropdown options only showing unassigned matching criteria lists
-        function populateSelectors() {
-            const selector = document.getElementById("roomSelector");
-            const currentSel = selector.value;
-            selector.innerHTML = "";
+        // Handle Selecting Target Room Core UI updates
+        function selectRoomTarget(id) {
+            activeRoomId = id;
+            const rm = roomsDb.find(r => r.id === id);
 
-            const discountPct = parseInt(document.getElementById("globalDiscount").value);
-
-            db.forEach(room => {
-                if(room.status === "Available") {
-                    let price = basePrices[room.type];
-                    // Apply optional custom discount selection modifier 10-15% range variations
-                    if(discountPct > 0) {
-                        price = price * (1 - (discountPct / 100));
-                    }
-                    // View surcharge logic rules calculation conditions
-                    if(room.view === "Sea") price += 20;
-
-                    const option = document.createElement("option");
-                    option.value = room.id;
-                    option.innerText = `Rm ${room.id} - ${room.type} (${room.view} View) - ${price.toFixed(0)} JOD/nt [${room.clean}]`;
-                    selector.appendChild(option);
-                }
-            });
-
-            if(currentSel) selector.value = currentSel;
-        }
-
-        // Run validation processing constraints criteria calculations 
-        function runOccupancyValidation() {
-            const adults = parseInt(document.getElementById("adultCount").value) || 0;
-            const children = parseInt(document.getElementById("childCount").value) || 0;
+            document.getElementById("panelPlaceholder").style.display = "none";
+            document.getElementById("panelContents").style.display = "block";
+            document.getElementById("panelTitle").innerText = `Managing Room ${rm.id} (${rm.type})`;
             
-            const selector = document.getElementById("roomSelector");
-            const warningBox = document.getElementById("validationWarning");
-            const submitBtn = document.getElementById("submitBtn");
-            
-            if(!selector.value) return;
+            document.getElementById("hkStatus").value = rm.clean;
+            document.getElementById("vipStatus").value = (rm.guest && rm.guest.isVip) ? "VIP" : "Standard";
 
-            const selectedRoom = db.find(r => r.id == selector.value);
-            let isValid = true;
-            let errorMsg = "";
-
-            // Evaluate conditional occupancy rules configuration requirements
-            if(selectedRoom.type === "Room" || selectedRoom.type === "Suite") {
-                // Max limits constraint: 2A1C
-                if(adults > 2) { isValid = false; errorMsg = `Max configuration limit for standard ${selectedRoom.type} is 2 Adults.`; }
-                if(children > 1) { isValid = false; errorMsg = `Max configuration limit for standard ${selectedRoom.type} is 1 Child.`; }
-            } else if(selectedRoom.type === "Family Room") {
-                // 4A or 3A1C or 2A1C or 1A1C
-                if(adults > 4) { isValid = false; errorMsg = "Max setup allowed in Family space is 4 Adults."; }
-                if(adults === 4 && children > 0) { isValid = false; errorMsg = "Occupancy violation! 4 Adults structure leaves 0 room configurations remaining for Children."; }
-                if(children > 1) { isValid = false; errorMsg = "Max allowed configuration limit structure cannot exceed 1 Child in Family Room combinations."; }
-            }
-
-            if(!isValid) {
-                warningBox.innerText = `⚠️ Occupancy Guard Warning: Selection exceeds capacity limit allowed [${errorMsg}]`;
-                warningBox.style.display = "block";
-                submitBtn.disabled = true;
-                submitBtn.style.background = "#cbd5e0";
-                submitBtn.style.cursor = "not-allowed";
+            if (rm.status === "Occupied") {
+                document.getElementById("screenAvailable").style.display = "none";
+                document.getElementById("screenOccupied").style.display = "block";
+                document.getElementById("stayNotes").value = rm.guest.notes || "";
+                renderOccupiedBill(rm);
             } else {
-                warningBox.style.display = "none";
-                submitBtn.disabled = false;
-                submitBtn.style.background = "var(--accent)";
-                submitBtn.style.cursor = "pointer";
+                document.getElementById("screenOccupied").style.display = "none";
+                document.getElementById("screenAvailable").style.display = "block";
+                // Reset inputs inside setup forms
+                document.getElementById("inGuestName").value = "";
+                document.getElementById("inDiscount").value = "0";
+                document.getElementById("verificationContainer").style.display = "none";
+                validateOccupancyAndCost();
             }
         }
 
-        // Live Cost Computation Calculator
-        function calculateLiveQuote() {
-            const selector = document.getElementById("roomSelector");
-            const quoteBox = document.getElementById("quoteBox");
-            if(!selector.value) {
-                quoteBox.innerText = "No ready room elements matched requirements.";
+        function updateRoomHkStatus() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            rm.clean = document.getElementById("hkStatus").value;
+            logAction(`Room ${rm.id} Housekeeping status updated to [${rm.clean}]`);
+            renderHotelGrid();
+        }
+
+        function toggleVipStatus() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            const statusVal = document.getElementById("vipStatus").value;
+            if (rm.guest) {
+                rm.guest.isVip = (statusVal === "VIP");
+                logAction(`Room ${rm.id} guest dynamic VIP profile set to: ${rm.guest.isVip}`, "log-success");
+            } else {
+                logAction(`Note: VIP label will lock dynamically onto reservation form execution.`);
+            }
+            renderHotelGrid();
+        }
+
+        function saveNotes() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            if (rm.guest) {
+                rm.guest.notes = document.getElementById("stayNotes").value;
+            }
+        }
+
+        // Toggle Display verification conditional requirement parameters inputs fields
+        function handleDiscountTypeChange() {
+            const discountType = document.getElementById("inDiscount").value;
+            const container = document.getElementById("verificationContainer");
+            const label = document.getElementById("verificationLabel");
+            const input = document.getElementById("verificationInput");
+
+            input.value = "";
+            if (discountType === "10") { container.style.display = "block"; label.innerText = "Required: Enter Member ID:"; }
+            else if (discountType === "15") { container.style.display = "block"; label.innerText = "Required: Enter Employee Code ID:"; }
+            else if (discountType === "20") { container.style.display = "block"; label.innerText = "Manager Override Password Required:"; }
+            else { container.style.display = "none"; }
+
+            validateOccupancyAndCost();
+        }
+
+        // Central Cost Evaluation Metric Engine & Max Capacity Check rules guard logic
+        function calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct, bypassAuthCheck = false) {
+            let baseRate = basePrices[rm.type];
+            let viewCost = viewPremiums[rm.view];
+            
+            let roomPerNight = baseRate + viewCost;
+            let discountAmount = roomPerNight * (discountPct / 100);
+            let finalRoomPerNight = roomPerNight - discountAmount;
+            
+            // Meal Calculations Rules: Children eat free! Only charge Adults.
+            let mealPerNight = mealAdultPrices[mealPlan] * adults;
+            
+            let totalPerNight = finalRoomPerNight + mealPerNight;
+            let finalTotalPaid = totalPerNight * nights;
+
+            // Maximum Capacity Constraint validation logic loops configuration filters
+            let isOccupancyValid = true;
+            let err = "";
+
+            if (rm.type === "Room" || rm.type === "Suite") {
+                if (adults > 2 || children > 1) {
+                    isOccupancyValid = false;
+                    err = `Max Capacity Overload for ${rm.type}! Strict ceiling limit is 2 Adults and 1 Child (2A1C).`;
+                }
+            } else if (rm.type === "Family Room") {
+                // Allowed paths explicitly parsed: 4A, 3A1C, 2A1C, 1A1C
+                if (adults > 4) { isOccupancyValid = false; err = "Family Rooms have an absolute ceiling cap limit of 4 Adults."; }
+                else if (children > 1) { isOccupancyValid = false; err = "Family Room layouts cannot exceed a maximum capacity of 1 Child."; }
+                else if (adults === 4 && children > 0) { isOccupancyValid = false; err = "Occupancy combination invalid! 4 Adults leaving 0 slots remaining for Children inside a single unit block space."; }
+            }
+
+            return {
+                isOccupancyValid, err, roomPerNight, discountAmount, finalRoomPerNight, mealPerNight, totalPerNight, finalTotalPaid
+            };
+        }
+
+        function validateOccupancyAndCost() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            if (!rm) return;
+
+            const adults = parseInt(document.getElementById("inAdults").value) || 0;
+            const children = parseInt(document.getElementById("inChildren").value) || 0;
+            const mealPlan = document.getElementById("inMeal").value;
+            const nights = parseInt(document.getElementById("inNights").value) || 0;
+            const discountPct = parseInt(document.getElementById("inDiscount").value) || 0;
+            const authInput = document.getElementById("verificationInput").value;
+
+            const calc = calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct);
+            
+            // Check verification requirements
+            let isVerified = true;
+            if (discountPct === 10 && authInput.trim().length === 0) isVerified = false;
+            if (discountPct === 15 && authInput.trim().length === 0) isVerified = false;
+            if (discountPct === 20 && authInput !== "jab123") isVerified = false;
+
+            const errBox = document.getElementById("occupancyError");
+            const btn = document.getElementById("checkInBtn");
+
+            if (!calc.isOccupancyValid) {
+                errBox.innerText = `⚠️ Occupancy Rule Violation: ${calc.err}`;
+                errBox.style.display = "block";
+                btn.disabled = true; btn.style.background = "#94a3b8";
                 return;
+            } else if (!isVerified && discountPct > 0) {
+                errBox.innerText = discountPct === 20 ? "❌ Invalid/Missing Manager Security Password Override." : "⚠️ Identification credentials/Member references string missing input parameters.";
+                errBox.style.display = "block";
+                btn.disabled = true; btn.style.background = "#94a3b8";
+            } else {
+                errBox.style.display = "none";
+                btn.disabled = false; btn.style.background = "var(--accent)";
             }
 
-            const selectedRoom = db.find(r => r.id == selector.value);
-            const discountPct = parseInt(document.getElementById("globalDiscount").value);
-            const mealCost = parseInt(document.getElementById("mealOption").value);
-            const nights = parseInt(document.getElementById("stayNights").value) || 1;
+            document.getElementById("liveQuoteSummary").innerHTML = `
+                <strong>Estimated Summary Layout Quote:</strong><br>
+                Base + View Rate: ${calc.roomPerNight} JOD/night<br>
+                Applied Promo Discount: -${calc.discountAmount.toFixed(0)} JOD/night (${discountPct}%)<br>
+                Meal Supplements (${mealPlan}): +${calc.mealPerNight} JOD/night (${adults} Adults, Children free)<br>
+                <strong>Total Billing Rate: ${calc.totalPerNight.toFixed(0)} JOD per night x ${nights} Nights = ${calc.finalTotalPaid.toFixed(0)} JOD</strong>
+            `;
+        }
 
-            let rate = basePrices[selectedRoom.type];
-            if(discountPct > 0) rate = rate * (1 - (discountPct / 100));
-            if(selectedRoom.view === "Sea") rate += 20;
-
-            const totalPerNight = rate + mealCost;
-            const overallCost = totalPerNight * nights;
-
-            quoteBox.innerHTML = `Live Estimate: <strong>${overallCost.toFixed(0)} JOD</strong> Total (${nights} Nights @ ${totalPerNight.toFixed(0)} JOD/night)`;
+        // UI billing output display formatter 
+        function renderOccupiedBill(rm) {
+            const g = rm.guest;
+            const calc = calculateBreakdown(rm, g.adults, g.children, g.mealPlan, g.nights, g.discountPct);
             
-            runOccupancyValidation();
+            document.getElementById("billSummary").innerHTML = `
+                <strong>Guest Principal Name:</strong> ${g.name} ${g.isVip ? '<span style="color:#db2777; font-weight:bold;">[VIP]</span>' : ''}<br>
+                <strong>Allocation Structure:</strong> ${g.adults} Adults, ${g.children} Children<br>
+                <strong>Meal Package:</strong> ${g.mealPlan}<br>
+                <strong>Stays Plan Duration:</strong> ${g.nights} Nights Total Checked In<br>
+                <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
+                <strong>Billing Statement Breakdown Ledger:</strong><br>
+                Calculated Base Price: ${basePrices[rm.type]} JOD/night<br>
+                View Premium Surcharge: +${viewPremiums[rm.view]} JOD/night<br>
+                System Rate Reductions: -${calc.discountAmount.toFixed(0)} JOD/night (${g.discountPct}%)<br>
+                Meal Costs Surcharge: +${calc.mealPerNight} JOD/night<br>
+                <strong>Total Paid Balance Amount: <span style="color:var(--success); font-size:1.15em;">${calc.finalTotalPaid.toFixed(0)} JOD</span></strong>
+            `;
         }
 
-        // Core transactional submit checkin logic handler processing script triggers
-        function executeCheckIn(e) {
-            e.preventDefault();
-            const selector = document.getElementById("roomSelector");
-            const guest = document.getElementById("guestName").value;
-            const nights = document.getElementById("stayNights").value;
+        // Action Check-In Handler Execution
+        function processCheckIn() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            const name = document.getElementById("inGuestName").value.trim();
+            const adults = parseInt(document.getElementById("inAdults").value);
+            const children = parseInt(document.getElementById("inChildren").value);
+            const mealPlan = document.getElementById("inMeal").value;
+            const nights = parseInt(document.getElementById("inNights").value);
+            const discountPct = parseInt(document.getElementById("inDiscount").value);
+            const isVip = (document.getElementById("vipStatus").value === "VIP");
 
-            if(!selector.value) return;
+            if (!name) { alert("Please input a valid Guest Registration Name parameters entry."); return; }
 
-            const targetRoom = db.find(r => r.id == selector.value);
+            // Assign reservation block metrics down across storage state objects
+            rm.status = "Occupied";
+            rm.clean = "Not Clean"; // Set dirty automatically upon checkin use allocations
+            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "" };
+
+            logAction(`Check-In Completed: Room ${rm.id} assigned to ${name} for ${nights} nights. Room marked Dirty.`, "log-success");
             
-            // Mutation assignment modifications across arrays instantly
-            targetRoom.status = "Occupied";
-            targetRoom.clean = "Not Clean"; // Mark dirty automatically upon booking usage cycle
-
-            writeLog(`✅ SUCCESS: Assigned Room ${targetRoom.id} (${targetRoom.type}) to ${guest} for ${nights} nights. Room marked Occupied & Dirty.`, true);
-
-            // Clean form state variables resets safely
-            document.getElementById("guestName").value = "";
-            recalculateEverything();
+            renderHotelGrid();
+            selectRoomTarget(rm.id);
         }
 
-        function writeLog(msg, isSuccess = false) {
-            const log = document.getElementById("systemLog");
-            const entry = document.createElement("div");
-            entry.className = `log-entry ${isSuccess ? 'success' : ''}`;
-            entry.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            log.insertBefore(entry, log.firstChild);
+        // Action Extend Stay reservation parameter handler process
+        function processExtension() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            const ext = parseInt(document.getElementById("extendNights").value) || 0;
+            if (ext <= 0) return;
+
+            rm.guest.nights += ext;
+            logAction(`Stay Extension: Room ${rm.id} extended by +${ext} more nights. Bill updated.`, "log-success");
+            
+            renderHotelGrid();
+            renderOccupiedBill(rm);
         }
 
-        function recalculateEverything() {
-            renderMatrix();
-            populateSelectors();
-            calculateLiveQuote();
+        // Action Check-Out Handler Processing Settlement 
+        function processCheckOut() {
+            const rm = roomsDb.find(r => r.id === activeRoomId);
+            logAction(`Check-Out Completed: Room ${rm.id} vacated by ${rm.guest.name}. Room remains Dirty until cleared by HK.`, "log-danger");
+            
+            rm.status = "Available";
+            rm.guest = null;
+
+            renderHotelGrid();
+            selectRoomTarget(rm.id);
         }
 
-        // First Execution Run Initialization calls
-        recalculateEverything();
+        function logAction(msg, cssClass = "") {
+            const logBox = document.getElementById("sysAuditLog");
+            const row = document.createElement("div");
+            row.className = cssClass;
+            row.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logBox.insertBefore(row, logBox.firstChild);
+        }
+
+        // Initial launch core executions calls
+        renderHotelGrid();
     </script>
 </body>
 </html>
