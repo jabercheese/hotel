@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Apex Bank Pro Database Dashboard</title>
+    <title>Amman English Bank - Database Management Suite</title>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -23,8 +23,10 @@
         
         /* Ribbon Styles */
         header { background: var(--primary); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .header-title-area { display: flex; align-items: center; gap: 15px; }
+        .bank-logo { width: 45px; height: 45px; fill: #38bdf8; }
         .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .ribbon-metrics { display: flex; flex-wrap: wrap; gap: 20px; background: rgba(21, 128, 61, 0.2); padding: 12px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); }
+        .ribbon-metrics { display: flex; flex-wrap: wrap; gap: 20px; background: rgba(21, 128, 61, 0.2); padding: 12px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); margin-top: 10px; }
         .metric-item { font-size: 0.95rem; font-weight: 500; }
         .metric-item span { font-weight: bold; color: #38bdf8; }
         .metric-item .profit-val { color: #4ade80; }
@@ -54,6 +56,7 @@
         button.secondary:hover { background: #475569; }
         button.manager-btn { background: var(--manager); }
         button.manager-btn:hover { background: #9333ea; }
+        button.action-toggle-btn { padding: 4px 8px; font-size: 0.75rem; width: auto; display: inline-block; margin-top: 5px; }
 
         .auth-box { background: #eff6ff; border: 1px dashed var(--primary-light); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .manager-box { background: #faf5ff; border: 1px dashed var(--manager); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
@@ -69,8 +72,11 @@
         .log-entry { margin-bottom: 6px; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
         
         /* Interactive Data Lists styles */
-        .data-list-item { background: #f8fafc; border: 1px solid var(--border); padding: 10px; margin-bottom: 8px; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .data-list-item { background: #f8fafc; border: 1px solid var(--border); padding: 10px; margin-bottom: 8px; border-radius: 4px; cursor: pointer; transition: background 0.2s; position: relative; }
         .data-list-item:hover { background: #f1f5f9; }
+        .status-badge { position: absolute; top: 10px; right: 10px; font-size: 0.75rem; font-weight: bold; padding: 2px 6px; border-radius: 3px; }
+        .status-badge.active { background: #d1fae5; color: #065f46; }
+        .status-badge.suspended { background: #fee2e2; color: #991b1b; }
 
         .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 4px; color: white; font-weight: bold; z-index: 2000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
         .toast.success { background: var(--success); }
@@ -82,7 +88,13 @@
 
     <div id="login-screen">
         <div class="login-card">
-            <h2 style="text-align: center; margin-bottom:20px; border:none;">Database Terminal Access</h2>
+            <div style="text-align: center; margin-bottom: 15px;">
+                <svg class="bank-logo" viewBox="0 0 24 24" style="fill: var(--primary);">
+                    <path d="M12 2L2 7h20L12 2zm9 8H3v10h3v-7h2v7h3v-7h2v7h3v-7h2v7h3V10zm-9 12H2v2h20v-2H12z"/>
+                </svg>
+                <h2 style="border:none; margin-top:5px; font-size:1.5rem; color:#0f172a;">Amman English Bank</h2>
+                <p style="color:#64748b; font-size:0.85rem;">System Terminal Administration Gateway</p>
+            </div>
             <div class="form-group">
                 <label>Employee Username</label>
                 <input type="text" id="sys-username" placeholder="Username">
@@ -98,9 +110,14 @@
     <div id="main-dashboard">
         <header>
             <div class="header-top">
-                <div>
-                    <h1>Apex Bank Pro Admin Control</h1>
-                    <small>Logged in as: <strong id="active-user-lbl" style="color:#67e8f9;">-</strong></small>
+                <div class="header-title-area">
+                    <svg class="bank-logo" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7h20L12 2zm9 8H3v10h3v-7h2v7h3v-7h2v7h3v-7h2v7h3V10zm-9 12H2v2h20v-2H12z"/>
+                    </svg>
+                    <div>
+                        <h1 style="font-size: 1.8rem; letter-spacing: 0.5px;">Amman English Bank</h1>
+                        <small>Logged in as: <strong id="active-user-lbl" style="color:#67e8f9;">-</strong></small>
+                    </div>
                 </div>
                 <button onclick="handleSystemLogout()" class="secondary" style="width:auto; padding: 6px 15px; font-size:0.85rem;">Lock Terminal Session</button>
             </div>
@@ -141,8 +158,14 @@
                         <div class="form-group"><label>Customer Passcode PIN</label><input type="password" id="auth-passcode" placeholder="4-digit PIN"></div>
                         <button onclick="accessAccount()">Verify Customer Credentials</button>
                     </div>
+                    
+                    <button class="secondary" onclick="lockAccount()">Clear Active Workstation</button>
+                </div>
 
-                    <div class="manager-box">
+                <div id="manager-only-panel" class="card" style="border: 2px solid var(--manager); display:none;">
+                    <h2 style="color: var(--manager); border-bottom-color: var(--manager);">3. Manager Operations Vault</h2>
+                    
+                    <div class="manager-box" style="margin-bottom: 15px;">
                         <h3>Manager Name-Bypass Gateway</h3>
                         <div class="form-row">
                             <div class="form-group"><label>First Name</label><input type="text" id="bypass-first" placeholder="John"></div>
@@ -155,13 +178,7 @@
                         <div class="form-group"><label>Manager Passcode</label><input type="password" id="bypass-code" placeholder="******"></div>
                         <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
                     </div>
-                    
-                    <button class="secondary" onclick="lockAccount()">Clear Active Workstation</button>
-                </div>
 
-                <div id="manager-only-panel" class="card" style="border: 2px solid var(--manager); display:none;">
-                    <h2 style="color: var(--manager); border-bottom-color: var(--manager);">3. Manager Operations Vault</h2>
-                    
                     <div style="background:#fae8ff; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #d8b4fe;">
                         <h4 style="color:var(--manager); font-size:0.95rem; margin-bottom:5px;">Manual Savings Dividend Payout</h4>
                         <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Triggers a global 1% dividend payout calculated on all fixed/locked customer savings deposits. All yields round up to the nearest full integer and deposit instantly into core balances.</p>
@@ -209,7 +226,7 @@
                 <div class="card">
                     <h2>4. Active Customer Workstation</h2>
                     <div id="no-account-selected" style="text-align: center; padding: 40px; color: #64748b;">
-                        <p>No active customer portfolio loaded. Please verify credentials via left authentication protocols.</p>
+                        <p>No active customer portfolio loaded. Please verify credentials via administration routing panels.</p>
                     </div>
 
                     <div id="account-view" class="account-details">
@@ -284,31 +301,30 @@
         const MGR_USER = "jaber";
         const MGR_PASSCODE = "250606";
 
-        // Core DB Structures
-        let bankDB = JSON.parse(localStorage.getItem('bankDB_v5')) || {};
-        let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v5')) || { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
-        let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v5')) || {}; 
+        // Core DB Structures - V6 Includes Case Insensitive tracking references and Status Indicators
+        let bankDB = JSON.parse(localStorage.getItem('bankDB_v6')) || {};
+        let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v6')) || { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
+        let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v6')) || {}; 
         
-        let financialMatrix = JSON.parse(localStorage.getItem('financialMatrix_v5')) || { 
-            vaultCash: 500.00, // Starts at 500 default pool as per example context
+        let financialMatrix = JSON.parse(localStorage.getItem('financialMatrix_v6')) || { 
+            vaultCash: 500.00, 
             totalFeesCollected: 0.00, 
             totalSavingsProfitGiven: 0.00 
         };
 
-        // Staff actions track logs
-        let staffSystemLogs = JSON.parse(localStorage.getItem('staffSystemLogs_v5')) || [
-            `[${new Date().toLocaleString()}] Core initialization parameters deployed securely.`
+        let staffSystemLogs = JSON.parse(localStorage.getItem('staffSystemLogs_v6')) || [
+            `[${new Date().toLocaleString()}] Amman English Bank core storage module instantiated.`
         ];
 
         let activeAccountID = null;
         let activeEmployeeUser = null;
 
         function saveAllData() {
-            localStorage.setItem('bankDB_v5', JSON.stringify(bankDB));
-            localStorage.setItem('feeStructure_v5', JSON.stringify(feeStructure));
-            localStorage.setItem('employeeDB_v5', JSON.stringify(employeeDB));
-            localStorage.setItem('financialMatrix_v5', JSON.stringify(financialMatrix));
-            localStorage.setItem('staffSystemLogs_v5', JSON.stringify(staffSystemLogs));
+            localStorage.setItem('bankDB_v6', JSON.stringify(bankDB));
+            localStorage.setItem('feeStructure_v6', JSON.stringify(feeStructure));
+            localStorage.setItem('employeeDB_v6', JSON.stringify(employeeDB));
+            localStorage.setItem('financialMatrix_v6', JSON.stringify(financialMatrix));
+            localStorage.setItem('staffSystemLogs_v6', JSON.stringify(staffSystemLogs));
             calculateRibbonMetrics();
             if (activeEmployeeUser === MGR_USER) {
                 renderManagerLists();
@@ -330,23 +346,33 @@
 
         // --- SECTION 1: SYSTEM PRE-LOGIN GATEWAYS ---
         function handleSystemLogin() {
-            const userIn = document.getElementById('sys-username').value.trim();
+            // Case-Insensitive evaluation parsing applied across entry routes
+            const userIn = document.getElementById('sys-username').value.trim().toLowerCase();
             const passIn = document.getElementById('sys-passcode').value.trim();
 
-            if (userIn === MGR_USER && passIn === MGR_PASSCODE) {
+            if (userIn === MGR_USER.toLowerCase() && passIn === MGR_PASSCODE) {
                 activeEmployeeUser = MGR_USER;
-                showToast("Welcome Root Manager Jaber. Operational access granted.", "manager");
+                showToast("Welcome Root Manager Jaber. Systems fully operational.", "manager");
                 document.getElementById('manager-only-panel').style.display = 'block';
-                pushStaffLog("Root Manager verified session entry parameters.");
-                enterDashboard();
-            } else if (employeeDB[userIn] && employeeDB[userIn] === passIn) {
-                activeEmployeeUser = userIn;
-                showToast(`Welcome staff member: ${userIn}. Access authorized.`);
-                document.getElementById('manager-only-panel').style.display = 'none';
-                pushStaffLog("Staff workstation clearance validated.");
+                pushStaffLog("Root Manager terminal verification established.");
                 enterDashboard();
             } else {
-                showToast("Authentication Failed. Invalid system configuration keys.", "error");
+                // Scan dynamically mapped staff registries case-insensitively
+                let cleanEmployeeKey = Object.keys(employeeDB).find(k => k.toLowerCase() === userIn);
+                
+                if (cleanEmployeeKey && employeeDB[cleanEmployeeKey].password === passIn) {
+                    if (employeeDB[cleanEmployeeKey].isActive === false) {
+                        showToast("Employee account deactivated", "error");
+                        return;
+                    }
+                    activeEmployeeUser = cleanEmployeeKey;
+                    showToast(`Welcome staff member: ${cleanEmployeeKey}. Access authorized.`);
+                    document.getElementById('manager-only-panel').style.display = 'none';
+                    pushStaffLog("Staff identity parameter clearance logged.");
+                    enterDashboard();
+                } else {
+                    showToast("Authentication Failed. Invalid system configuration keys.", "error");
+                }
             }
         }
 
@@ -364,7 +390,7 @@
         }
 
         function handleSystemLogout() {
-            pushStaffLog("Workstation terminal locked down.");
+            pushStaffLog("Session safety locks applied to dashboard viewport.");
             activeEmployeeUser = null;
             lockAccount();
             document.getElementById('main-dashboard').style.display = 'none';
@@ -376,14 +402,37 @@
             const empPass = document.getElementById('new-emp-pass').value.trim();
 
             if (!empUser || !empPass) { showToast("Provide a valid username and passcode.", "error"); return; }
-            if (empUser === MGR_USER) { showToast("Cannot override protected manager index identifier profile.", "error"); return; }
+            if (empUser.toLowerCase() === MGR_USER.toLowerCase()) { showToast("Protected manager profile designation error.", "error"); return; }
 
-            employeeDB[empUser] = empPass;
-            pushStaffLog(`Provisioned new credentials for employee register: ${empUser}`);
+            // Store extended object profile properties tracking operational status
+            employeeDB[empUser] = {
+                password: empPass,
+                isActive: true
+            };
+            pushStaffLog(`Provisioned new active credentials for staff member: ${empUser}`);
             saveAllData();
-            showToast(`Employee profile '${empUser}' registered successfully.`, "manager");
+            showToast(`Employee profile '${empUser}' registered safely.`, "manager");
             document.getElementById('new-emp-user').value = '';
             document.getElementById('new-emp-pass').value = '';
+        }
+
+        function toggleEmployeeStatus(empKey) {
+            if(employeeDB[empKey]) {
+                employeeDB[empKey].isActive = !employeeDB[empKey].isActive;
+                pushStaffLog(`Altered staff state metric: ${empKey} (Status set to: ${employeeDB[empKey].isActive})`);
+                saveAllData();
+                showToast(`Employee state tracking adjusted.`);
+            }
+        }
+
+        function toggleCustomerStatus(accId) {
+            if(bankDB[accId]) {
+                bankDB[accId].isSuspended = !bankDB[accId].isSuspended;
+                pushStaffLog(`Altered customer processing status flag: ${accId} (Suspended: ${bankDB[accId].isSuspended})`);
+                saveAllData();
+                showToast(`Customer processing gateway status updated.`);
+                if(activeAccountID === accId) loadWorkstation();
+            }
         }
 
         // --- SECTION 2: METRICS AND RIBBON CALCULATIONS ---
@@ -437,17 +486,17 @@
                 balance: initialDeposit,
                 savingsBalance: 0,
                 notes: '',
+                isSuspended: false, // Default active parameterization
                 logs: [
-                    `[${timestamp}] Account registry built. Opening deposit of ${initialDeposit} JD asset cleared. Paid opening fee of ${openFee} JD cash.`
+                    `[${timestamp}] Account registration built. Opening deposit of ${initialDeposit} JD asset cleared. Paid opening fee of ${openFee} JD cash.`
                 ]
             };
 
-            // Cash fee handling modifies vault and profits directly outside core ledger structures
             financialMatrix.vaultCash += initialDeposit + openFee;
             financialMatrix.totalFeesCollected += openFee;
 
             bankDB[accountId] = newAccount;
-            pushStaffLog(`Created account registry item targeting ${accountId} under name ${newAccount.firstName}`);
+            pushStaffLog(`Created new user registration index element: ${accountId}`);
             saveAllData();
 
             alert(`CUSTOMER REGISTRY SAVED\n\nCredentials Details:\nAccount ID: ${accountId}\nPIN Passcode: ${passcode}`);
@@ -456,7 +505,6 @@
             if(activeAccountID) loadWorkstation();
         });
 
-        // MANUAL PROFIT DIVIDEND MATRIX - ROUNDS UP ALWAYS, DIRECT TO BALANCE, DOES NOT AFFECT VAULT CASH
         function triggerManualProfitPayout() {
             let totalDistributedThisCycle = 0;
             let totalAccountsAffected = 0;
@@ -466,7 +514,6 @@
                 let acc = bankDB[id];
                 if (acc.savingsBalance > 0) {
                     let calculatedProfit = acc.savingsBalance * 0.01;
-                    // Always round up to next integer
                     let finalProfitPayout = Math.ceil(calculatedProfit);
 
                     acc.balance += finalProfitPayout;
@@ -478,7 +525,7 @@
             });
 
             financialMatrix.totalSavingsProfitGiven += totalDistributedThisCycle;
-            pushStaffLog(`Distributed manual 1% dividend matrix across ${totalAccountsAffected} active profiles. Total output: ${totalDistributedThisCycle} JD.`);
+            pushStaffLog(`Distributed manual 1% dividend matrices across ${totalAccountsAffected} items. Value payout sum: ${totalDistributedThisCycle} JD.`);
             saveAllData();
             showToast(`Successfully processed global dividends! Total distributed: ${totalDistributedThisCycle} JD`, "manager");
             if(activeAccountID) loadWorkstation();
@@ -497,29 +544,48 @@
         }
 
         function renderManagerLists() {
-            // Render Staff Profiles and Global Security Logs
             const staffBox = document.getElementById('staff-registry-box');
             staffBox.innerHTML = `
-                <div style="font-size:0.85rem; padding:4px 0;"><strong>Manager Root Profile:</strong> ${MGR_USER} (Secret key encryption masked)</div>
-                ${Object.keys(employeeDB).map(u => `
-                    <div style="font-size:0.85rem; padding:4px 0; border-bottom:1px solid #f1f5f9;">
-                        <strong>Staff Key:</strong> ${u} | <strong>Passcode PIN:</strong> ${employeeDB[u]}
-                    </div>
-                `).join('')}
+                <div style="font-size:0.85rem; padding:4px 0;"><strong>Manager Root Profile:</strong> ${MGR_USER} (System master account status locked)</div>
+                ${Object.keys(employeeDB).map(u => {
+                    let emp = employeeDB[u];
+                    return `
+                        <div style="font-size:0.85rem; padding:6px 0; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong>Staff Key:</strong> ${u} | <strong>PIN:</strong> ${emp.password} | 
+                                <span style="font-weight:bold; color:${emp.isActive ? 'var(--success)' : 'var(--danger)'};">
+                                    ${emp.isActive ? 'Active' : 'Deactivated'}
+                                </span>
+                            </div>
+                            <button class="manager-btn action-toggle-btn" onclick="toggleEmployeeStatus('${u}')">
+                                ${emp.isActive ? 'Deactivate Account' : 'Activate Account'}
+                            </button>
+                        </div>
+                    `;
+                }).join('')}
             `;
 
             const staffLogsBox = document.getElementById('staff-global-logs-box');
             staffLogsBox.innerHTML = staffSystemLogs.map(l => `<div class="log-entry">${l}</div>`).reverse().join('');
 
-            // Render Global Customer Financial Registry balances overview
             const accRegistryBox = document.getElementById('account-registry-box');
             accRegistryBox.innerHTML = Object.keys(bankDB).map(id => {
                 let acc = bankDB[id];
                 let combinedTotalBalance = acc.balance + acc.savingsBalance;
                 return `
-                    <div class="data-list-item" onclick="promptManagerAccessGate('${id}')">
-                        <strong>${acc.firstName}</strong> (${acc.id}) <br>
-                        <span style="font-size:0.85rem; color:#64748b;">Combined Portfolio Value Balance: <strong>${combinedTotalBalance.toFixed(2)} JD</strong></span>
+                    <div class="data-list-item" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div onclick="promptManagerAccessGate('${id}')" style="flex-grow:1; cursor:pointer;">
+                            <strong>${acc.firstName} ${acc.lastName}</strong> (${acc.id}) <br>
+                            <span style="font-size:0.85rem; color:#64748b;">Combined Portfolio Value Balance: <strong>${combinedTotalBalance.toFixed(2)} JD</strong></span>
+                        </div>
+                        <div>
+                            <span class="status-badge ${acc.isSuspended ? 'suspended' : 'active'}" style="position:static; margin-bottom:5px; display:inline-block;">
+                                ${acc.isSuspended ? 'Suspended' : 'Active'}
+                            </span><br>
+                            <button class="manager-btn action-toggle-btn" style="background:#475569;" onclick="toggleCustomerStatus('${id}')">
+                                ${acc.isSuspended ? 'Activate Ledger' : 'Suspend Ledger'}
+                            </button>
+                        </div>
                     </div>
                 `;
             }).join('');
@@ -531,7 +597,8 @@
 
             let authOption = prompt(`MANAGER VIEW AUTHENTICATION REQUIREMENT GATEWAY\nTo view profile info for ${acc.firstName}, input at least one of the following criteria parameters:\n\n1. Customer Password PIN\n2. Customer Date of Birth (YYYY-MM-DD format)`);
             
-            if (authOption && (authOption === acc.passcode || authOption === acc.dob)) {
+            // Case-Insensitive verification validation handling across criteria fields
+            if (authOption && (authOption.toLowerCase() === acc.passcode.toLowerCase() || authOption.toLowerCase() === acc.dob.toLowerCase())) {
                 activeAccountID = accountId;
                 loadWorkstation();
                 showToast(`Workstation linked successfully via Management Override permissions.`);
@@ -541,33 +608,37 @@
             }
         }
 
-        // --- SECTION 5: CUSTOMER AUTHENTICATION & WORKSTATION LOADING ---
+        // --- SECTION 5: CUSTOMER AUTHENTICATION & WORKSTATION PARSING ---
         function accessAccount() {
-            const idInput = document.getElementById('auth-acc-id').value.trim();
+            const idInput = document.getElementById('auth-acc-id').value.trim().toLowerCase();
             const passInput = document.getElementById('auth-passcode').value.trim();
 
-            if (!bankDB[idInput]) { showToast("Account ID parameters unindexed.", "error"); return; }
-            if (bankDB[idInput].passcode !== passInput) { showToast("Invalid structural password signature code.", "error"); return; }
+            // Handle Case-Insensitive evaluation loops across system lookup parameters
+            let actualMatchedId = Object.keys(bankDB).find(k => k.toLowerCase() === idInput);
 
-            activeAccountID = idInput;
+            if (!actualMatchedId) { showToast("Account ID parameters unindexed.", "error"); return; }
+            if (bankDB[actualMatchedId].passcode !== passInput) { showToast("Invalid structural password signature code.", "error"); return; }
+
+            activeAccountID = actualMatchedId;
             loadWorkstation();
-            showToast(`Customer terminal sequence active for ${bankDB[idInput].id}.`);
+            showToast(`Customer terminal sequence active for ${bankDB[actualMatchedId].id}.`);
         }
 
         function managerBypassAccess() {
             const fName = document.getElementById('bypass-first').value.trim().toLowerCase();
             const lName = document.getElementById('bypass-last').value.trim().toLowerCase();
-            const dobIn = document.getElementById('bypass-dob').value;
+            const dobIn = document.getElementById('bypass-dob').value.trim();
             const mgrPass = document.getElementById('bypass-code').value.trim();
 
             if (mgrPass !== MGR_PASSCODE) { showToast("Bypass Refused: Invalid Master Key authorization.", "error"); return; }
             if (!fName || !lName || !dobIn) { showToast("Identify metrics criteria fields completely.", "error"); return; }
 
+            // Pure case-insensitive structural matching logic parameters
             let targetId = null;
             Object.keys(bankDB).forEach(id => {
                 if(bankDB[id].firstName.toLowerCase() === fName && 
                    bankDB[id].lastName.toLowerCase() === lName &&
-                   bankDB[id].dob === dobIn) {
+                   bankDB[id].dob.toLowerCase() === dobIn.toLowerCase()) {
                     targetId = id;
                 }
             });
@@ -608,6 +679,14 @@
             document.getElementById('info-address').innerText = acc.address;
             document.getElementById('view-notes').value = acc.notes || '';
 
+            // Render clear indicator elements on dashboard block if asset state is suspended
+            if(acc.isSuspended) {
+                document.getElementById('view-balance').innerText += " [SUSPENDED]";
+                document.getElementById('view-balance').style.color = "var(--danger)";
+            } else {
+                document.getElementById('view-balance').style.color = "var(--primary)";
+            }
+
             renderLogs(acc.logs);
         }
 
@@ -619,7 +698,7 @@
         function updateNotes() {
             if (!activeAccountID) return;
             bankDB[activeAccountID].notes = document.getElementById('view-notes').value;
-            localStorage.setItem('bankDB_v5', JSON.stringify(bankDB));
+            localStorage.setItem('bankDB_v6', JSON.stringify(bankDB));
         }
 
         function updateFeeStructure() {
@@ -634,9 +713,20 @@
             showToast("Global operational cost policies modified.", "manager");
         }
 
-        // --- SECTION 6: COMPULSORY CASH CASH-ONLY BALANCING MATRIX ---
+        function verifySuspensionGate(acc) {
+            if(acc && acc.isSuspended) {
+                alert("Account suspended, manager required to activate from portal");
+                showToast("Operation rejected: Ledger suspension rule constraints active.", "error");
+                return true;
+            }
+            return false;
+        }
+
+        // --- SECTION 6: COMPULSORY CASH CASH-ONLY BALANCING ENGINE ---
         function processStandard(type) {
             const acc = bankDB[activeAccountID];
+            if (verifySuspensionGate(acc)) return;
+
             const amount = parseFloat(document.getElementById('tx-amount').value);
             const timestamp = new Date().toLocaleString();
 
@@ -646,8 +736,6 @@
                 const cashFeeHandedOver = feeStructure.withdraw;
                 if (acc.balance < amount) { showToast("Insufficient ledger assets within primary balance structure.", "error"); return; }
                 
-                // Accounting Rule Validation Check Example: Vault 500, withdraw 100, fee 1. 
-                // Customer pays 1 cash (vault 501), teller dispenses 100 cash (vault 401). Profit grows +1.
                 financialMatrix.vaultCash += cashFeeHandedOver; 
                 financialMatrix.vaultCash -= amount;
                 financialMatrix.totalFeesCollected += cashFeeHandedOver;
@@ -659,7 +747,6 @@
             else if (type === 'deposit') {
                 const cashFeeHandedOver = feeStructure.deposit;
                 
-                // Customer hands over deposit cash + cash fee amount out-of-pocket directly to vault box
                 financialMatrix.vaultCash += amount + cashFeeHandedOver;
                 financialMatrix.totalFeesCollected += cashFeeHandedOver;
 
@@ -671,15 +758,16 @@
 
         function processSavings(type) {
             const acc = bankDB[activeAccountID];
+            if (verifySuspensionGate(acc)) return;
+
             const amount = parseFloat(document.getElementById('savings-amount').value);
             const timestamp = new Date().toLocaleString();
 
-            if (isNaN(amount) || amount <= 0) { showToast("Define valid positive numerical string values.", "error"); return; }
+            if (isNaN(amount) || amount <= 0) { showToast("Define valid positive numerical metrics parameters.", "error"); return; }
 
             if (type === 'deposit') {
                 if (acc.balance < amount) { showToast("Primary core balance values lack required coverage assets.", "error"); return; }
                 
-                // Internal ledger moving only - Vault cash stays identical since it resides inside building
                 acc.balance -= amount;
                 acc.savingsBalance += amount;
                 acc.logs.push(`[${timestamp}] Asset Lock: Transferred ${amount} JD into fixed savings terms. Fee: FREE.`);
@@ -689,7 +777,6 @@
                 const cashFeeHandedOver = feeStructure.break;
                 if (acc.savingsBalance < amount) { showToast("Extraction boundaries break bounds of active locked portfolio.", "error"); return; }
                 
-                // Cash fee paid out-of-pocket into vault box drawer
                 financialMatrix.vaultCash += cashFeeHandedOver;
                 financialMatrix.totalFeesCollected += cashFeeHandedOver;
 
@@ -702,27 +789,37 @@
 
         function processTransfer() {
             const sourceAcc = bankDB[activeAccountID];
-            const targetId = document.getElementById('transfer-target').value.trim();
+            if (verifySuspensionGate(sourceAcc)) return;
+
+            const targetIdInput = document.getElementById('transfer-target').value.trim().toLowerCase();
             const amount = parseFloat(document.getElementById('tx-amount').value);
             const timestamp = new Date().toLocaleString();
             const cashFeeHandedOver = feeStructure.transfer;
 
-            if (!bankDB[targetId]) { showToast("Target clearing index registration points missing.", "error"); return; }
-            if (targetId === activeAccountID) { showToast("Self-routing processing loops forbidden.", "error"); return; }
+            // Handle Case-Insensitive target address tracking values resolution
+            let targetedIdKey = Object.keys(bankDB).find(k => k.toLowerCase() === targetIdInput);
+
+            if (!targetedIdKey) { showToast("Target clearing index registration points missing.", "error"); return; }
+            if (targetedIdKey.toLowerCase() === activeAccountID.toLowerCase()) { showToast("Self-routing processing loops forbidden.", "error"); return; }
             if (isNaN(amount) || amount <= 0) { showToast("Provide valid transfer quantity metrics.", "error"); return; }
 
             if (sourceAcc.balance < amount) { showToast("Source profile ledger values lack transfer total requirement sums.", "error"); return; }
 
-            // Fee paid out of pocket cash-in-hand
+            // Target balance block state screening validation lookup check
+            const recipientAcc = bankDB[targetedIdKey];
+            if (recipientAcc.isSuspended) {
+                showToast("Transfer Aborted: Recipient account channel is suspended.", "error");
+                return;
+            }
+
             financialMatrix.vaultCash += cashFeeHandedOver;
             financialMatrix.totalFeesCollected += cashFeeHandedOver;
 
             sourceAcc.balance -= amount;
-            sourceAcc.logs.push(`[${timestamp}] Transfer Outbound: Settled ${amount} JD payload tracking towards target ${targetId}. Paid ${cashFeeHandedOver} JD cash fee.`);
+            sourceAcc.logs.push(`[${timestamp}] Transfer Outbound: Settled ${amount} JD payload tracking towards target ${recipientAcc.id}. Paid ${cashFeeHandedOver} JD cash fee.`);
 
-            const recipientAcc = bankDB[targetId];
             recipientAcc.balance += amount;
-            recipientAcc.logs.push(`[${timestamp}] Transfer Inbound: Accepted clearing payload of ${amount} JD arriving from source entity ${activeAccountID}.`);
+            recipientAcc.logs.push(`[${timestamp}] Transfer Inbound: Accepted clearing payload of ${amount} JD arriving from source entity ${sourceAcc.id}.`);
 
             finalizeTx();
         }
