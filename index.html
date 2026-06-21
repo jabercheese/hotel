@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -57,6 +56,8 @@
         button.secondary:hover { background: #475569; }
         button.manager-btn { background: var(--manager); }
         button.manager-btn:hover { background: #9333ea; }
+        button.danger-btn { background: var(--danger); }
+        button.danger-btn:hover { background: #dc2626; }
         button.action-toggle-btn { padding: 4px 8px; font-size: 0.75rem; width: auto; display: inline-block; margin-top: 5px; }
 
         .auth-box { background: #eff6ff; border: 1px dashed var(--primary-light); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
@@ -180,6 +181,24 @@
                         <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
                     </div>
 
+                    <div style="background:#fef2f2; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #fee2e2;">
+                        <h4 style="color:var(--danger); font-size:0.95rem; margin-bottom:5px;">Manual Financial Matrix Override</h4>
+                        <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Directly correct calculations if a mistake happens. Automation pipelines will continue seamlessly from these overriding anchors.</p>
+                        <div class="form-group">
+                            <label style="font-size:0.8rem;">Physical Cash in Vault (JD)</label>
+                            <input type="number" step="0.01" id="override-vault-cash">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.8rem;">Fees Collected Archive (JD)</label>
+                            <input type="number" step="0.01" id="override-fees-collected">
+                        </div>
+                        <div class="form-group">
+                            <label style="font-size:0.8rem;">Total Savings Profits Given Out (JD)</label>
+                            <input type="number" step="0.01" id="override-savings-profit">
+                        </div>
+                        <button class="danger-btn" style="padding: 6px 10px; font-size:0.85rem;" onclick="saveManualFinancialOverride()">Commit Matrix Corrections</button>
+                    </div>
+
                     <div style="background:#fae8ff; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #d8b4fe;">
                         <h4 style="color:var(--manager); font-size:0.95rem; margin-bottom:5px;">Manual Savings Dividend Payout</h4>
                         <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Triggers a global 1% dividend payout calculated on all fixed/locked customer savings deposits. All yields round up to the nearest full integer and deposit instantly into core balances.</p>
@@ -195,7 +214,7 @@
                         <button class="manager-btn" onclick="updateFeeStructure()">Save Structural Settings</button>
                     </div>
 
-                    <div style="display:flex; gap:10px;">
+                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
                         <button class="secondary" style="background:#475569;" onclick="toggleDataSection('employees')">View Staff Registers</button>
                         <button class="secondary" style="background:#475569;" onclick="toggleDataSection('accounts')">View Bank Registers</button>
                     </div>
@@ -218,6 +237,12 @@
                         <h4>All Active Bank Accounts</h4>
                         <p style="font-size:0.75rem; color:#64748b; margin-bottom:8px;">Click account to verify credentials and pull workstation profiles.</p>
                         <div id="account-registry-box" style="max-height:250px; overflow-y:auto;"></div>
+                    </div>
+
+                    <div style="margin-top:25px; padding-top:15px; border-top:2px dashed var(--border);">
+                        <h4 style="color:var(--danger); font-size:0.9rem; margin-bottom:5px;">Master Database Reset Sequence</h4>
+                        <p style="font-size:0.75rem; color:#64748b; margin-bottom:10px;">Permanently wipes all transaction ledgers, bank profiles, employee sub-credentials, and returns structural variables to baseline values.</p>
+                        <button class="danger-btn" onclick="executeFullSystemWipe()">Purge and Reset Everything</button>
                     </div>
 
                 </div>
@@ -302,7 +327,7 @@
         const MGR_USER = "jaber";
         const MGR_PASSCODE = "250606";
 
-        // Core DB Structures - V6 Includes Case Insensitive tracking references and Status Indicators
+        // Core DB Structures - Storage keys linked to dynamic v6 indices
         let bankDB = JSON.parse(localStorage.getItem('bankDB_v6')) || {};
         let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v6')) || { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
         let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v6')) || {}; 
@@ -347,7 +372,6 @@
 
         // --- SECTION 1: SYSTEM PRE-LOGIN GATEWAYS ---
         function handleSystemLogin() {
-            // Case-Insensitive evaluation parsing applied across entry routes
             const userIn = document.getElementById('sys-username').value.trim().toLowerCase();
             const passIn = document.getElementById('sys-passcode').value.trim();
 
@@ -358,7 +382,6 @@
                 pushStaffLog("Root Manager terminal verification established.");
                 enterDashboard();
             } else {
-                // Scan dynamically mapped staff registries case-insensitively
                 let cleanEmployeeKey = Object.keys(employeeDB).find(k => k.toLowerCase() === userIn);
                 
                 if (cleanEmployeeKey && employeeDB[cleanEmployeeKey].password === passIn) {
@@ -387,7 +410,10 @@
             
             calculateRibbonMetrics();
             updateFeeDisplayLabels();
-            if(activeEmployeeUser === MGR_USER) renderManagerLists();
+            if(activeEmployeeUser === MGR_USER) {
+                renderManagerLists();
+                populateOverrideInputFields();
+            }
         }
 
         function handleSystemLogout() {
@@ -405,7 +431,6 @@
             if (!empUser || !empPass) { showToast("Provide a valid username and passcode.", "error"); return; }
             if (empUser.toLowerCase() === MGR_USER.toLowerCase()) { showToast("Protected manager profile designation error.", "error"); return; }
 
-            // Store extended object profile properties tracking operational status
             employeeDB[empUser] = {
                 password: empPass,
                 isActive: true
@@ -466,6 +491,63 @@
             document.getElementById('fee-break-cfg').value = feeStructure.break;
         }
 
+        // Populate override form fields with contemporary calculation variables
+        function populateOverrideInputFields() {
+            document.getElementById('override-vault-cash').value = financialMatrix.vaultCash.toFixed(2);
+            document.getElementById('override-fees-collected').value = financialMatrix.totalFeesCollected.toFixed(2);
+            document.getElementById('override-savings-profit').value = financialMatrix.totalSavingsProfitGiven.toFixed(2);
+        }
+
+        // Commits structural manual adjustments while leaving automated triggers fully active
+        function saveManualFinancialOverride() {
+            if (activeEmployeeUser !== MGR_USER) return;
+            
+            const vCash = parseFloat(document.getElementById('override-vault-cash').value);
+            const tFees = parseFloat(document.getElementById('override-fees-collected').value);
+            const tProfits = parseFloat(document.getElementById('override-savings-profit').value);
+
+            if (isNaN(vCash) || isNaN(tFees) || isNaN(tProfits)) {
+                showToast("Ensure fields are filled with valid numeric calculations.", "error");
+                return;
+            }
+
+            financialMatrix.vaultCash = vCash;
+            financialMatrix.totalFeesCollected = tFees;
+            financialMatrix.totalSavingsProfitGiven = tProfits;
+
+            pushStaffLog(`Executed manual financial calculation adjustments override.`);
+            saveAllData();
+            showToast("Calculations updated manually. Automation continues.", "manager");
+        }
+
+        // Factory reset function to completely purge database
+        function executeFullSystemWipe() {
+            if (activeEmployeeUser !== MGR_USER) return;
+            
+            const pinConfirm = prompt("MASTER SYSTEM RESET WARNING!\n\nThis action will completely wipe all customer databases, accounts, employee credentials, and financial metrics. To confirm this action, enter the Manager Passcode:");
+            
+            if (pinConfirm !== MGR_PASSCODE) {
+                alert("Reset sequence aborted. Verification failed.");
+                return;
+            }
+
+            // Purge local states back to default parameters
+            bankDB = {};
+            employeeDB = {};
+            feeStructure = { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
+            financialMatrix = { vaultCash: 500.00, totalFeesCollected: 0.00, totalSavingsProfitGiven: 0.00 };
+            staffSystemLogs = [`[${new Date().toLocaleString()}] Database factory wipe initiated. Core structures returned to default values.`];
+
+            localStorage.removeItem('bankDB_v6');
+            localStorage.removeItem('feeStructure_v6');
+            localStorage.removeItem('employeeDB_v6');
+            localStorage.removeItem('financialMatrix_v6');
+            localStorage.removeItem('staffSystemLogs_v6');
+
+            alert("All systems completely purged and reset back to defaults.");
+            handleSystemLogout();
+        }
+
         // --- SECTION 3: BANK CUSTOMER CORE LOGIC ---
         document.getElementById('create-account-form').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -487,7 +569,7 @@
                 balance: initialDeposit,
                 savingsBalance: 0,
                 notes: '',
-                isSuspended: false, // Default active parameterization
+                isSuspended: false,
                 logs: [
                     `[${timestamp}] Account registration built. Opening deposit of ${initialDeposit} JD asset cleared. Paid opening fee of ${openFee} JD cash.`
                 ]
@@ -499,10 +581,11 @@
             bankDB[accountId] = newAccount;
             pushStaffLog(`Created new user registration index element: ${accountId}`);
             saveAllData();
+            if (activeEmployeeUser === MGR_USER) populateOverrideInputFields();
 
             alert(`CUSTOMER REGISTRY SAVED\n\nCredentials Details:\nAccount ID: ${accountId}\nPIN Passcode: ${passcode}`);
             this.reset();
-            showToast(`Customer portal profile safely indexed.`);
+            showToast(`Customer portfolio profile safely indexed.`);
             if(activeAccountID) loadWorkstation();
         });
 
@@ -528,6 +611,7 @@
             financialMatrix.totalSavingsProfitGiven += totalDistributedThisCycle;
             pushStaffLog(`Distributed manual 1% dividend matrices across ${totalAccountsAffected} items. Value payout sum: ${totalDistributedThisCycle} JD.`);
             saveAllData();
+            if (activeEmployeeUser === MGR_USER) populateOverrideInputFields();
             showToast(`Successfully processed global dividends! Total distributed: ${totalDistributedThisCycle} JD`, "manager");
             if(activeAccountID) loadWorkstation();
         }
@@ -598,7 +682,6 @@
 
             let authOption = prompt(`MANAGER VIEW AUTHENTICATION REQUIREMENT GATEWAY\nTo view profile info for ${acc.firstName}, input at least one of the following criteria parameters:\n\n1. Customer Password PIN\n2. Customer Date of Birth (YYYY-MM-DD format)`);
             
-            // Case-Insensitive verification validation handling across criteria fields
             if (authOption && (authOption.toLowerCase() === acc.passcode.toLowerCase() || authOption.toLowerCase() === acc.dob.toLowerCase())) {
                 activeAccountID = accountId;
                 loadWorkstation();
@@ -614,7 +697,6 @@
             const idInput = document.getElementById('auth-acc-id').value.trim().toLowerCase();
             const passInput = document.getElementById('auth-passcode').value.trim();
 
-            // Handle Case-Insensitive evaluation loops across system lookup parameters
             let actualMatchedId = Object.keys(bankDB).find(k => k.toLowerCase() === idInput);
 
             if (!actualMatchedId) { showToast("Account ID parameters unindexed.", "error"); return; }
@@ -634,7 +716,6 @@
             if (mgrPass !== MGR_PASSCODE) { showToast("Bypass Refused: Invalid Master Key authorization.", "error"); return; }
             if (!fName || !lName || !dobIn) { showToast("Identify metrics criteria fields completely.", "error"); return; }
 
-            // Pure case-insensitive structural matching logic parameters
             let targetId = null;
             Object.keys(bankDB).forEach(id => {
                 if(bankDB[id].firstName.toLowerCase() === fName && 
@@ -680,7 +761,6 @@
             document.getElementById('info-address').innerText = acc.address;
             document.getElementById('view-notes').value = acc.notes || '';
 
-            // Render clear indicator elements on dashboard block if asset state is suspended
             if(acc.isSuspended) {
                 document.getElementById('view-balance').innerText += " [SUSPENDED]";
                 document.getElementById('view-balance').style.color = "var(--danger)";
@@ -797,7 +877,6 @@
             const timestamp = new Date().toLocaleString();
             const cashFeeHandedOver = feeStructure.transfer;
 
-            // Handle Case-Insensitive target address tracking values resolution
             let targetedIdKey = Object.keys(bankDB).find(k => k.toLowerCase() === targetIdInput);
 
             if (!targetedIdKey) { showToast("Target clearing index registration points missing.", "error"); return; }
@@ -806,7 +885,6 @@
 
             if (sourceAcc.balance < amount) { showToast("Source profile ledger values lack transfer total requirement sums.", "error"); return; }
 
-            // Target balance block state screening validation lookup check
             const recipientAcc = bankDB[targetedIdKey];
             if (recipientAcc.isSuspended) {
                 showToast("Transfer Aborted: Recipient account channel is suspended.", "error");
@@ -828,6 +906,7 @@
         function finalizeTx() {
             saveAllData();
             loadWorkstation();
+            if (activeEmployeeUser === MGR_USER) populateOverrideInputFields();
             document.getElementById('tx-amount').value = '';
             document.getElementById('savings-amount').value = '';
             document.getElementById('transfer-target').value = '';
