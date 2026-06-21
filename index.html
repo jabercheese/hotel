@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Amman English Bank - Database Management Suite</title>
+    <title>Amman English Bank - Core Interface & ATM Portal</title>
     <style>
         :root {
             --primary: #1e3a8a;
@@ -16,6 +16,7 @@
             --danger: #ef4444;
             --warning: #f59e0b;
             --manager: #7c3aed;
+            --atm-screen: #0f172a;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
@@ -32,7 +33,7 @@
         .metric-item .profit-val { color: #4ade80; }
 
         /* Login Screen Setup */
-        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #0f172a; z-index: 9999; display: none; justify-content: center; align-items: center; }
         .login-card { background: white; padding: 35px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
 
         #main-dashboard { display: none; }
@@ -84,9 +85,65 @@
         .toast.success { background: var(--success); }
         .toast.error { background: var(--danger); }
         .toast.manager { background: var(--manager); }
+
+        /* Modal Prompt Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 10000; display: none; align-items: center; justify-content: center; }
+        .modal-card { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .text-green-bold { color: #16a34a; font-weight: bold; }
+        .text-red-bold { color: #dc2626; font-weight: bold; }
+
+        /* --- ATM PORTAL INTERFACE --- */
+        #customer-atm-portal { display: block; max-width: 600px; margin: 40px auto; }
+        .atm-housing { background: #334155; border: 12px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        .atm-screen { background: var(--atm-screen); min-height: 380px; border-radius: 8px; padding: 25px; color: #38bdf8; font-family: monospace; position: relative; border: 4px solid #475569; display: flex; flex-direction: column; }
+        .atm-loading-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 320px; font-size: 1.5rem; letter-spacing: 1px; color: #f59e0b; }
+        .atm-keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 15px auto 0 auto; }
+        .atm-key { background: #e2e8f0; color: #0f172a; font-size: 1.2rem; font-weight: bold; padding: 12px; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 3px 0 #94a3b8; text-align: center; }
+        .atm-key:active { transform: translateY(3px); box-shadow: none; }
+        .atm-key.clear-key { background: #f59e0b; color: white; box-shadow: 0 3px 0 #b45309; }
+        .atm-key.enter-key { background: #10b981; color: white; box-shadow: 0 3px 0 #047857; }
+        .atm-options-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .atm-opt-btn { background: #1e293b; border: 2px solid #38bdf8; color: #38bdf8; padding: 12px; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 1rem; }
+        .atm-opt-btn:hover { background: #38bdf8; color: #0f172a; }
+        .search-box-modifier { width: 100%; padding: 6px 10px; margin-bottom: 10px; border: 1px solid var(--manager); border-radius: 4px; font-size: 0.85rem; }
     </style>
 </head>
 <body>
+
+    <div id="tx-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="margin-top:0; border-bottom: 2px solid var(--border); padding-bottom: 8px;" id="modal-title">Confirm Transaction</h3>
+            <div style="margin: 15px 0; font-size: 1.05rem; line-height: 1.6;">
+                <p id="modal-amount-line">Amount: <span id="modal-amount-val" class="text-green-bold">0.00 JD</span></p>
+                <p id="modal-fee-line">Dynamic Processing Fee: <span id="modal-fee-val" class="text-red-bold">0.00 JD</span></p>
+                
+                <div id="manager-bypass-checkbox-area" style="display:none; margin-top:12px; padding:10px; background:#faf5ff; border:1px dashed var(--manager); border-radius:4px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;">
+                        <input type="checkbox" id="bypass-fee-toggle" style="width:auto; cursor:pointer;">
+                        <span style="color:var(--manager); font-weight:bold; font-size:0.9rem;">Waive operational cash fee (Manager Override)</span>
+                    </label>
+                </div>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="modal-confirm-btn" style="background:var(--success);">Confirm &amp; Commit</button>
+                <button onclick="closeTxModal()" class="secondary">Cancel Process</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="customer-atm-portal">
+        <div style="text-align:center; margin-bottom:15px;">
+            <h1 style="color:var(--primary); font-size:1.8rem;">Amman English Bank ATM</h1>
+            <p style="color:#64748b; font-size:0.9rem;">Automated Terminal Processing Node</p>
+        </div>
+        <div class="atm-housing">
+            <div id="atm-screen-wrapper" class="atm-screen">
+                </div>
+        </div>
+        <div style="text-align: center; margin-top: 25px;">
+            <button onclick="openStaffGatewayPanel()" class="secondary" style="width:auto; padding:6px 12px; font-size:0.8rem; background:#475569;">LOG IN as staff</button>
+        </div>
+    </div>
 
     <div id="login-screen">
         <div class="login-card">
@@ -94,18 +151,26 @@
                 <svg class="bank-logo" viewBox="0 0 24 24" style="fill: var(--primary);">
                     <path d="M12 2L2 7h20L12 2zm9 8H3v10h3v-7h2v7h3v-7h2v7h3v-7h2v7h3V10zm-9 12H2v2h20v-2H12z"/>
                 </svg>
-                <h2 style="border:none; margin-top:5px; font-size:1.5rem; color:#0f172a;">Amman English Bank</h2>
+                <h2 style="border:none; margin-top:5px; font-size:1.4rem; color:#0f172a;">Staff Gateway Terminal</h2>
                 <p style="color:#64748b; font-size:0.85rem;">System Terminal Administration Gateway</p>
             </div>
-            <div class="form-group">
-                <label>Employee Username</label>
-                <input type="text" id="sys-username" placeholder="Username">
+            <div id="staff-login-fields-area">
+                <div class="form-group">
+                    <label>Employee Username</label>
+                    <input type="text" id="sys-username" placeholder="Username">
+                </div>
+                <div class="form-group">
+                    <label>Terminal Passcode</label>
+                    <input type="password" id="sys-passcode" placeholder="******">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button onclick="handleSystemLogin()">Authenticate &amp; Initialize</button>
+                    <button onclick="closeStaffGatewayPanel()" class="secondary">Back to ATM</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Terminal Passcode</label>
-                <input type="password" id="sys-passcode" placeholder="******">
+            <div id="staff-login-loading-zone" style="display:none; text-align:center; padding:20px 0;">
+                <p style="color:var(--warning); font-weight:bold; font-size:1.1rem;" id="staff-loading-txt">Logging in...</p>
             </div>
-            <button onclick="handleSystemLogin()" style="margin-top:10px;">Authenticate &amp; Initialize</button>
         </div>
     </div>
 
@@ -183,7 +248,6 @@
 
                     <div style="background:#fef2f2; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #fee2e2;">
                         <h4 style="color:var(--danger); font-size:0.95rem; margin-bottom:5px;">Manual Financial Matrix Override</h4>
-                        <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Directly correct calculations if a mistake happens. Automation pipelines will continue seamlessly from these overriding anchors.</p>
                         <div class="form-group">
                             <label style="font-size:0.8rem;">Physical Cash in Vault (JD)</label>
                             <input type="number" step="0.01" id="override-vault-cash">
@@ -200,8 +264,13 @@
                     </div>
 
                     <div style="background:#fae8ff; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #d8b4fe;">
-                        <h4 style="color:var(--manager); font-size:0.95rem; margin-bottom:5px;">Manual Savings Dividend Payout</h4>
-                        <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Triggers a global 1% dividend payout calculated on all fixed/locked customer savings deposits. All yields round up to the nearest full integer and deposit instantly into core balances.</p>
+                        <h4 style="color:var(--manager); font-size:0.95rem; margin-bottom:5px;">Savings Dividend Payout Settings Matrix</h4>
+                        <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Triggers global dividend yields rounding up to the nearest full integer instantly into core balances.</p>
+                        
+                        <div class="form-group">
+                            <label style="font-size:0.85rem; font-weight:bold; color:var(--manager);">Dividend Yield Rate (%)</label>
+                            <input type="number" id="cfg-dividend-percent" value="1" min="0" step="0.1" style="border-color:var(--manager);">
+                        </div>
                         <button class="manager-btn" onclick="triggerManualProfitPayout()">Distribute Dividends Globally</button>
                     </div>
 
@@ -221,12 +290,13 @@
 
                     <div id="manager-employee-list-sec" style="display:none; margin-top:15px; background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
                         <h4>Staff Database Index Profiles</h4>
+                        <input type="text" id="staff-search-input" class="search-box-modifier" placeholder="Search staff members by name..." oninput="handleStaffRegistrySearch()">
                         <div id="staff-registry-box" style="margin-top:10px; max-height:200px; overflow-y:auto;"></div>
                         <h4 style="margin-top:15px; color:var(--manager); font-size:0.85rem;">Global Internal Employee Audit Logs</h4>
                         <div id="staff-global-logs-box" class="log-container" style="max-height:150px; font-size:0.75rem; background:#020617; margin-top:5px;"></div>
                         
                         <div style="background:#fff; border:1px solid var(--border); padding:10px; border-radius:4px; margin-top:10px;">
-                            <h5>Register Staff Member</h5>
+                            <label>Register Staff Member</label>
                             <div class="form-group"><input type="text" id="new-emp-user" placeholder="Username" style="padding:4px; font-size:0.85rem;"></div>
                             <div class="form-group"><input type="password" id="new-emp-pass" placeholder="Passcode" style="padding:4px; font-size:0.85rem;"></div>
                             <button class="manager-btn" style="font-size:0.8rem; padding:4px;" onclick="registerNewEmployee()">Provision Staff Credentials</button>
@@ -235,13 +305,12 @@
 
                     <div id="manager-account-list-sec" style="display:none; margin-top:15px; background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
                         <h4>All Active Bank Accounts</h4>
-                        <p style="font-size:0.75rem; color:#64748b; margin-bottom:8px;">Click account to verify credentials and pull workstation profiles.</p>
+                        <input type="text" id="customer-search-input" class="search-box-modifier" placeholder="Search customers by name or ID..." oninput="handleCustomerRegistrySearch()">
                         <div id="account-registry-box" style="max-height:250px; overflow-y:auto;"></div>
                     </div>
 
                     <div style="margin-top:25px; padding-top:15px; border-top:2px dashed var(--border);">
                         <h4 style="color:var(--danger); font-size:0.9rem; margin-bottom:5px;">Master Database Reset Sequence</h4>
-                        <p style="font-size:0.75rem; color:#64748b; margin-bottom:10px;">Permanently wipes all transaction ledgers, bank profiles, employee sub-credentials, and returns structural variables to baseline values.</p>
                         <button class="danger-btn" onclick="executeFullSystemWipe()">Purge and Reset Everything</button>
                     </div>
 
@@ -263,10 +332,23 @@
                             <div class="stat-box"><span>Tied Savings Deposit</span><strong id="view-savings" style="color: var(--warning);">0.00 JD</strong></div>
                         </div>
 
-                        <div style="font-size: 0.9rem; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div><strong>ID:</strong> <span id="info-id"></span></div>
-                            <div><strong>DOB:</strong> <span id="info-dob"></span></div>
-                            <div style="grid-column: span 2"><strong>Address:</strong> <span id="info-address"></span></div>
+                        <div style="font-size: 0.9rem; margin-bottom: 15px; background: #f1f5f9; padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
+                            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--primary);">Identity Management Tracking Data</h4>
+                            <div class="form-group">
+                                <label style="font-size:0.75rem;">ID / Passport Number</label>
+                                <input type="text" id="workstation-input-id" onchange="persistIdentityEdits('nationalId')">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label style="font-size:0.75rem;">Date of Birth</label>
+                                    <input type="date" id="workstation-input-dob" onchange="persistIdentityEdits('dob')">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size:0.75rem;">Address Coordinates</label>
+                                    <input type="text" id="workstation-input-address" onchange="persistIdentityEdits('address')">
+                                </div>
+                            </div>
+                            <small id="editing-restriction-notice" style="color:var(--danger); font-size:0.75rem; display:none;">* Identity adjustments locked. Root Manager clearance required.</small>
                         </div>
 
                         <div class="form-group">
@@ -283,14 +365,14 @@
                                 <p style="font-size:0.75rem; color:var(--danger); margin-bottom:8px;">* Fees strictly paid out-of-pocket via cash-in-hand.</p>
                                 <div class="form-group"><label>Amount (JD)</label><input type="number" id="tx-amount" min="0.01" step="0.01" placeholder="0.00"></div>
                                 <div style="display:flex; gap: 5px; margin-bottom: 15px;">
-                                    <button onclick="processStandard('deposit')" style="background: var(--success); font-size: 0.85rem;">Deposit Cash</button>
-                                    <button onclick="processStandard('withdraw')" style="background: var(--danger); font-size: 0.85rem;">Withdraw Cash</button>
+                                    <button onclick="prepareStandardTx('deposit')" style="background: var(--success); font-size: 0.85rem;">Deposit Cash</button>
+                                    <button onclick="prepareStandardTx('withdraw')" style="background: var(--danger); font-size: 0.85rem;">Withdraw Cash</button>
                                 </div>
 
                                 <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 4px;">
                                     <h4 style="font-size:0.85rem; margin-bottom:5px;">Internal Account Transfer</h4>
                                     <div class="form-group"><label style="font-size:0.8rem;">Target Account ID</label><input type="text" id="transfer-target" placeholder="ACC-XXXXXX"></div>
-                                    <button onclick="processTransfer()" class="secondary" style="font-size:0.85rem; background: var(--primary-light);">Execute Transfer</button>
+                                    <button onclick="prepareTransferTx()" class="secondary" style="font-size:0.85rem; background: var(--primary-light);">Execute Transfer</button>
                                 </div>
                             </div>
 
@@ -298,8 +380,8 @@
                                 <h3>Tied Savings Vault</h3>
                                 <div class="form-group"><label>Amount (JD)</label><input type="number" id="savings-amount" min="1" placeholder="0.00"></div>
                                 <div style="display:flex; flex-direction: column; gap: 5px;">
-                                    <button onclick="processSavings('deposit')" style="background: var(--warning); color: black;">Lock in Savings</button>
-                                    <button onclick="processSavings('break')" class="secondary" style="background: #94a3b8;">Break Savings Deposit</button>
+                                    <button onclick="prepareSavingsTx('deposit')" style="background: var(--warning); color: black;">Lock in Savings</button>
+                                    <button onclick="prepareSavingsTx('break')" class="secondary" style="background: #94a3b8;">Break Savings Deposit</button>
                                 </div>
                                 <div style="margin-top:10px; padding: 6px; background: #fffbeb; font-size: 0.75rem; border-radius:4px; border:1px solid #fef3c7;">
                                     Operational Cost Policies Matrix:<br>
@@ -327,10 +409,10 @@
         const MGR_USER = "jaber";
         const MGR_PASSCODE = "250606";
 
-        // Core DB Structures - Storage keys linked to dynamic v6 indices
         let bankDB = JSON.parse(localStorage.getItem('bankDB_v6')) || {};
         let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v6')) || { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
         let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v6')) || {}; 
+        let globalConfig = JSON.parse(localStorage.getItem('globalConfig_v6')) || { dividendRate: 1.0 };
         
         let financialMatrix = JSON.parse(localStorage.getItem('financialMatrix_v6')) || { 
             vaultCash: 500.00, 
@@ -344,6 +426,23 @@
 
         let activeAccountID = null;
         let activeEmployeeUser = null;
+        let pendingTxCallback = null; 
+
+        // ATM Terminal App State
+        let atmState = {
+            currentScreen: 'WELCOME', // WELCOME, PIN_ENTRY, MAIN_MENU, AMOUNT_SELECT, TRANS_CONFIRM
+            accountContext: null,
+            inputAccountId: '',
+            inputPasscodeString: '',
+            selectedActionType: null // 'deposit' or 'withdraw'
+        };
+
+        window.onload = function() {
+            renderAtmTerminalEngine();
+            calculateRibbonMetrics();
+            updateFeeDisplayLabels();
+            document.getElementById('cfg-dividend-percent').value = globalConfig.dividendRate;
+        };
 
         function saveAllData() {
             localStorage.setItem('bankDB_v6', JSON.stringify(bankDB));
@@ -351,6 +450,7 @@
             localStorage.setItem('employeeDB_v6', JSON.stringify(employeeDB));
             localStorage.setItem('financialMatrix_v6', JSON.stringify(financialMatrix));
             localStorage.setItem('staffSystemLogs_v6', JSON.stringify(staffSystemLogs));
+            localStorage.setItem('globalConfig_v6', JSON.stringify(globalConfig));
             calculateRibbonMetrics();
             if (activeEmployeeUser === MGR_USER) {
                 renderManagerLists();
@@ -370,38 +470,326 @@
             staffSystemLogs.push(`[${timestamp}] [Staff: ${activeEmployeeUser}] ${message}`);
         }
 
-        // --- SECTION 1: SYSTEM PRE-LOGIN GATEWAYS ---
-        function handleSystemLogin() {
-            const userIn = document.getElementById('sys-username').value.trim().toLowerCase();
-            const passIn = document.getElementById('sys-passcode').value.trim();
+        // --- CUSTOMER ATM SYSTEM ENGINE LOGIC ---
+        function setAtmLoadingState(loadingWord, nextStepCallback, timeMs = 1500) {
+            const scr = document.getElementById('atm-screen-wrapper');
+            scr.innerHTML = `
+                <div class="atm-loading-view">
+                    <div>${loadingWord}</div>
+                    <div style="font-size:0.8rem; margin-top:10px; color:#64748b;">Please wait...</div>
+                </div>
+            `;
+            setTimeout(nextStepCallback, timeMs);
+        }
 
-            if (userIn === MGR_USER.toLowerCase() && passIn === MGR_PASSCODE) {
-                activeEmployeeUser = MGR_USER;
-                showToast("Welcome Root Manager Jaber. Systems fully operational.", "manager");
-                document.getElementById('manager-only-panel').style.display = 'block';
-                pushStaffLog("Root Manager terminal verification established.");
-                enterDashboard();
-            } else {
-                let cleanEmployeeKey = Object.keys(employeeDB).find(k => k.toLowerCase() === userIn);
+        function renderAtmTerminalEngine() {
+            const scr = document.getElementById('atm-screen-wrapper');
+            
+            if (atmState.currentScreen === 'WELCOME') {
+                scr.innerHTML = `
+                    <div style="text-align:center; padding-top:40px;">
+                        <h2 style="color:#38bdf8; border:none; margin-bottom:10px;">WELCOME TO AEB ATM</h2>
+                        <p style="color:#64748b; font-size:0.85rem; margin-bottom:30px;">Insert account key string identifier to begin transaction processing</p>
+                        <div class="form-group" style="max-width:320px; margin:0 auto;">
+                            <label style="color:#38bdf8; text-align:left;">Account Registration Number</label>
+                            <input type="text" id="atm-acc-id-field" placeholder="ACC-XXXXXX" value="${atmState.inputAccountId}" style="background:#1e293b; color:white; border-color:#475569; text-align:center;">
+                        </div>
+                        <button onclick="processAtmAccountSubmission()" style="max-width:200px; margin-top:20px; background:#1e3a8a; border:1px solid #38bdf8;">Next Step</button>
+                    </div>
+                `;
+            } 
+            else if (atmState.currentScreen === 'PIN_ENTRY') {
+                scr.innerHTML = `
+                    <div style="text-align:center;">
+                        <h3 style="color:#38bdf8; margin-bottom:5px;">SECURE PIN IDENTIFICATION</h3>
+                        <p style="color:#64748b; font-size:0.75rem; margin-bottom:15px;">Account: ${atmState.inputAccountId.toUpperCase()}</p>
+                        <div style="margin:10px 0;">
+                            <input type="password" id="atm-masked-pin-display" readonly style="background:#0f172a; color:#10b981; border:2px solid #475569; font-size:1.6rem; text-align:center; letter-spacing:6px; max-width:220px;" value="${'*'.repeat(atmState.inputPasscodeString.length)}">
+                        </div>
+                        <div class="atm-keypad-grid">
+                            ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button class="atm-key" onclick="pressAtmPinNumber(${n})">${n}</button>`).join('')}
+                            <button class="atm-key clear-key" onclick="pressAtmPinClear()">CLEAR</button>
+                            <button class="atm-key" onclick="pressAtmPinNumber(0)">0</button>
+                            <button class="atm-key enter-key" onclick="processAtmPinSubmission()">ENTER</button>
+                        </div>
+                        <p style="margin-top:15px;"><a href="#" onclick="resetAtmWorkflow()" style="color:#64748b; font-size:0.8rem; text-decoration:none;">&larr; Cancel session</a></p>
+                    </div>
+                `;
+            }
+            else if (atmState.currentScreen === 'MAIN_MENU') {
+                const acc = bankDB[atmState.accountContext];
+                scr.innerHTML = `
+                    <div>
+                        <div style="display:flex; justify-content:between; border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:15px;">
+                            <div><span style="color:#64748b;">Holder:</span> <strong style="color:white;">${acc.firstName} ${acc.lastName}</strong></div>
+                            <div style="margin-left:auto;"><span style="color:#64748b;">ID:</span> <strong style="color:white;">${acc.id}</strong></div>
+                        </div>
+                        <div style="background:#1e293b; padding:15px; border-radius:6px; margin-bottom:20px;">
+                            <div style="margin-bottom:8px;">Balance: <strong style="color:#10b981; font-size:1.2rem;">${acc.balance.toFixed(2)} JD</strong></div>
+                            <div>Fixed deposit: <strong style="color:var(--warning); font-size:1.1rem;">${acc.savingsBalance.toFixed(2)} JD</strong></div>
+                            <small style="color:#64748b; display:block; margin-top:5px;">* Note: Fixed saving structures cannot be customized or modified at ATM modules.</small>
+                        </div>
+                        <h3 style="color:#38bdf8; text-align:center;">SELECT TRANSACTION ROUTE</h3>
+                        <div class="atm-options-layout">
+                            <button class="atm-opt-btn" onclick="selectAtmActionRoute('deposit')">DEPOSIT FUNDS</button>
+                            <button class="atm-opt-btn" onclick="selectAtmActionRoute('withdraw')">WITHDRAW CASH</button>
+                        </div>
+                        <div style="text-align:center; margin-top:25px;">
+                            <button onclick="resetAtmWorkflow()" class="secondary" style="width:auto; padding:5px 12px; font-size:0.8rem;">Terminate Session</button>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (atmState.currentScreen === 'AMOUNT_SELECT') {
+                scr.innerHTML = `
+                    <div style="text-align:center;">
+                        <h3 style="color:#38bdf8; margin-bottom:15px; text-transform:uppercase;">Select ${atmState.selectedActionType} Amount</h3>
+                        <div class="atm-options-layout" style="max-width:440px; margin:0 auto;">
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(100)">100 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(200)">200 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(300)">300 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(400)">400 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(500)">500 JD</button>
+                            <button class="atm-opt-btn" style="border-color:var(--warning); color:var(--warning);" onclick="displayAtmCustomAmountField()">OTHER</button>
+                        </div>
+                        
+                        <div id="atm-custom-input-block" style="display:none; margin-top:20px; background:#1e293b; padding:12px; border-radius:6px;">
+                            <label style="color:white; font-size:0.8rem; margin-bottom:5px;">Enter custom metric amount:</label>
+                            <input type="number" id="atm-custom-numeric-val" min="1" step="1" placeholder="Enter amount" style="background:#0f172a; color:white; text-align:center; max-width:180px; margin:0 auto 10px auto; display:block;">
+                            <button onclick="submitAtmCustomAmountChoice()" style="width:auto; padding:5px 15px; font-size:0.85rem;">Apply</button>
+                        </div>
+
+                        <div style="text-align:center; margin-top:20px;">
+                            <button onclick="revertAtmToMenu()" class="secondary" style="width:auto; padding:4px 10px; font-size:0.8rem;">&larr; Back to menu</button>
+                        </div>
+                    </div>
+                `;
+            }
+            else if (atmState.currentScreen === 'TRANS_CONFIRM') {
+                const acc = bankDB[atmState.accountContext];
+                const amount = atmState.processedAmountValue;
+                const fee = (atmState.selectedActionType === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
                 
-                if (cleanEmployeeKey && employeeDB[cleanEmployeeKey].password === passIn) {
-                    if (employeeDB[cleanEmployeeKey].isActive === false) {
-                        showToast("Employee account deactivated", "error");
-                        return;
-                    }
-                    activeEmployeeUser = cleanEmployeeKey;
-                    showToast(`Welcome staff member: ${cleanEmployeeKey}. Access authorized.`);
-                    document.getElementById('manager-only-panel').style.display = 'none';
-                    pushStaffLog("Staff identity parameter clearance logged.");
-                    enterDashboard();
+                if (atmState.selectedActionType === 'deposit') {
+                    const totalRequired = amount + fee;
+                    scr.innerHTML = `
+                        <div style="text-align:center; padding-top:10px;">
+                            <h3 style="color:var(--warning); margin-bottom:15px;">TRANSACTION IN-VOICE RECEIPT</h3>
+                            <div style="background:#1e293b; padding:20px; border-radius:6px; text-align:left; max-width:360px; margin:0 auto 20px auto; line-height:1.6;">
+                                <p style="color:white;">Deposit Target: <strong>${amount.toFixed(2)} JD</strong></p>
+                                <p style="color:var(--danger); font-weight:bold;">Processing Fee: ${fee.toFixed(2)} JD</p>
+                                <hr style="border-color:#475569; margin:10px 0;">
+                                <p style="color:#10b981; font-size:1.1rem;"><strong>Total to enter in ATM: ${totalRequired.toFixed(2)} JD</strong></p>
+                            </div>
+                            <div style="display:flex; justify-content:center; gap:10px;">
+                                <button onclick="executeAtmTransactionCommit()" style="background:#10b981; max-width:180px;">Confirm Cash Inserted</button>
+                                <button onclick="revertAtmToMenu()" class="secondary" style="max-width:120px;">Cancel</button>
+                            </div>
+                        </div>
+                    `;
                 } else {
-                    showToast("Authentication Failed. Invalid system configuration keys.", "error");
+                    const totalDeducted = amount + fee;
+                    scr.innerHTML = `
+                        <div style="text-align:center; padding-top:10px;">
+                            <h3 style="color:var(--warning); margin-bottom:15px;">TRANSACTION IN-VOICE RECEIPT</h3>
+                            <div style="background:#1e293b; padding:20px; border-radius:6px; text-align:left; max-width:360px; margin:0 auto 20px auto; line-height:1.6;">
+                                <p style="color:white;">Withdraw Cash: <strong>${amount.toFixed(2)} JD</strong></p>
+                                <p style="color:var(--danger); font-weight:bold;">Processing Fee: ${fee.toFixed(2)} JD</p>
+                                <hr style="border-color:#475569; margin:10px 0;">
+                                <p style="color:white;">Total Balance Deducted: <strong>${totalDeducted.toFixed(2)} JD</strong></p>
+                            </div>
+                            <div style="display:flex; justify-content:center; gap:10px;">
+                                <button onclick="executeAtmTransactionCommit()" style="background:var(--danger); max-width:180px;">Confirm Dispersion</button>
+                                <button onclick="revertAtmToMenu()" class="secondary" style="max-width:120px;">Cancel</button>
+                            </div>
+                        </div>
+                    `;
                 }
             }
         }
 
+        function processAtmAccountSubmission() {
+            const rawId = document.getElementById('atm-acc-id-field').value.trim();
+            if (!rawId) { alert("Please provide a valid account tracker value."); return; }
+            
+            let matchedId = Object.keys(bankDB).find(k => k.toLowerCase() === rawId.toLowerCase());
+            if (!matchedId) { alert("Account ID sequence could not be matched inside current records."); return; }
+
+            atmState.inputAccountId = matchedId;
+            setAtmLoadingState("Verifying Account Key", function() {
+                atmState.currentScreen = 'PIN_ENTRY';
+                renderAtmTerminalEngine();
+            }, 1200);
+        }
+
+        function pressAtmPinNumber(num) {
+            if (atmState.inputPasscodeString.length < 4) {
+                atmState.inputPasscodeString += num;
+                renderAtmTerminalEngine();
+            }
+        }
+
+        function pressAtmPinClear() {
+            atmState.inputPasscodeString = '';
+            renderAtmTerminalEngine();
+        }
+
+        function processAtmPinSubmission() {
+            if (atmState.inputPasscodeString.length < 4) { alert("Please input complete four digit validation keys."); return; }
+            
+            const targetAcc = bankDB[atmState.inputAccountId];
+            if (targetAcc.passcode !== atmState.inputPasscodeString) {
+                alert("Passcode combination error. Connection terminated.");
+                pressAtmPinClear();
+                return;
+            }
+
+            if (targetAcc.isSuspended) {
+                alert("This account ledger holds a system suspended flag. Contact staff administration.");
+                resetAtmWorkflow();
+                return;
+            }
+
+            setAtmLoadingState("Checking Security Parameters", function() {
+                atmState.accountContext = atmState.inputAccountId;
+                atmState.currentScreen = 'MAIN_MENU';
+                renderAtmTerminalEngine();
+            }, 1500);
+        }
+
+        function selectAtmActionRoute(type) {
+            atmState.selectedActionType = type;
+            setAtmLoadingState("Loading Transaction Interface", function() {
+                atmState.currentScreen = 'AMOUNT_SELECT';
+                renderAtmTerminalEngine();
+            }, 1000);
+        }
+
+        function displayAtmCustomAmountField() {
+            document.getElementById('atm-custom-input-block').style.display = 'block';
+        }
+
+        function submitAtmAmountChoice(amount) {
+            const acc = bankDB[atmState.accountContext];
+            const fee = (atmState.selectedActionType === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
+            
+            if (atmState.selectedActionType === 'withdraw' && acc.balance < (amount + fee)) {
+                alert("Operational Failure: Core accounts lack specified balance capacities.");
+                return;
+            }
+
+            atmState.processedAmountValue = amount;
+            setAtmLoadingState("Calculating Operational Expenses", function() {
+                atmState.currentScreen = 'TRANS_CONFIRM';
+                renderAtmTerminalEngine();
+            }, 1200);
+        }
+
+        function submitAtmCustomAmountChoice() {
+            const val = parseFloat(document.getElementById('atm-custom-numeric-val').value);
+            if (isNaN(val) || val <= 0) { alert("Provide explicit numerical parameters."); return; }
+            submitAtmAmountChoice(val);
+        }
+
+        function executeAtmTransactionCommit() {
+            const acc = bankDB[atmState.accountContext];
+            const amount = atmState.processedAmountValue;
+            const fee = (atmState.selectedActionType === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
+            const timestamp = new Date().toLocaleString();
+
+            setAtmLoadingState("Processing Transaction ledgers", function() {
+                if (atmState.selectedActionType === 'withdraw') {
+                    if (acc.balance < (amount + fee)) {
+                        alert("Transaction dropped out due to dynamic capital fluctuations.");
+                        revertAtmToMenu();
+                        return;
+                    }
+                    financialMatrix.vaultCash += fee;
+                    financialMatrix.vaultCash -= amount;
+                    financialMatrix.totalFeesCollected += fee;
+
+                    acc.balance -= (amount + fee);
+                    acc.logs.push(`[${timestamp}] ATM Withdrawal: Dispensed ${amount} JD. Deducted ${fee} JD processing fee from core ledger balance.`);
+                } else {
+                    financialMatrix.vaultCash += (amount + fee);
+                    financialMatrix.totalFeesCollected += fee;
+
+                    acc.balance += amount;
+                    acc.logs.push(`[${timestamp}] ATM Deposit: Credited ${amount} JD. Collected ${fee} JD processing fee into bank repositories.`);
+                }
+
+                saveAllData();
+                alert("Processing Action Sequence Successful. Vault registries updated.");
+                
+                atmState.currentScreen = 'MAIN_MENU';
+                renderAtmTerminalEngine();
+            }, 2000);
+        }
+
+        function revertAtmToMenu() {
+            atmState.currentScreen = 'MAIN_MENU';
+            renderAtmTerminalEngine();
+        }
+
+        function resetAtmWorkflow() {
+            atmState = { currentScreen: 'WELCOME', accountContext: null, inputAccountId: '', inputPasscodeString: '', selectedActionType: null };
+            renderAtmTerminalEngine();
+        }
+
+
+        // --- SECTION 1: PRE-LOGIN ADMINISTRATIVE DELAY ROUTERS ---
+        function openStaffGatewayPanel() {
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        function closeStaffGatewayPanel() {
+            document.getElementById('login-screen').style.display = 'none';
+        }
+
+        function handleSystemLogin() {
+            const userIn = document.getElementById('sys-username').value.trim().toLowerCase();
+            const passIn = document.getElementById('sys-passcode').value.trim();
+
+            if (!userIn || !passIn) { showToast("Authentication markers required.", "error"); return; }
+
+            // Trigger the mandatory 3-second staff logging in screen simulation delay
+            document.getElementById('staff-login-fields-area').style.display = 'none';
+            document.getElementById('staff-login-loading-zone').style.display = 'block';
+
+            setTimeout(function() {
+                // Return interface back to basic state ready for any future sequences
+                document.getElementById('staff-login-fields-area').style.display = 'block';
+                document.getElementById('staff-login-loading-zone').style.display = 'none';
+
+                if (userIn === MGR_USER.toLowerCase() && passIn === MGR_PASSCODE) {
+                    activeEmployeeUser = MGR_USER;
+                    showToast("Welcome Root Manager Jaber. Systems fully operational.", "manager");
+                    document.getElementById('manager-only-panel').style.display = 'block';
+                    pushStaffLog("Root Manager terminal verification established.");
+                    enterDashboard();
+                } else {
+                    let cleanEmployeeKey = Object.keys(employeeDB).find(k => k.toLowerCase() === userIn);
+                    
+                    if (cleanEmployeeKey && employeeDB[cleanEmployeeKey].password === passIn) {
+                        if (employeeDB[cleanEmployeeKey].isActive === false) {
+                            showToast("Employee account deactivated by Root Management.", "error");
+                            return;
+                        }
+                        activeEmployeeUser = cleanEmployeeKey;
+                        showToast(`Welcome staff member: ${cleanEmployeeKey}. Access authorized.`);
+                        document.getElementById('manager-only-panel').style.display = 'none';
+                        pushStaffLog("Staff identity parameter clearance logged.");
+                        enterDashboard();
+                    } else {
+                        showToast("Authentication Failed. Invalid system configuration keys.", "error");
+                    }
+                }
+            }, 3000); // 3 Second Deliberate Load Wait Timestamps
+        }
+
         function enterDashboard() {
             document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('customer-atm-portal').style.display = 'none';
             document.getElementById('main-dashboard').style.display = 'block';
             document.getElementById('active-user-lbl').innerText = activeEmployeeUser;
             
@@ -421,7 +809,8 @@
             activeEmployeeUser = null;
             lockAccount();
             document.getElementById('main-dashboard').style.display = 'none';
-            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('customer-atm-portal').style.display = 'block';
+            resetAtmWorkflow();
         }
 
         function registerNewEmployee() {
@@ -431,10 +820,7 @@
             if (!empUser || !empPass) { showToast("Provide a valid username and passcode.", "error"); return; }
             if (empUser.toLowerCase() === MGR_USER.toLowerCase()) { showToast("Protected manager profile designation error.", "error"); return; }
 
-            employeeDB[empUser] = {
-                password: empPass,
-                isActive: true
-            };
+            employeeDB[empUser] = { password: empPass, isActive: true };
             pushStaffLog(`Provisioned new active credentials for staff member: ${empUser}`);
             saveAllData();
             showToast(`Employee profile '${empUser}' registered safely.`, "manager");
@@ -491,14 +877,12 @@
             document.getElementById('fee-break-cfg').value = feeStructure.break;
         }
 
-        // Populate override form fields with contemporary calculation variables
         function populateOverrideInputFields() {
             document.getElementById('override-vault-cash').value = financialMatrix.vaultCash.toFixed(2);
             document.getElementById('override-fees-collected').value = financialMatrix.totalFeesCollected.toFixed(2);
             document.getElementById('override-savings-profit').value = financialMatrix.totalSavingsProfitGiven.toFixed(2);
         }
 
-        // Commits structural manual adjustments while leaving automated triggers fully active
         function saveManualFinancialOverride() {
             if (activeEmployeeUser !== MGR_USER) return;
             
@@ -506,10 +890,7 @@
             const tFees = parseFloat(document.getElementById('override-fees-collected').value);
             const tProfits = parseFloat(document.getElementById('override-savings-profit').value);
 
-            if (isNaN(vCash) || isNaN(tFees) || isNaN(tProfits)) {
-                showToast("Ensure fields are filled with valid numeric calculations.", "error");
-                return;
-            }
+            if (isNaN(vCash) || isNaN(tFees) || isNaN(tProfits)) { showToast("Ensure fields are valid.", "error"); return; }
 
             financialMatrix.vaultCash = vCash;
             financialMatrix.totalFeesCollected = tFees;
@@ -517,36 +898,86 @@
 
             pushStaffLog(`Executed manual financial calculation adjustments override.`);
             saveAllData();
-            showToast("Calculations updated manually. Automation continues.", "manager");
+            showToast("Calculations updated manually.", "manager");
         }
 
-        // Factory reset function to completely purge database
         function executeFullSystemWipe() {
             if (activeEmployeeUser !== MGR_USER) return;
+            const pinConfirm = prompt("MASTER SYSTEM RESET SEQUENCE REQUIREMENT\nEnter Manager Passcode to wipe entries:");
+            if (pinConfirm !== MGR_PASSCODE) { alert("Reset sequence aborted."); return; }
+
+            bankDB = {}; employeeDB = {};
+            feeStructure = { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
+            financialMatrix = { vaultCash: 500.00, totalFeesCollected: 0.00, totalSavingsProfitGiven: 0.00 };
+            staffSystemLogs = [`[${new Date().toLocaleString()}] Database factory wipe initiated.`];
+            globalConfig = { dividendRate: 1.0 };
+
+            localStorage.clear();
+            alert("All structural components reset.");
+            handleSystemLogout();
+        }
+
+        // --- PROMPT CONFIRMATION VIEW ROUTER ---
+        function openTxModal(title, textAmount, feeAmount, callback) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-amount-val').innerText = `${textAmount.toFixed(2)} JD`;
+            document.getElementById('modal-fee-val').innerText = `${feeAmount.toFixed(2)} JD`;
             
-            const pinConfirm = prompt("MASTER SYSTEM RESET WARNING!\n\nThis action will completely wipe all customer databases, accounts, employee credentials, and financial metrics. To confirm this action, enter the Manager Passcode:");
+            const bypassArea = document.getElementById('manager-bypass-checkbox-area');
+            const bypassCheckbox = document.getElementById('bypass-fee-toggle');
+            bypassCheckbox.checked = false; 
             
-            if (pinConfirm !== MGR_PASSCODE) {
-                alert("Reset sequence aborted. Verification failed.");
+            if (activeEmployeeUser === MGR_USER && feeAmount > 0) {
+                bypassArea.style.display = 'block';
+            } else {
+                bypassArea.style.display = 'none';
+            }
+
+            pendingTxCallback = callback;
+            document.getElementById('tx-modal').style.display = 'flex';
+        }
+
+        function closeTxModal() {
+            document.getElementById('tx-modal').style.display = 'none';
+            pendingTxCallback = null;
+        }
+
+        document.getElementById('modal-confirm-btn').addEventListener('click', function() {
+            if (pendingTxCallback) {
+                const isBypassed = document.getElementById('bypass-fee-toggle').checked;
+                pendingTxCallback(isBypassed);
+            }
+            closeTxModal();
+        });
+
+        // --- IDENTITY MANAGEMENT RESTRICTION MODIFIER ENGINE ---
+        function persistIdentityEdits(fieldKey) {
+            if (!activeAccountID) return;
+            
+            let domElementId = '';
+            if (fieldKey === 'nationalId') domElementId = 'workstation-input-id';
+            else if (fieldKey === 'dob') domElementId = 'workstation-input-dob';
+            else if (fieldKey === 'address') domElementId = 'workstation-input-address';
+
+            const targetInput = document.getElementById(domElementId);
+            const newValue = targetInput.value.trim();
+
+            if (activeEmployeeUser !== MGR_USER) {
+                // Block operation and reset layout value to base configuration
+                alert("ACCESS REJECTED: Only the Root Bank Manager holds credentials to update ID, DOB, or Address tracking vectors.");
+                targetInput.value = bankDB[activeAccountID][fieldKey];
                 return;
             }
 
-            // Purge local states back to default parameters
-            bankDB = {};
-            employeeDB = {};
-            feeStructure = { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
-            financialMatrix = { vaultCash: 500.00, totalFeesCollected: 0.00, totalSavingsProfitGiven: 0.00 };
-            staffSystemLogs = [`[${new Date().toLocaleString()}] Database factory wipe initiated. Core structures returned to default values.`];
+            if (!newValue) { alert("Fields cannot be saved with empty parameters."); targetInput.value = bankDB[activeAccountID][fieldKey]; return; }
 
-            localStorage.removeItem('bankDB_v6');
-            localStorage.removeItem('feeStructure_v6');
-            localStorage.removeItem('employeeDB_v6');
-            localStorage.removeItem('financialMatrix_v6');
-            localStorage.removeItem('staffSystemLogs_v6');
-
-            alert("All systems completely purged and reset back to defaults.");
-            handleSystemLogout();
+            bankDB[activeAccountID][fieldKey] = newValue;
+            bankDB[activeAccountID].logs.push(`[${new Date().toLocaleString()}] Identity Tracking Parameter [${fieldKey}] revised by Root Manager to: ${newValue}`);
+            pushStaffLog(`Altered core biometric identity fields [${fieldKey}] on profile: ${activeAccountID}`);
+            saveAllData();
+            showToast("Identity metric recorded successfully.", "manager");
         }
+
 
         // --- SECTION 3: BANK CUSTOMER CORE LOGIC ---
         document.getElementById('create-account-form').addEventListener('submit', function(e) {
@@ -556,40 +987,40 @@
             const passcode = Math.floor(1000 + Math.random() * 9000).toString();
             const initialDeposit = parseFloat(document.getElementById('cust-initial').value) || 0;
             const openFee = feeStructure.open;
-            const timestamp = new Date().toLocaleString();
 
-            const newAccount = {
-                id: accountId,
-                passcode: passcode,
-                firstName: document.getElementById('cust-first').value.trim(),
-                lastName: document.getElementById('cust-last').value.trim(),
-                nationalId: document.getElementById('cust-id').value,
-                address: document.getElementById('cust-address').value,
-                dob: document.getElementById('cust-dob').value,
-                balance: initialDeposit,
-                savingsBalance: 0,
-                notes: '',
-                isSuspended: false,
-                logs: [
-                    `[${timestamp}] Account registration built. Opening deposit of ${initialDeposit} JD asset cleared. Paid opening fee of ${openFee} JD cash.`
-                ]
-            };
+            openTxModal("Confirm Profile Creation Setup", initialDeposit, openFee, function(feeBypassed) {
+                const finalFee = feeBypassed ? 0 : openFee;
+                const timestamp = new Date().toLocaleString();
 
-            financialMatrix.vaultCash += initialDeposit + openFee;
-            financialMatrix.totalFeesCollected += openFee;
+                const newAccount = {
+                    id: accountId, passcode: passcode,
+                    firstName: document.getElementById('cust-first').value.trim(),
+                    lastName: document.getElementById('cust-last').value.trim(),
+                    nationalId: document.getElementById('cust-id').value,
+                    address: document.getElementById('cust-address').value,
+                    dob: document.getElementById('cust-dob').value,
+                    balance: initialDeposit, savingsBalance: 0, notes: '', isSuspended: false,
+                    logs: [`[${timestamp}] Registration built. Opening deposit: ${initialDeposit} JD. Fee: ${finalFee} JD paid.`]
+                };
 
-            bankDB[accountId] = newAccount;
-            pushStaffLog(`Created new user registration index element: ${accountId}`);
-            saveAllData();
-            if (activeEmployeeUser === MGR_USER) populateOverrideInputFields();
+                financialMatrix.vaultCash += initialDeposit + finalFee;
+                financialMatrix.totalFeesCollected += finalFee;
 
-            alert(`CUSTOMER REGISTRY SAVED\n\nCredentials Details:\nAccount ID: ${accountId}\nPIN Passcode: ${passcode}`);
-            this.reset();
-            showToast(`Customer portfolio profile safely indexed.`);
-            if(activeAccountID) loadWorkstation();
+                bankDB[accountId] = newAccount;
+                pushStaffLog(`Created new user registration index element: ${accountId}`);
+                saveAllData();
+
+                alert(`CUSTOMER REGISTRY SAVED\n\nAccount ID: ${accountId}\nPIN Passcode: ${passcode}`);
+                document.getElementById('create-account-form').reset();
+                if(activeAccountID) loadWorkstation();
+            });
         });
 
         function triggerManualProfitPayout() {
+            const currentRateField = parseFloat(document.getElementById('cfg-dividend-percent').value);
+            if (isNaN(currentRateField) || currentRateField < 0) { alert("Define clear dividend percentages."); return; }
+            
+            globalConfig.dividendRate = currentRateField;
             let totalDistributedThisCycle = 0;
             let totalAccountsAffected = 0;
             const timestamp = new Date().toLocaleString();
@@ -597,11 +1028,11 @@
             Object.keys(bankDB).forEach(id => {
                 let acc = bankDB[id];
                 if (acc.savingsBalance > 0) {
-                    let calculatedProfit = acc.savingsBalance * 0.01;
+                    let calculatedProfit = acc.savingsBalance * (globalConfig.dividendRate / 100);
                     let finalProfitPayout = Math.ceil(calculatedProfit);
 
                     acc.balance += finalProfitPayout;
-                    acc.logs.push(`[${timestamp}] Profit added: ${finalProfitPayout}JD`);
+                    acc.logs.push(`[${timestamp}] Profit dividend payout added: ${finalProfitPayout} JD based on adjusted ${globalConfig.dividendRate}% parameters.`);
                     
                     totalDistributedThisCycle += finalProfitPayout;
                     totalAccountsAffected++;
@@ -609,46 +1040,53 @@
             });
 
             financialMatrix.totalSavingsProfitGiven += totalDistributedThisCycle;
-            pushStaffLog(`Distributed manual 1% dividend matrices across ${totalAccountsAffected} items. Value payout sum: ${totalDistributedThisCycle} JD.`);
+            pushStaffLog(`Distributed manual custom ${globalConfig.dividendRate}% dividends across ${totalAccountsAffected} matrix profiles.`);
             saveAllData();
-            if (activeEmployeeUser === MGR_USER) populateOverrideInputFields();
-            showToast(`Successfully processed global dividends! Total distributed: ${totalDistributedThisCycle} JD`, "manager");
+            showToast(`Processed global dividends successfully!`, "manager");
             if(activeAccountID) loadWorkstation();
         }
 
-        // --- SECTION 4: MANAGER VIEW SECURITY CONTROL ---
+        // --- SECTION 4: MANAGER REGISTRY LIST FILTERS SEARCH SYSTEM ---
         function toggleDataSection(section) {
             const empSec = document.getElementById('manager-employee-list-sec');
             const accSec = document.getElementById('manager-account-list-sec');
-            
-            if (section === 'employees') {
-                empSec.style.display = empSec.style.display === 'none' ? 'block' : 'none';
-            } else if (section === 'accounts') {
-                accSec.style.display = accSec.style.display === 'none' ? 'block' : 'none';
-            }
+            if (section === 'employees') empSec.style.display = empSec.style.display === 'none' ? 'block' : 'none';
+            else if (section === 'accounts') accSec.style.display = accSec.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function handleStaffRegistrySearch() {
+            const term = document.getElementById('staff-search-input').value.toLowerCase().trim();
+            const entries = document.querySelectorAll('#staff-registry-box .staff-list-row-item');
+            entries.forEach(item => {
+                const textContent = item.innerText.toLowerCase();
+                item.style.display = textContent.includes(term) ? 'flex' : 'none';
+            });
+        }
+
+        function handleCustomerRegistrySearch() {
+            const term = document.getElementById('customer-search-input').value.toLowerCase().trim();
+            const entries = document.querySelectorAll('#account-registry-box .data-list-item');
+            entries.forEach(item => {
+                const textContent = item.innerText.toLowerCase();
+                item.style.display = textContent.includes(term) ? 'flex' : 'none';
+            });
         }
 
         function renderManagerLists() {
             const staffBox = document.getElementById('staff-registry-box');
             staffBox.innerHTML = `
-                <div style="font-size:0.85rem; padding:4px 0;"><strong>Manager Root Profile:</strong> ${MGR_USER} (System master account status locked)</div>
+                <div class="staff-list-row-item" style="font-size:0.85rem; padding:4px 0;"><strong>Manager Profile:</strong> ${MGR_USER} (System master account status locked)</div>
                 ${Object.keys(employeeDB).map(u => {
                     let emp = employeeDB[u];
                     return `
-                        <div style="font-size:0.85rem; padding:6px 0; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <strong>Staff Key:</strong> ${u} | <strong>PIN:</strong> ${emp.password} | 
-                                <span style="font-weight:bold; color:${emp.isActive ? 'var(--success)' : 'var(--danger)'};">
-                                    ${emp.isActive ? 'Active' : 'Deactivated'}
-                                </span>
-                            </div>
-                            <button class="manager-btn action-toggle-btn" onclick="toggleEmployeeStatus('${u}')">
-                                ${emp.isActive ? 'Deactivate Account' : 'Activate Account'}
-                            </button>
+                        <div class="staff-list-row-item" style="font-size:0.85rem; padding:6px 0; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                            <div><strong>Staff Key:</strong> ${u} | <strong>PIN:</strong> ${emp.password} | <span style="font-weight:bold; color:${emp.isActive ? 'var(--success)' : 'var(--danger)'};">${emp.isActive ? 'Active' : 'Deactivated'}</span></div>
+                            <button class="manager-btn action-toggle-btn" onclick="toggleEmployeeStatus('${u}')">${emp.isActive ? 'Deactivate' : 'Activate'}</button>
                         </div>
                     `;
                 }).join('')}
             `;
+            handleStaffRegistrySearch();
 
             const staffLogsBox = document.getElementById('staff-global-logs-box');
             staffLogsBox.innerHTML = staffSystemLogs.map(l => `<div class="log-entry">${l}</div>`).reverse().join('');
@@ -656,40 +1094,29 @@
             const accRegistryBox = document.getElementById('account-registry-box');
             accRegistryBox.innerHTML = Object.keys(bankDB).map(id => {
                 let acc = bankDB[id];
-                let combinedTotalBalance = acc.balance + acc.savingsBalance;
                 return `
                     <div class="data-list-item" style="display:flex; justify-content:space-between; align-items:center;">
-                        <div onclick="promptManagerAccessGate('${id}')" style="flex-grow:1; cursor:pointer;">
+                        <div onclick="promptManagerAccessGate('${id}')" style="flex-grow:1;">
                             <strong>${acc.firstName} ${acc.lastName}</strong> (${acc.id}) <br>
-                            <span style="font-size:0.85rem; color:#64748b;">Combined Portfolio Value Balance: <strong>${combinedTotalBalance.toFixed(2)} JD</strong></span>
+                            <span style="font-size:0.85rem; color:#64748b;">Combined Portfolio Value Balance: <strong>${(acc.balance + acc.savingsBalance).toFixed(2)} JD</strong></span>
                         </div>
                         <div>
-                            <span class="status-badge ${acc.isSuspended ? 'suspended' : 'active'}" style="position:static; margin-bottom:5px; display:inline-block;">
-                                ${acc.isSuspended ? 'Suspended' : 'Active'}
-                            </span><br>
-                            <button class="manager-btn action-toggle-btn" style="background:#475569;" onclick="toggleCustomerStatus('${id}')">
-                                ${acc.isSuspended ? 'Activate Ledger' : 'Suspend Ledger'}
-                            </button>
+                            <span class="status-badge ${acc.isSuspended ? 'suspended' : 'active'}" style="position:static; display:inline-block;">${acc.isSuspended ? 'Suspended' : 'Active'}</span><br>
+                            <button class="manager-btn action-toggle-btn" style="background:#475569;" onclick="toggleCustomerStatus('${id}')">${acc.isSuspended ? 'Activate' : 'Suspend'}</button>
                         </div>
                     </div>
                 `;
             }).join('');
+            handleCustomerRegistrySearch();
         }
 
         function promptManagerAccessGate(accountId) {
             const acc = bankDB[accountId];
             if (!acc) return;
-
-            let authOption = prompt(`MANAGER VIEW AUTHENTICATION REQUIREMENT GATEWAY\nTo view profile info for ${acc.firstName}, input at least one of the following criteria parameters:\n\n1. Customer Password PIN\n2. Customer Date of Birth (YYYY-MM-DD format)`);
-            
+            let authOption = prompt(`MANAGER VIEW AUTHENTICATION\nInput Customer Password PIN or DOB (YYYY-MM-DD format):`);
             if (authOption && (authOption.toLowerCase() === acc.passcode.toLowerCase() || authOption.toLowerCase() === acc.dob.toLowerCase())) {
-                activeAccountID = accountId;
-                loadWorkstation();
-                showToast(`Workstation linked successfully via Management Override permissions.`);
-            } else {
-                alert("ACCESS GATE REJECTED: Cleared tracking flags fail validation.");
-                showToast("Unauthorized portfolio extraction block applied.", "error");
-            }
+                activeAccountID = accountId; loadWorkstation();
+            } else { alert("ACCESS DENIED."); }
         }
 
         // --- SECTION 5: CUSTOMER AUTHENTICATION & WORKSTATION PARSING ---
@@ -698,13 +1125,10 @@
             const passInput = document.getElementById('auth-passcode').value.trim();
 
             let actualMatchedId = Object.keys(bankDB).find(k => k.toLowerCase() === idInput);
-
-            if (!actualMatchedId) { showToast("Account ID parameters unindexed.", "error"); return; }
-            if (bankDB[actualMatchedId].passcode !== passInput) { showToast("Invalid structural password signature code.", "error"); return; }
+            if (!actualMatchedId || bankDB[actualMatchedId].passcode !== passInput) { showToast("Invalid structural password signature validation codes.", "error"); return; }
 
             activeAccountID = actualMatchedId;
             loadWorkstation();
-            showToast(`Customer terminal sequence active for ${bankDB[actualMatchedId].id}.`);
         }
 
         function managerBypassAccess() {
@@ -713,28 +1137,12 @@
             const dobIn = document.getElementById('bypass-dob').value.trim();
             const mgrPass = document.getElementById('bypass-code').value.trim();
 
-            if (mgrPass !== MGR_PASSCODE) { showToast("Bypass Refused: Invalid Master Key authorization.", "error"); return; }
-            if (!fName || !lName || !dobIn) { showToast("Identify metrics criteria fields completely.", "error"); return; }
-
-            let targetId = null;
-            Object.keys(bankDB).forEach(id => {
-                if(bankDB[id].firstName.toLowerCase() === fName && 
-                   bankDB[id].lastName.toLowerCase() === lName &&
-                   bankDB[id].dob.toLowerCase() === dobIn.toLowerCase()) {
-                    targetId = id;
-                }
-            });
-
+            if (mgrPass !== MGR_PASSCODE) { showToast("Bypass Refused.", "error"); return; }
+            
+            let targetId = Object.keys(bankDB).find(id => bankDB[id].firstName.toLowerCase() === fName && bankDB[id].lastName.toLowerCase() === lName && bankDB[id].dob === dobIn);
             if(!targetId) { showToast("No ledger profile corresponds to those coordinates.", "error"); return; }
 
-            activeAccountID = targetId;
-            loadWorkstation();
-            showToast(`Manager Bypass Applied: Workspace connected to ${bankDB[targetId].id}`, "manager");
-            
-            document.getElementById('bypass-first').value = '';
-            document.getElementById('bypass-last').value = '';
-            document.getElementById('bypass-dob').value = '';
-            document.getElementById('bypass-code').value = '';
+            activeAccountID = targetId; loadWorkstation();
         }
 
         function lockAccount() {
@@ -756,10 +1164,15 @@
             document.getElementById('view-balance').innerText = `${acc.balance.toFixed(2)} JD`;
             document.getElementById('view-savings').innerText = `${acc.savingsBalance.toFixed(2)} JD`;
             
-            document.getElementById('info-id').innerText = acc.nationalId;
-            document.getElementById('info-dob').innerText = acc.dob;
-            document.getElementById('info-address').innerText = acc.address;
+            // Populate Identity management system matrix inputs
+            document.getElementById('workstation-input-id').value = acc.nationalId || '';
+            document.getElementById('workstation-input-dob').value = acc.dob || '';
+            document.getElementById('workstation-input-address').value = acc.address || '';
             document.getElementById('view-notes').value = acc.notes || '';
+
+            // Handle informational message flags visibility status
+            const noticeLbl = document.getElementById('editing-restriction-notice');
+            noticeLbl.style.display = (activeEmployeeUser === MGR_USER) ? 'none' : 'block';
 
             if(acc.isSuspended) {
                 document.getElementById('view-balance').innerText += " [SUSPENDED]";
@@ -767,7 +1180,6 @@
             } else {
                 document.getElementById('view-balance').style.color = "var(--primary)";
             }
-
             renderLogs(acc.logs);
         }
 
@@ -789,123 +1201,113 @@
             feeStructure.break = parseFloat(document.getElementById('fee-break-cfg').value) || 0;
             
             pushStaffLog(`Modified global cash transaction penalty matrix formulas.`);
-            saveAllData();
-            updateFeeDisplayLabels();
+            saveAllData(); updateFeeDisplayLabels();
             showToast("Global operational cost policies modified.", "manager");
         }
 
         function verifySuspensionGate(acc) {
             if(acc && acc.isSuspended) {
                 alert("Account suspended, manager required to activate from portal");
-                showToast("Operation rejected: Ledger suspension rule constraints active.", "error");
                 return true;
             }
             return false;
         }
 
         // --- SECTION 6: COMPULSORY CASH CASH-ONLY BALANCING ENGINE ---
-        function processStandard(type) {
+        function prepareStandardTx(type) {
             const acc = bankDB[activeAccountID];
             if (verifySuspensionGate(acc)) return;
 
             const amount = parseFloat(document.getElementById('tx-amount').value);
-            const timestamp = new Date().toLocaleString();
-
             if (isNaN(amount) || amount <= 0) { showToast("Please submit valid monetary units.", "error"); return; }
 
-            if (type === 'withdraw') {
-                const cashFeeHandedOver = feeStructure.withdraw;
-                if (acc.balance < amount) { showToast("Insufficient ledger assets within primary balance structure.", "error"); return; }
-                
-                financialMatrix.vaultCash += cashFeeHandedOver; 
-                financialMatrix.vaultCash -= amount;
-                financialMatrix.totalFeesCollected += cashFeeHandedOver;
+            const structuralFee = (type === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
+            const titleLabel = (type === 'withdraw') ? "Confirm Cash Withdrawal Vault Action" : "Confirm Cash Deposit Vault Action";
 
-                acc.balance -= amount;
-                acc.logs.push(`[${timestamp}] Withdrawal: Dispensed ${amount} JD from account ledger. Collected ${cashFeeHandedOver} JD fee strictly in cash.`);
-            } 
-            
-            else if (type === 'deposit') {
-                const cashFeeHandedOver = feeStructure.deposit;
-                
-                financialMatrix.vaultCash += amount + cashFeeHandedOver;
-                financialMatrix.totalFeesCollected += cashFeeHandedOver;
+            openTxModal(titleLabel, amount, structuralFee, function(feeBypassed) {
+                const finalFee = feeBypassed ? 0 : structuralFee;
+                const timestamp = new Date().toLocaleString();
 
-                acc.balance += amount;
-                acc.logs.push(`[${timestamp}] Deposit: Credited ${amount} JD directly to core ledger. Collected ${cashFeeHandedOver} JD fee strictly in cash.`);
-            }
-            finalizeTx();
+                if (type === 'withdraw') {
+                    if (acc.balance < amount) { showToast("Insufficient ledger assets within primary balance structure.", "error"); return; }
+                    financialMatrix.vaultCash += finalFee - amount;
+                    financialMatrix.totalFeesCollected += finalFee;
+                    acc.balance -= amount;
+                    acc.logs.push(`[${timestamp}] Withdrawal: Dispensed ${amount} JD from account ledger. Collected ${finalFee} JD fee strictly in cash.`);
+                } else {
+                    financialMatrix.vaultCash += amount + finalFee;
+                    financialMatrix.totalFeesCollected += finalFee;
+                    acc.balance += amount;
+                    acc.logs.push(`[${timestamp}] Deposit: Credited ${amount} JD directly to core ledger. Collected ${finalFee} JD fee strictly in cash.`);
+                }
+                finalizeTx();
+            });
         }
 
-        function processSavings(type) {
+        function prepareSavingsTx(type) {
             const acc = bankDB[activeAccountID];
             if (verifySuspensionGate(acc)) return;
 
             const amount = parseFloat(document.getElementById('savings-amount').value);
-            const timestamp = new Date().toLocaleString();
-
             if (isNaN(amount) || amount <= 0) { showToast("Define valid positive numerical metrics parameters.", "error"); return; }
 
             if (type === 'deposit') {
                 if (acc.balance < amount) { showToast("Primary core balance values lack required coverage assets.", "error"); return; }
-                
-                acc.balance -= amount;
-                acc.savingsBalance += amount;
+                const timestamp = new Date().toLocaleString();
+                acc.balance -= amount; acc.savingsBalance += amount;
                 acc.logs.push(`[${timestamp}] Asset Lock: Transferred ${amount} JD into fixed savings terms. Fee: FREE.`);
-            } 
-            
-            else if (type === 'break') {
-                const cashFeeHandedOver = feeStructure.break;
+                finalizeTx();
+            } else if (type === 'break') {
                 if (acc.savingsBalance < amount) { showToast("Extraction boundaries break bounds of active locked portfolio.", "error"); return; }
-                
-                financialMatrix.vaultCash += cashFeeHandedOver;
-                financialMatrix.totalFeesCollected += cashFeeHandedOver;
+                const structuralFee = feeStructure.break;
 
-                acc.savingsBalance -= amount;
-                acc.balance += amount; 
-                acc.logs.push(`[${timestamp}] Term Break: Unlocked ${amount} JD asset bundle back to core balance ledger. Collected ${cashFeeHandedOver} JD breaking fee cash-in-hand.`);
+                openTxModal("Confirm Savings Break Request", amount, structuralFee, function(feeBypassed) {
+                    const finalFee = feeBypassed ? 0 : structuralFee;
+                    const timestamp = new Date().toLocaleString();
+
+                    financialMatrix.vaultCash += finalFee;
+                    financialMatrix.totalFeesCollected += finalFee;
+                    acc.savingsBalance -= amount; acc.balance += amount; 
+                    acc.logs.push(`[${timestamp}] Term Break: Unlocked ${amount} JD back to core balance ledger. Collected ${finalFee} JD breaking fee cash-in-hand.`);
+                    finalizeTx();
+                });
             }
-            finalizeTx();
         }
 
-        function processTransfer() {
+        function prepareTransferTx() {
             const sourceAcc = bankDB[activeAccountID];
             if (verifySuspensionGate(sourceAcc)) return;
 
             const targetIdInput = document.getElementById('transfer-target').value.trim().toLowerCase();
             const amount = parseFloat(document.getElementById('tx-amount').value);
-            const timestamp = new Date().toLocaleString();
-            const cashFeeHandedOver = feeStructure.transfer;
+            const structuralFee = feeStructure.transfer;
 
             let targetedIdKey = Object.keys(bankDB).find(k => k.toLowerCase() === targetIdInput);
-
-            if (!targetedIdKey) { showToast("Target clearing index registration points missing.", "error"); return; }
-            if (targetedIdKey.toLowerCase() === activeAccountID.toLowerCase()) { showToast("Self-routing processing loops forbidden.", "error"); return; }
-            if (isNaN(amount) || amount <= 0) { showToast("Provide valid transfer quantity metrics.", "error"); return; }
-
-            if (sourceAcc.balance < amount) { showToast("Source profile ledger values lack transfer total requirement sums.", "error"); return; }
-
-            const recipientAcc = bankDB[targetedIdKey];
-            if (recipientAcc.isSuspended) {
-                showToast("Transfer Aborted: Recipient account channel is suspended.", "error");
-                return;
+            if (!targetedIdKey || targetedIdKey.toLowerCase() === activeAccountID.toLowerCase() || isNaN(amount) || amount <= 0 || sourceAcc.balance < amount) {
+                showToast("Invalid Transfer parameters or parameters error.", "error"); return;
             }
 
-            financialMatrix.vaultCash += cashFeeHandedOver;
-            financialMatrix.totalFeesCollected += cashFeeHandedOver;
+            const recipientAcc = bankDB[targetedIdKey];
+            if (recipientAcc.isSuspended) { showToast("Transfer Aborted: Recipient account channel is suspended.", "error"); return; }
 
-            sourceAcc.balance -= amount;
-            sourceAcc.logs.push(`[${timestamp}] Transfer Outbound: Settled ${amount} JD payload tracking towards target ${recipientAcc.id}. Paid ${cashFeeHandedOver} JD cash fee.`);
+            openTxModal("Confirm Inter-Account Transfer", amount, structuralFee, function(feeBypassed) {
+                const finalFee = feeBypassed ? 0 : structuralFee;
+                const timestamp = new Date().toLocaleString();
 
-            recipientAcc.balance += amount;
-            recipientAcc.logs.push(`[${timestamp}] Transfer Inbound: Accepted clearing payload of ${amount} JD arriving from source entity ${sourceAcc.id}.`);
+                financialMatrix.vaultCash += finalFee;
+                financialMatrix.totalFeesCollected += finalFee;
 
-            finalizeTx();
+                sourceAcc.balance -= amount;
+                sourceAcc.logs.push(`[${timestamp}] Transfer Outbound: Settled ${amount} JD towards target ${recipientAcc.id}. Paid ${finalFee} JD cash fee.`);
+                recipientAcc.balance += amount;
+                recipientAcc.logs.push(`[${timestamp}] Transfer Inbound: Accepted clearing payload of ${amount} JD from source entity ${sourceAcc.id}.`);
+
+                finalizeTx();
+            });
         }
 
         function finalizeTx() {
-            saveAllData();
-            loadWorkstation();
+            saveAllData(); loadWorkstation();
             if (activeEmployeeUser === MGR_USER) populateOverrideInputFields();
             document.getElementById('tx-amount').value = '';
             document.getElementById('savings-amount').value = '';
