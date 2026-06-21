@@ -57,7 +57,6 @@
 
         .auth-box { background: #eff6ff; border: 1px dashed var(--primary-light); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
         .manager-box { background: #faf5ff; border: 1px dashed var(--manager); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
-        .fee-info { font-size: 0.85rem; color: #64748b; margin-top: 5px; display: block; }
         
         .account-details { display: none; }
         .account-details.active { display: block; }
@@ -87,14 +86,13 @@
             <h2 style="text-align: center; margin-bottom:20px; border:none;">Database Terminal Access</h2>
             <div class="form-group">
                 <label>Employee Username</label>
-                <input type="text" id="sys-username" placeholder="e.g., jaber or employee name">
+                <input type="text" id="sys-username" placeholder="Username">
             </div>
             <div class="form-group">
                 <label>Terminal Passcode</label>
                 <input type="password" id="sys-passcode" placeholder="******">
             </div>
             <button onclick="handleSystemLogin()" style="margin-top:10px;">Authenticate &amp; Initialize</button>
-            <p style="font-size:0.75rem; text-align:center; color:#64748b; margin-top:15px;">Root Manager: jaber | Code: 250606</p>
         </div>
     </div>
 
@@ -148,6 +146,10 @@
                         <div class="form-row">
                             <div class="form-group"><label>First Name</label><input type="text" id="bypass-first" placeholder="John"></div>
                             <div class="form-group"><label>Last Name</label><input type="text" id="bypass-last" placeholder="Doe"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Customer Date of Birth (DOB)</label>
+                            <input type="date" id="bypass-dob">
                         </div>
                         <div class="form-group"><label>Manager Passcode</label><input type="password" id="bypass-code" placeholder="******"></div>
                         <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
@@ -241,21 +243,22 @@
                                 <div style="display:flex; flex-direction: column; gap: 5px;">
                                     <button onclick="processSavings('deposit')" style="background: var(--warning); color: black;">Lock in Savings</button>
                                     <button onclick="processSavings('break')" class="secondary" style="background: #94a3b8;">Break Savings Deposit</button>
+                                </div>
+                                <div style="margin-top:10px; padding: 6px; background: #fffbeb; font-size: 0.75rem; border-radius:4px; border:1px solid #fef3c7;">
+                                    Active Matrix Rates:<br>
+                                    <span id="fee-tracker-txt">Deposit: 1 JD | Withdraw: 1 JD | Lock: Free | Break: 3 JD | Transfer: 1 JD</span>
+                                </div>
                             </div>
-                            <div style="margin-top:10px; padding: 6px; background: #fffbeb; font-size: 0.75rem; border-radius:4px; border:1px solid #fef3c7;">
-                                Active Matrix Rates:<br>
-                                <span id="fee-tracker-txt">Deposit: 1 JD | Withdraw: 1 JD | Lock: Free | Break: 3 JD | Transfer: 1 JD</span>
-                            </div>
-                        </div>
 
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="card">
-                <h2>5. Live Account Audit Ledger</h2>
-                <div id="log-box" class="log-container">
-                    <div class="log-entry">[SYSTEM] Waiting for dashboard connection sequence...</div>
+                <div class="card">
+                    <h2>5. Live Account Audit Ledger</h2>
+                    <div id="log-box" class="log-container">
+                        <div class="log-entry">[SYSTEM] Waiting for dashboard connection sequence...</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -277,22 +280,21 @@
         const MGR_PASSCODE = "250606";
 
         // Global DB state structures
-        let bankDB = JSON.parse(localStorage.getItem('bankDB_v3')) || {};
-        let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v3')) || { deposit: 1, withdraw: 1, break: 3, transfer: 1 };
-        let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v3')) || {}; // structural storage for added users
+        let bankDB = JSON.parse(localStorage.getItem('bankDB_v4')) || {};
+        let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v4')) || { deposit: 1, withdraw: 1, break: 3, transfer: 1 };
+        let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v4')) || {}; 
         
-        // Ledger tracking metrics for tracking ribbon calculations 
-        let internalFinances = JSON.parse(localStorage.getItem('internalFinances_v3')) || { totalFeesCollected: 0, totalSavingsProfitGiven: 0 };
+        let internalFinances = JSON.parse(localStorage.getItem('internalFinances_v4')) || { totalFeesCollected: 0, totalSavingsProfitGiven: 0 };
 
         let activeAccountID = null;
         let activeEmployeeUser = null;
         let isFeeBypassed = false;
 
         function saveAllData() {
-            localStorage.setItem('bankDB_v3', JSON.stringify(bankDB));
-            localStorage.setItem('feeStructure_v3', JSON.stringify(feeStructure));
-            localStorage.setItem('employeeDB_v3', JSON.stringify(employeeDB));
-            localStorage.setItem('internalFinances_v3', JSON.stringify(internalFinances));
+            localStorage.setItem('bankDB_v4', JSON.stringify(bankDB));
+            localStorage.setItem('feeStructure_v4', JSON.stringify(feeStructure));
+            localStorage.setItem('employeeDB_v4', JSON.stringify(employeeDB));
+            localStorage.setItem('internalFinances_v4', JSON.stringify(internalFinances));
             calculateRibbonMetrics();
         }
 
@@ -329,7 +331,6 @@
             document.getElementById('main-dashboard').style.display = 'block';
             document.getElementById('active-user-lbl').innerText = activeEmployeeUser;
             
-            // reset fields
             document.getElementById('sys-username').value = '';
             document.getElementById('sys-passcode').value = '';
             
@@ -359,16 +360,22 @@
         }
 
         // --- SECTION 2: RIBBON CALCULATOR MATRIX ---
+        // UPDATED METHOD: VAULT COVERS USER FUNDS + COLLECTED CARD/CASH FEES
         function calculateRibbonMetrics() {
             let accountsCount = Object.keys(bankDB).length;
             let vaultTotal = 0;
 
+            // Gather all baseline customer money
             Object.keys(bankDB).forEach(id => {
                 vaultTotal += bankDB[id].balance;
                 vaultTotal += bankDB[id].savingsBalance;
             });
 
             let totalFees = internalFinances.totalFeesCollected || 0;
+            
+            // Add collected fees straight into the vault representation
+            vaultTotal += totalFees;
+
             let totalDistributedProfit = internalFinances.totalSavingsProfitGiven || 0;
             let netProfit = totalFees - totalDistributedProfit;
 
@@ -409,13 +416,13 @@
                 balance: initialDeposit,
                 savingsBalance: 0,
                 notes: '',
+                trackedProfitPool: 0, 
                 logs: [
                     `[${timestamp}] [Processed by: ${activeEmployeeUser}] Account initialized in database storage scope.`,
                     `[${timestamp}] [Processed by: ${activeEmployeeUser}] Opening cash vault deposit of ${initialDeposit} JD applied.`
                 ]
             };
 
-            // Run structural 1% incremental evaluation calculation matrix rules
             evaluateGlobalSavingsGrowth();
 
             bankDB[accountId] = newAccount;
@@ -423,7 +430,7 @@
 
             alert(`CUSTOMER PROVISION STATUS: SUCCESS!\n\nProvide Credentials:\nAccount ID: ${accountId}\nPIN Passcode: ${passcode}`);
             this.reset();
-            showToast(`Customer account profile compiled safely. Systems calculated interest loops.`);
+            showToast(`Customer account profile compiled safely.`);
             if(activeAccountID) loadWorkstation();
         });
 
@@ -432,20 +439,20 @@
             Object.keys(bankDB).forEach(id => {
                 let acc = bankDB[id];
                 if (acc.savingsBalance > 0) {
-                    let baseInterest = acc.savingsBalance * 0.01;
-                    acc.savingsBalance += baseInterest;
-                    
-                    // Increment the system-wide payout metrics ledger tracking pool
-                    internalFinances.totalSavingsProfitGiven += baseInterest;
+                    let addedProfit = acc.savingsBalance * 0.01;
                     
                     if(!acc.trackedProfitPool) acc.trackedProfitPool = 0;
-                    acc.trackedProfitPool += baseInterest;
+                    acc.trackedProfitPool += addedProfit;
 
                     if (acc.trackedProfitPool >= 5) {
-                        let intervalsOfFive = Math.floor(acc.trackedProfitPool / 5);
-                        let loggableYield = intervalsOfFive * 5;
-                        acc.logs.push(`[${timestamp}] [savings profit] Cumulative growth milestone triggered: ${loggableYield} JD assigned to tied asset structures.`);
-                        acc.trackedProfitPool -= loggableYield;
+                        let groupsOfFive = Math.floor(acc.trackedProfitPool / 5);
+                        let totalPayout = groupsOfFive * 5;
+
+                        acc.balance += totalPayout;
+                        acc.trackedProfitPool -= totalPayout;
+                        internalFinances.totalSavingsProfitGiven += totalPayout;
+
+                        acc.logs.push(`[${timestamp}] [savings profit] 5JD of profit Added`);
                     }
                 }
             });
@@ -467,19 +474,22 @@
         function managerBypassAccess() {
             const fName = document.getElementById('bypass-first').value.trim().toLowerCase();
             const lName = document.getElementById('bypass-last').value.trim().toLowerCase();
+            const dobIn = document.getElementById('bypass-dob').value;
             const mgrPass = document.getElementById('bypass-code').value.trim();
 
             if (mgrPass !== MGR_PASSCODE) { showToast("Bypass Refused: Unauthorized management credentials.", "error"); return; }
-            if (!fName || !lName) { showToast("Fill name specifications completely.", "error"); return; }
+            if (!fName || !lName || !dobIn) { showToast("Fill matching name specifications and DOB completely.", "error"); return; }
 
             let targetId = null;
             Object.keys(bankDB).forEach(id => {
-                if(bankDB[id].firstName.toLowerCase() === fName && bankDB[id].lastName.toLowerCase() === lName) {
+                if(bankDB[id].firstName.toLowerCase() === fName && 
+                   bankDB[id].lastName.toLowerCase() === lName &&
+                   bankDB[id].dob === dobIn) {
                     targetId = id;
                 }
             });
 
-            if(!targetId) { showToast("No registry objects mirror those identifier metrics.", "error"); return; }
+            if(!targetId) { showToast("No registry objects mirror those identifier metrics (Check Name and DOB matches).", "error"); return; }
 
             activeAccountID = targetId;
             loadWorkstation();
@@ -487,6 +497,7 @@
             
             document.getElementById('bypass-first').value = '';
             document.getElementById('bypass-last').value = '';
+            document.getElementById('bypass-dob').value = '';
             document.getElementById('bypass-code').value = '';
         }
 
@@ -528,7 +539,7 @@
         function updateNotes() {
             if (!activeAccountID) return;
             bankDB[activeAccountID].notes = document.getElementById('view-notes').value;
-            localStorage.setItem('bankDB_v3', JSON.stringify(bankDB));
+            localStorage.setItem('bankDB_v4', JSON.stringify(bankDB));
         }
 
         function toggleFeeBypassPrompt(checkbox) {
@@ -577,7 +588,7 @@
             if (type === 'withdraw') {
                 if (method === 'account') {
                     if (acc.balance < (amount + dynamicFee)) {
-                        showToast(`Overdraft Blocked! Total needed: ${(amount + dynamicFee)} JD. Use Card payment for fee to bypass baseline calculation negative checks.`, "error");
+                        showToast(`Overdraft Blocked! Total needed: ${(amount + dynamicFee)} JD.`, "error");
                         return;
                     }
                     acc.balance -= (amount + dynamicFee);
@@ -658,12 +669,10 @@
                 return;
             }
 
-            // Debit Source
             sourceAcc.balance -= (amount + dynamicFee);
             internalFinances.totalFeesCollected += dynamicFee;
             sourceAcc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Transfer Outbound: Settled ${amount} JD payload to target ${targetId}. Fee: ${dynamicFee} JD.`);
 
-            // Credit Destination target
             const recipientAcc = bankDB[targetId];
             recipientAcc.balance += amount;
             recipientAcc.logs.push(`[${timestamp}] Transfer Inbound: Accepted clearing deposit of ${amount} JD coming from account index source ${activeAccountID}.`);
@@ -677,7 +686,7 @@
             document.getElementById('tx-amount').value = '';
             document.getElementById('savings-amount').value = '';
             document.getElementById('transfer-target').value = '';
-            showToast("Transaction logged and variables compiled safely across network data layers.");
+            showToast("Transaction logged and variables compiled safely.");
         }
     </script>
 </body>
