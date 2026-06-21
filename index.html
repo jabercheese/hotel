@@ -1,518 +1,465 @@
-HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Intelligence Database (GRID) - Advanced Terminal</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Apex Bank Database Dashboard</title>
     <style>
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #0b0f19; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-        .scanline {
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 6px 100%;
+        :root {
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
         }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; }
+        header { background: var(--primary); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        
+        .container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media (max-width: 1024px) { .container { grid-template-columns: 1fr; } }
+
+        .card { background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-bottom: 15px; color: var(--primary); font-size: 1.4rem; border-bottom: 2px solid var(--border); padding-bottom: 5px; }
+        
+        .form-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        input, textarea, select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary-light); }
+        
+        button { background: var(--primary); color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
+        button:hover { background: var(--primary-light); }
+        button.secondary { background: #64748b; }
+        button.secondary:hover { background: #475569; }
+
+        .auth-box { background: #eff6ff; border: 1px dashed var(--primary-light); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .fee-info { font-size: 0.85rem; color: #64748b; margin-top: 5px; display: block; }
+        
+        /* Account Display Styling */
+        .account-details { display: none; }
+        .account-details.active { display: block; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #f1f5f9; padding: 10px; border-radius: 4px; text-align: center; }
+        .stat-box span { display: block; font-size: 0.8rem; color: #64748b; }
+        .stat-box strong { font-size: 1.2rem; color: var(--primary); }
+
+        /* Tabs/Logs styling */
+        .log-container { max-height: 250px; overflow-y: auto; background: #0f172a; color: #38bdf8; font-family: monospace; padding: 10px; border-radius: 4px; font-size: 0.85rem; }
+        .log-entry { margin-bottom: 6px; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
+        
+        /* Simulated Card Portal Overlay */
+        .portal-overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+        .portal-card { background: white; padding: 30px; border-radius: 12px; max-width: 400px; width: 90%; text-align: center; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary-light); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Notification Toast */
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 4px; color: white; font-weight: bold; z-index: 2000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans h-screen overflow-hidden scanline">
+<body>
 
-    <div id="login-page" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(15,23,42,0.8)_0%,rgba(2,6,23,1)_100%)]"></div>
-        <div class="relative w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-xl p-8 shadow-2xl backdrop-blur-md">
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 mb-4 text-2xl animate-pulse">
-                    <i class="fa-solid fa-terminal"></i>
-                </div>
-                <h1 class="text-2xl font-mono tracking-widest text-slate-200">GRID // SYSTEM ACCESS</h1>
-                <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">Operator Authorization Required</p>
-            </div>
-            <form id="login-form" class="space-y-5">
-                <div>
-                    <label class="block text-xs font-mono uppercase text-slate-400 mb-1.5">Operator ID</label>
-                    <input type="text" id="username" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500 transition-colors" placeholder="jaber">
-                </div>
-                <div>
-                    <label class="block text-xs font-mono uppercase text-slate-400 mb-1.5">Access Passphrase</label>
-                    <input type="password" id="password" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500 transition-colors" placeholder="••••••••">
-                </div>
-                <div id="login-error" class="hidden text-xs text-rose-500 font-mono bg-rose-500/10 border border-rose-500/20 rounded px-3 py-2">
-                    CRITICAL ERROR: Access Credentials Rejected.
-                </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold uppercase tracking-wider text-xs py-3 rounded-lg shadow-lg transition-all">
-                    Initialize Core Decryption
-                </button>
-            </form>
-        </div>
-    </div>
+    <header>
+        <h1>Apex Bank Admin Dashboard</h1>
+        <div id="clock">Database Status: Operational</div>
+    </header>
 
-    <div id="app-container" class="hidden h-full flex flex-col relative">
-        
-        <div id="terminal-loader" class="hidden absolute inset-0 bg-slate-950/90 z-40 flex flex-col items-center justify-center backdrop-blur-sm">
-            <div class="w-16 h-16 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4"></div>
-            <p class="text-xs font-mono text-amber-500 tracking-widest uppercase animate-pulse">Querying decentralized database logs... Please hold.</p>
-            <p id="loader-uid" class="text-[10px] font-mono text-slate-600 mt-1"></p>
-        </div>
-
-        <header class="bg-slate-900 border-b border-slate-800 h-16 flex items-center justify-between px-6 shrink-0 z-10 shadow-md">
-            <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-circle-nodes text-amber-500 text-xl animate-pulse"></i>
-                <span class="font-mono font-bold text-sm text-slate-200 tracking-wide">GRID.v4.8 // CORE TIER DETECTOR</span>
-            </div>
-            <div class="flex items-center space-x-4">
-                <button onclick="openRecordModal('Standard Registration')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded text-xs font-mono transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus text-emerald-400"></i> New Entry
-                </button>
-                <button onclick="openRecordModal('Secret Arrest File')" class="bg-rose-950/40 hover:bg-rose-900/40 text-rose-300 border border-rose-900/50 px-3 py-1.5 rounded text-xs font-mono transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-user-lock text-rose-400"></i> Secret Arrest
-                </button>
-                <button id="vault-access-btn" onclick="promptVaultAccess()" class="bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-slate-950 border border-amber-500/30 px-3 py-1.5 rounded text-xs font-mono font-bold transition-all flex items-center gap-1.5">
-                    <i class="fa-solid fa-vault"></i> Top Secret Vault
-                </button>
-                <div class="h-6 w-[1px] bg-slate-800 mx-2"></div>
-                <button id="logout-btn" class="text-xs font-mono text-slate-400 hover:text-rose-400 transition-colors"><i class="fa-solid fa-power-off"></i></button>
-            </div>
-        </header>
-
-        <div class="flex flex-1 overflow-hidden">
-            
-            <aside class="w-80 bg-slate-900/40 border-r border-slate-800 p-4 flex flex-col space-y-4 shrink-0">
-                <div>
-                    <label class="block text-[10px] font-mono text-slate-500 uppercase mb-1">Target Engine Filters</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 text-xs"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="search-input" class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-amber-500" placeholder="Type to search database...">
+    <div class="container">
+        <div>
+            <div class="card">
+                <h2>1. Open Customer Account</h2>
+                <form id="create-account-form">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="cust-first" required>
                     </div>
-                </div>
-
-                <div class="space-y-1 overflow-y-auto custom-scrollbar flex-1" id="filter-container">
-                    <button data-filter="all" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between bg-slate-800 text-amber-500 filter-btn border border-slate-700">
-                        <span>[ALL ARCHIVES]</span><span id="count-all" class="font-sans">0</span>
-                    </button>
-                    <button data-filter="High Risk" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between text-rose-400 hover:bg-slate-900/60 filter-btn border border-transparent">
-                        <span>[HIGH RISK ASSETS]</span><span id="count-high" class="font-sans">0</span>
-                    </button>
-                    <button data-filter="Moderate Risk" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between text-amber-400 hover:bg-slate-900/60 filter-btn border border-transparent">
-                        <span>[MODERATE ANOMALIES]</span><span id="count-mod" class="font-sans">0</span>
-                    </button>
-                    <button data-filter="Clear / Nominal" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between text-emerald-400 hover:bg-slate-900/60 filter-btn border border-transparent">
-                        <span>[NOMINAL DIRECTORY]</span><span id="count-clear" class="font-sans">0</span>
-                    </button>
-                </div>
-            </aside>
-
-            <section class="w-96 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
-                <div class="p-3 border-b border-slate-800 bg-slate-900/20 flex justify-between items-center">
-                    <span class="text-[11px] font-mono text-slate-500 uppercase tracking-widest">Active Manifest Indexes</span>
-                    <span id="visible-count" class="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded">0 Records</span>
-                </div>
-                <div id="profile-list" class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-900/60">
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="cust-last" required>
                     </div>
-            </section>
+                    <div class="form-group">
+                        <label>ID / Passport Number</label>
+                        <input type="text" id="cust-id" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Address</label>
+                        <input type="text" id="cust-address" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="date" id="cust-dob" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Initial Deposit (JD)</label>
+                        <input type="number" id="cust-initial" min="0" value="0" required>
+                    </div>
+                    <button type="submit">Generate & Create Account</button>
+                </form>
+            </div>
 
-            <main class="flex-1 bg-slate-950 overflow-y-auto custom-scrollbar p-6 relative">
-                <div id="detail-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                    <i class="fa-solid fa-shield-cat text-4xl text-slate-800 mb-3 animate-bounce"></i>
-                    <h3 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Awaiting Manifest Command Input</h3>
+            <div class="card">
+                <h2>2. Access Customer Account</h2>
+                <div class="auth-box">
+                    <div class="form-group">
+                        <label>Account ID</label>
+                        <input type="text" id="auth-acc-id" placeholder="ACC-XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label>Passcode</label>
+                        <input type="password" id="auth-passcode" placeholder="4-digit PIN">
+                    </div>
+                    <button onclick="accessAccount()">Access Account Securely</button>
+                </div>
+                <button class="secondary" onclick="lockAccount()">Lock / Clear View</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="card">
+                <h2>3. Active Workstation</h2>
+                <div id="no-account-selected" style="text-align: center; padding: 40px; color: #64748b;">
+                    <p>No account currently loaded. Please use the Access Portal on the left.</p>
                 </div>
 
-                <div id="detail-content" class="hidden space-y-6 max-w-4xl">
-                    <div class="flex items-start justify-between border-b border-slate-800 pb-6">
-                        <div class="flex items-center space-x-4">
-                            <img id="det-photo" src="" alt="Dossier Mugshot" class="w-24 h-24 rounded-lg object-cover border-2 border-slate-800 bg-slate-900">
-                            <div>
-                                <h2 id="det-name" class="text-xl font-bold tracking-tight text-slate-100 font-mono">---</h2>
-                                <p class="text-xs font-mono text-slate-500 mt-0.5">REGISTRY ID: <span id="det-uid" class="text-amber-500">---</span></p>
-                                <div class="flex items-center gap-2 mt-3">
-                                    <span id="det-badge-risk" class="px-2 py-0.5 text-[9px] font-mono font-bold rounded">---</span>
-                                    <span id="det-badge-clearance" class="px-2 py-0.5 bg-slate-900 text-slate-400 border border-slate-800 font-mono rounded text-[9px]">---</span>
-                                </div>
-                            </div>
+                <div id="account-view" class="account-details">
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <span>Account Holder</span>
+                            <strong id="view-name">John Doe</strong>
+                        </div>
+                        <div class="stat-box">
+                            <span>Account ID</span>
+                            <strong id="view-id">ACC-0000</strong>
+                        </div>
+                        <div class="stat-box">
+                            <span>Standard Balance</span>
+                            <strong id="view-balance">0.00 JD</strong>
+                        </div>
+                        <div class="stat-box">
+                            <span>Tied Savings Deposit</span>
+                            <strong id="view-savings" style="color: var(--warning);">0.00 JD</strong>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="bg-slate-900/30 border border-slate-800/80 rounded-lg p-4 space-y-3">
-                            <h3 class="text-[11px] font-mono uppercase text-slate-400 tracking-wider border-b border-slate-800/80 pb-1.5"><i class="fa-solid fa-address-card text-slate-500 mr-2"></i>Demographics</h3>
-                            <div class="grid grid-cols-2 gap-y-2 text-xs font-mono">
-                                <div><span class="text-slate-600 block text-[9px]">SEX</span><span id="det-gender" class="text-slate-300">---</span></div>
-                                <div><span class="text-slate-600 block text-[9px]">DOB / LIFESPAN</span><span id="det-dob" class="text-slate-300">---</span></div>
-                                <div><span class="text-slate-600 block text-[9px]">NATIONALITY</span><span id="det-nationality" class="text-slate-300">---</span></div>
-                                <div><span class="text-slate-600 block text-[9px]">LAST GPS LOCATION</span><span id="det-location" class="text-slate-300">---</span></div>
+                    <div style="font-size: 0.9rem; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div><strong>ID:</strong> <span id="info-id"></span></div>
+                        <div><strong>DOB:</strong> <span id="info-dob"></span></div>
+                        <div style="grid-column: span 2"><strong>Address:</strong> <span id="info-address"></span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Customer Relationship Notes (Saves automatically on edit)</label>
+                        <textarea id="view-notes" rows="3" oninput="updateNotes()"></textarea>
+                    </div>
+
+                    <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border);">
+
+                    <h3>Perform Transaction</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px;">
+                        
+                        <div style="border-right: 1px solid var(--border); padding-right: 15px;">
+                            <h4 style="font-size:0.9rem; margin-bottom: 8px;">Standard Transaction</h4>
+                            <div class="form-group">
+                                <label>Amount (JD)</label>
+                                <input type="number" id="tx-amount" min="1" placeholder="0.00">
                             </div>
+                            <div class="form-group">
+                                <label>Fee Processing</label>
+                                <select id="tx-fee-method">
+                                    <option value="account">Deduct from Account/Cash</option>
+                                    <option value="card">Pay via External Card Portal</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; gap: 5px;">
+                                <button onclick="processStandard('deposit')" style="background: var(--success);">Deposit</button>
+                                <button onclick="processStandard('withdraw')" style="background: var(--danger);">Withdraw</button>
+                            </div>
+                            <small class="fee-info">Deposit Fee: 1 JD | Withdraw Fee: 1 JD</small>
                         </div>
 
-                        <div class="bg-slate-900/30 border border-slate-800/80 rounded-lg p-4 space-y-3">
-                            <h3 class="text-[11px] font-mono uppercase text-slate-400 tracking-wider border-b border-slate-800/80 pb-1.5"><i class="fa-solid fa-chart-line text-slate-500 mr-2"></i>Operational Financial Ledger</h3>
-                            <div class="grid grid-cols-2 gap-y-2 text-xs font-mono">
-                                <div><span class="text-slate-600 block text-[9px]">ESTIMATED CAPITAL</span><span id="det-networth" class="text-slate-300">---</span></div>
-                                <div><span class="text-slate-600 block text-[9px]">PASSPORT HASH</span><span id="det-passport" class="text-slate-300">---</span></div>
-                                <div class="col-span-2"><span class="text-slate-600 block text-[9px]">EMPLOYMENT INTERACTION</span><span id="det-occupation" class="text-slate-300">---</span></div>
+                        <div>
+                            <h4 style="font-size:0.9rem; margin-bottom: 8px;">Tied Savings Operations</h4>
+                            <div class="form-group">
+                                <label>Amount (JD)</label>
+                                <input type="number" id="savings-amount" min="1" placeholder="0.00">
                             </div>
+                            <div style="display:flex; flex-direction: column; gap: 5px;">
+                                <button onclick="processSavings('deposit')" style="background: var(--warning); color: black;">Lock in Savings</button>
+                                <button onclick="processSavings('break')" class="secondary" style="background: #94a3b8;">Break Savings Deposit</button>
+                            </div>
+                            <small class="fee-info">Locking: Free | Breaking Fee: 3 JD</small>
                         </div>
-                    </div>
 
-                    <div class="bg-slate-900/40 border border-slate-800 rounded-lg p-4 space-y-3">
-                        <h4 class="text-[11px] font-mono uppercase text-amber-500 tracking-widest flex items-center"><i class="fa-solid fa-microchip mr-2"></i>Heuristic Flag Inconsistencies</h4>
-                        <div id="det-flags" class="space-y-1.5"></div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <h4 class="text-[11px] font-mono uppercase text-slate-400 tracking-widest"><i class="fa-solid fa-quote-right mr-2 text-slate-600"></i>Field Narrative Logs</h4>
-                        <div id="det-narrative" class="text-xs font-mono text-slate-400 leading-relaxed bg-slate-900/10 border border-slate-800 rounded-lg p-4"></div>
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
-
-    <div id="record-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg p-6 font-mono text-xs shadow-2xl">
-            <h3 id="modal-title" class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">Create Record Entry</h3>
-            <form id="record-form" class="space-y-4">
-                <input type="hidden" id="modal-type">
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Full Legal Name</label>
-                        <input type="text" id="form-name" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Gender Identification</label>
-                        <select id="form-gender" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
-                            <option>Male</option><option>Female</option><option>Non-Binary</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Primary Jurisdiction</label>
-                        <input type="text" id="form-nationality" placeholder="e.g. Iceland" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Risk Allocation Tier</label>
-                        <select id="form-risk" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
-                            <option>Clear / Nominal</option><option>Moderate Risk</option><option>High Risk</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-[10px] text-slate-500 uppercase mb-1">Dossier Chronology Details</label>
-                    <textarea id="form-narrative" rows="3" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200" placeholder="Type random raw observation entries..."></textarea>
-                </div>
-                <div class="flex justify-end space-x-2 pt-2 border-t border-slate-800">
-                    <button type="button" onclick="closeRecordModal()" class="px-4 py-2 bg-slate-800 rounded text-slate-400 hover:bg-slate-700">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded">Commit System Record</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <div id="vault-modal" class="hidden fixed inset-0 z-50 bg-black/95 flex flex-col p-8 font-mono">
-        <div class="flex justify-between items-center border-b border-rose-900 pb-4 mb-6">
-            <h2 class="text-rose-500 font-bold tracking-widest text-sm animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-2"></i>RESTRICTED DECRYPTED STORAGE CORE // LEVEL 5</h2>
-            <button onclick="closeVault()" class="text-xs text-slate-500 hover:text-slate-200">[EXIT DECRYPTION]</button>
-        </div>
-        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-4 text-xs text-rose-300/80">
-            <p class="text-slate-500">// INITIALIZING COUNTER-INTELLIGENCE RAW FEED LOGS...</p>
-            <div class="p-4 bg-rose-950/20 border border-rose-900/50 rounded-lg space-y-2">
-                <p class="font-bold text-rose-400">[intercept #8841-A] SUB-ORBITAL COMMUNICATIONS INTERCEPT</p>
-                <p>"Target relocation array scheduled for standard node transit window. All primary civil data scrubbed completely across federal local archives."</p>
             </div>
-            <div class="p-4 bg-rose-950/20 border border-rose-900/50 rounded-lg space-y-2">
-                <p class="font-bold text-rose-400">[intercept #0092-F] LIQUID QUANTUM CRYPTO ASSET TRANSFERS</p>
-                <p>"Unlinked wallet validation nodes detected routing approximately 4,200 BTC assets from sovereign infrastructure reserves straight to blind escrow endpoints."</p>
-            </div>
-            <div class="p-4 bg-rose-950/20 border border-rose-900/50 rounded-lg space-y-2">
-                <p class="font-bold text-rose-400">[protocol #BLACKOUT-7] SANCTIONED OPERATIONAL EXCLUSION SHEETS</p>
-                <p>"All automated background identification telemetry for targets under intercept protocols are actively generating falsified clear indicators to blind perimeter monitors."</p>
+
+            <div class="card">
+                <h2>4. Full Account Audit & Edit History Log</h2>
+                <div id="log-box" class="log-container">
+                    <div class="log-entry">[SYSTEM] Awaiting account initialization...</div>
+                </div>
             </div>
         </div>
     </div>
+
+    <div id="card-portal" class="portal-overlay">
+        <div class="portal-card">
+            <h2 style="border:none;">Secure Card Payment Gateway</h2>
+            <p id="portal-text" style="margin: 10px 0; color:#475569;">Processing processing transaction fee via Visa/Mastercard...</p>
+            <div class="spinner"></div>
+            <p style="font-size: 0.8rem; color: #94a3b8;">Simulating external banking communication network...</p>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
 
     <script>
-        const AUTH_CREDS = { user: "jaber", pass: "jaber123" };
-        const SECRET_PASSCODE = "250606";
-        let internalManifestDatabase = [];
-        let activeFilter = "all";
-        let searchFilterString = "";
+        // Database state stored in LocalStorage or fall back to empty object
+        let bankDB = JSON.parse(localStorage.getItem('bankDB')) || {};
+        let activeAccountID = null;
 
-        // Raw Array Assets for True Deep Randomization
-        const namesPoolMale = ["Klaus", "Zayn", "Hiroshi", "Santiago", "Dante", "Gideon", "Nikolai", "Xavier", "Arjun", "Malik", "Chen", "Silas", "Finnian", "Tariq", "Viktor", "Sven", "Otto", "Enzo", "Luka", "Omar"];
-        const namesPoolFemale = ["Saskia", "Aiko", "Freja", "Ines", "Soraya", "Katja", "Zari", "Nadia", "Lin", "Amara", "Yael", "Elena", "Talia", "Chie", "Astrid", "Paloma", "Kira", "Meera", "Sonia", "Oksana"];
-        const familyNamesPool = ["Vogel", "Kazama", "Mendoza", "Kovalev", "Blackwood", "Al-Jamil", "Tan", "Groot", "Sinclair", "Petrou", "Ribeiro", "Hwang", "Hussain", "Moretti", "Lindstrom", "Baumann", "Dimitrov", "Park"];
-        
-        const regionsPool = ["Reykjavik, Iceland", "Kyoto, Japan", "Cape Town, South Africa", "Geneva, Switzerland", "Bangkok, Thailand", "Casablanca, Morocco", "Vladivostok, Russia", "Bogota, Colombia", "Anchorage, USA", "Mumbai, India", "Rotterdam, Netherlands", "Oman, UAE"];
-        const activitiesPool = ["Quantum Crypto Miner", "Sub-Maritime Surveyor", "High-Altitude Cargo Pilot", "AI Infrastructure Auditor", "Biometric Integrity Architect", "Rare-Earth Metal Broker", "Deep-Web Network Relay Tech", "Off-Shore Trust Underwriter", "Unvouched Military Liaison", "Diplomatic Courier Proxy"];
-        
-        const genericNarrativeSnippets = [
-            "Monitored communications display localized military-grade encryption cycles without registered civil licensing validation parameters.",
-            "Subject demonstrates atypical short-term pattern of switching global currency holdings into physical asset commodities within secondary banking sectors.",
-            "Biometric signature records possess minor architectural anomalies indicating subtle surgical adjustments to peripheral sensory points.",
-            "Subject routinely transitions through primary logistical transportation boundaries during highly localized communication infrastructure blind windows.",
-            "Maintains an immaculate, state-verified standard background register data layout, completely devoid of standard civic tracking footprints.",
-            "Subject is identified as a fluid transaction node router for dark pool venture capital groups spanning multiple sovereign island territories.",
-            "Historical customs log analysis isolates target's systematic presence within industrial development centers immediately preceding system failures.",
-            "Maintains 14 alternative proxy identification entities linked across variable continental registries, currently active within commercial data channels."
-        ];
-
-        const flagDescriptions = [
-            { type: "CRITICAL", text: "Localized cellular device tracking isolates proximity patterns to deep restricted sector installations." },
-            { type: "ANOMALY", text: "Encrypted micro-packet transmission surges identified during atypical nocturnal rest cycles." },
-            { type: "WARNING", text: "Subject identity utilizes verification tokens matching archived civil files from historical records." },
-            { type: "SECURITY", text: "Active identification queries originating from foreign intelligence intelligence terminals." },
-            { type: "FINANCIAL", text: "Sub-surface asset liquidations routing directly to untrackable cold hardware addresses." },
-            { type: "BIOMETRIC", text: "Iris scan identification metrics register a minor structural mismatch against original digital registry files." }
-        ];
-
-        function generateMassiveRandomDatabase() {
-            internalManifestDatabase = [];
-            for (let i = 1; i <= 75; i++) {
-                const determineSex = Math.random() > 0.5 ? "Male" : "Female";
-                const selectedFirst = determineSex === "Male" ? namesPoolMale[Math.floor(Math.random() * namesPoolMale.length)] : namesPoolFemale[Math.floor(Math.random() * namesPoolFemale.length)];
-                const selectedLast = familyNamesPool[Math.floor(Math.random() * familyNamesPool.length)];
-                const calculatedAge = Math.floor(Math.random() * 45) + 22;
-                
-                // Pure random image configurations using highly descriptive gender/age profile sets
-                const faceIndex = Math.floor(Math.random() * 70);
-                const genderKeyword = determineSex === "Male" ? "men" : "women";
-                const randomPhoto = `https://randomuser.me/api/portraits/${genderKeyword}/${faceIndex}.jpg`;
-
-                // Assign random threat tier metrics
-                const generatorSeed = Math.random();
-                let chosenRisk = "Clear / Nominal";
-                if (generatorSeed > 0.70) chosenRisk = "High Risk";
-                else if (generatorSeed > 0.30) chosenRisk = "Moderate Risk";
-
-                // Map highly specific programmatic flag sets based entirely on subject risk thresholds
-                let customGeneratedFlags = [];
-                if (chosenRisk === "High Risk") {
-                    customGeneratedFlags.push(flagDescriptions[Math.floor(Math.random() * 2)]);
-                    customGeneratedFlags.push(flagDescriptions[Math.floor(Math.random() * 2) + 2]);
-                } else if (chosenRisk === "Moderate Risk") {
-                    customGeneratedFlags.push(flagDescriptions[Math.floor(Math.random() * 2) + 4]);
-                } else {
-                    customGeneratedFlags.push({ type: "NOMINAL", text: "Standard telemetry profile metrics remain within baseline standard variances." });
-                }
-
-                internalManifestDatabase.push({
-                    uid: `GRID-ID-${Math.floor(Math.random() * 89999 + 10000)}`,
-                    name: `${selectedFirst} ${selectedLast}`,
-                    gender: determineSex,
-                    dob: `19${98 - calculatedAge}-${String(Math.floor(Math.random() * 11) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')} (Age ${calculatedAge})`,
-                    photo: randomPhoto,
-                    nationality: familyNamesPool[Math.floor(Math.random() * familyNamesPool.length)] + " Legacy Jurisdiction", 
-                    location: regionsPool[Math.floor(Math.random() * regionsPool.length)],
-                    occupation: activitiesPool[Math.floor(Math.random() * activitiesPool.length)],
-                    networth: `$${(Math.random() * 14 + 0.1).toFixed(2)}M USD`,
-                    passport: `HASH-${Math.floor(Math.random() * 8999 + 1000)}-${Math.floor(Math.random() * 8999 + 1000)}`,
-                    risk: chosenRisk,
-                    clearance: chosenRisk === "High Risk" ? "LEVEL 4 RESTRICTED" : chosenRisk === "Moderate Risk" ? "INTERNAL MONITORING" : "PUBLIC REGISTRY CLEAR",
-                    flags: customGeneratedFlags,
-                    narrative: genericNarrativeSnippets[Math.floor(Math.random() * genericNarrativeSnippets.length)] + " " + genericNarrativeSnippets[Math.floor(Math.random() * genericNarrativeSnippets.length)]
-                });
-            }
+        function saveDB() {
+            localStorage.setItem('bankDB', JSON.stringify(bankDB));
         }
 
-        // --- Core UI Presentation Filters ---
-        function executeSystemFilterPipeline() {
-            const compiledMatches = internalManifestDatabase.filter(dataItem => {
-                const filterMatch = activeFilter === "all" || dataItem.risk === activeFilter;
-                const structuralStringSearch = dataItem.name.toLowerCase().includes(searchFilterString) || 
-                                              dataItem.uid.toLowerCase().includes(searchFilterString) || 
-                                              dataItem.location.toLowerCase().includes(searchFilterString);
-                return filterMatch && structuralStringSearch;
-            });
-
-            renderLeftPaneList(compiledMatches);
-            calculateSidebarMetrics();
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
         }
 
-        function calculateSidebarMetrics() {
-            document.getElementById("count-all").innerText = internalManifestDatabase.length;
-            document.getElementById("count-high").innerText = internalManifestDatabase.filter(d => d.risk === "High Risk").length;
-            document.getElementById("count-mod").innerText = internalManifestDatabase.filter(d => d.risk === "Moderate Risk").length;
-            document.getElementById("count-clear").innerText = internalManifestDatabase.filter(d => d.risk === "Clear / Nominal").length;
-        }
+        // 1. Account Generation & Creation logic
+        document.getElementById('create-account-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Auto generate account ID and 4 digit passcode
+            const accountId = 'ACC-' + Math.floor(100000 + Math.random() * 900000);
+            const passcode = Math.floor(1000 + Math.random() * 9000).toString();
 
-        function renderLeftPaneList(targetDataset) {
-            const listTargetContainer = document.getElementById("profile-list");
-            document.getElementById("visible-count").innerText = `${targetDataset.length} Profiles Listed`;
-            listTargetContainer.innerHTML = "";
+            const initialDeposit = parseFloat(document.getElementById('cust-initial').value) || 0;
+            const timestamp = new Date().toLocaleString();
 
-            if (targetDataset.length === 0) {
-                listTargetContainer.innerHTML = `<div class="p-4 text-center font-mono text-slate-600 text-[11px]">No asset match structures found in core records.</div>`;
+            const newAccount = {
+                id: accountId,
+                passcode: passcode,
+                firstName: document.getElementById('cust-first').value,
+                lastName: document.getElementById('cust-last').value,
+                nationalId: document.getElementById('cust-id').value,
+                address: document.getElementById('cust-address').value,
+                dob: document.getElementById('cust-dob').value,
+                balance: initialDeposit,
+                savingsBalance: 0,
+                notes: '',
+                logs: [
+                    `[${timestamp}] Account systematically initialized.`,
+                    `[${timestamp}] Initial opening cash deposit of ${initialDeposit} JD completed.`
+                ]
+            };
+
+            bankDB[accountId] = newAccount;
+            saveDB();
+
+            // Prompt employee with credentials immediately
+            alert(`ACCOUNT CREATED SUCCESSFULLY!\n\nPlease write down and hand these credentials safely to the client:\n\nAccount ID: ${accountId}\nTemporary Passcode: ${passcode}`);
+            
+            this.reset();
+            showToast(`Account ${accountId} ready to use.`);
+        });
+
+        // 2. Authentication Gateway
+        function accessAccount() {
+            const idInput = document.getElementById('auth-acc-id').value.trim();
+            const passInput = document.getElementById('auth-passcode').value.trim();
+
+            if (!bankDB[idInput]) {
+                showToast("Account ID not discovered in records.", "error");
                 return;
             }
 
-            targetDataset.forEach(profileObject => {
-                let textBorderClass = "border-emerald-500/30 text-emerald-400";
-                if (profileObject.risk === "High Risk") textBorderClass = "border-rose-500/30 text-rose-400";
-                else if (profileObject.risk === "Moderate Risk") textBorderClass = "border-amber-500/30 text-amber-400";
+            if (bankDB[idInput].passcode !== passInput) {
+                showToast("Authentication Failed: Incorrect Passcode.", "error");
+                return;
+            }
 
-                const wrapperNode = document.createElement("div");
-                wrapperNode.className = "p-3 hover:bg-slate-900/50 cursor-pointer flex justify-between items-center transition-all duration-100 bg-slate-900/10";
-                wrapperNode.innerHTML = `
-                    <div class="flex items-center space-x-3 truncate">
-                        <img src="${profileObject.photo}" class="w-8 h-8 rounded-full object-cover shrink-0 bg-slate-800 border border-slate-700">
-                        <div class="truncate font-mono">
-                            <h4 class="text-xs font-bold text-slate-300 truncate">${profileObject.name}</h4>
-                            <p class="text-[9px] text-slate-600 truncate">${profileObject.uid} // ${profileObject.location.split(',')[0]}</p>
-                        </div>
-                    </div>
-                    <span class="text-[8px] font-mono border px-1.5 py-0.5 rounded shrink-0 ml-2 uppercase font-bold tracking-tight ${textBorderClass}">${profileObject.risk.split(' ')[0]}</span>
-                `;
-                wrapperNode.addEventListener("click", () => triggerDossierLoadSequence(profileObject));
-                listTargetContainer.appendChild(wrapperNode);
-            });
+            activeAccountID = idInput;
+            loadWorkstation();
+            showToast("Secure access authorized successfully.");
         }
 
-        // DELAY TIMING EXECUTION SYSTEM
-        function triggerDossierLoadSequence(targetProfilePayload) {
-            const loaderElement = document.getElementById("terminal-loader");
-            document.getElementById("loader-uid").innerText = `TARGET LOG: ${targetProfilePayload.uid} // INTEGRITY CHECK`;
-            loaderElement.classList.remove("hidden");
+        function lockAccount() {
+            activeAccountID = null;
+            document.getElementById('no-account-selected').style.display = 'block';
+            document.getElementById('account-view').style.display = 'none';
+            document.getElementById('log-box').innerHTML = `<div class="log-entry">[SYSTEM] Terminal locked. Provide credentials.</div>`;
+            document.getElementById('auth-acc-id').value = '';
+            document.getElementById('auth-passcode').value = '';
+        }
 
+        // Load visual interface data
+        function loadWorkstation() {
+            const acc = bankDB[activeAccountID];
+            if (!acc) return;
+
+            document.getElementById('no-account-selected').style.display = 'none';
+            document.getElementById('account-view').style.display = 'block';
+
+            document.getElementById('view-name').innerText = `${acc.firstName} ${acc.lastName}`;
+            document.getElementById('view-id').innerText = acc.id;
+            document.getElementById('view-balance').innerText = `${acc.balance.toFixed(2)} JD`;
+            document.getElementById('view-savings').innerText = `${acc.savingsBalance.toFixed(2)} JD`;
+            
+            document.getElementById('info-id').innerText = acc.nationalId;
+            document.getElementById('info-dob').innerText = acc.dob;
+            document.getElementById('info-address').innerText = acc.address;
+            document.getElementById('view-notes').value = acc.notes;
+
+            // Render log lists
+            renderLogs(acc.logs);
+        }
+
+        function renderLogs(logs) {
+            const container = document.getElementById('log-box');
+            container.innerHTML = logs.map(l => `<div class="log-entry">${l}</div>`).reverse().join('');
+        }
+
+        // Live updating customer relationship notes
+        function updateNotes() {
+            if (!activeAccountID) return;
+            const text = document.getElementById('view-notes').value;
+            const timestamp = new Date().toLocaleString();
+            
+            bankDB[activeAccountID].notes = text;
+            // To prevent flooding logs on every keystroke, let's just save the variable state quietly
+            saveDB();
+        }
+
+        // Simulated card loading structure
+        function runCardPortal(callback) {
+            const overlay = document.getElementById('card-portal');
+            overlay.style.display = 'flex';
             setTimeout(() => {
-                loaderElement.classList.add("hidden");
-                displayFullDossierDetails(targetProfilePayload);
-            }, 3000);
+                overlay.style.display = 'none';
+                callback();
+            }, 2500); // Loads for 2.5 seconds, then flags success
         }
 
-        function displayFullDossierDetails(targetData) {
-            document.getElementById("detail-placeholder").classList.add("hidden");
-            document.getElementById("detail-content").classList.remove("hidden");
+        // 3. Transactions Matrix Engine
+        function processStandard(type) {
+            const acc = bankDB[activeAccountID];
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const method = document.getElementById('tx-fee-method').value;
+            const timestamp = new Date().toLocaleString();
+            const fee = 1; // 1 JD transaction fee
 
-            document.getElementById("det-photo").src = targetData.photo;
-            document.getElementById("det-name").innerText = targetData.name;
-            document.getElementById("det-uid").innerText = targetData.uid;
-            document.getElementById("det-gender").innerText = targetData.gender;
-            document.getElementById("det-dob").innerText = targetData.dob;
-            document.getElementById("det-nationality").innerText = targetData.nationality;
-            document.getElementById("det-location").innerText = targetData.location;
-            document.getElementById("det-occupation").innerText = targetData.occupation;
-            document.getElementById("det-networth").innerText = targetData.networth;
-            document.getElementById("det-passport").innerText = targetData.passport;
-            document.getElementById("det-badge-clearance").innerText = targetData.clearance;
-            document.getElementById("det-narrative").innerText = targetData.narrative;
-
-            const badgeElement = document.getElementById("det-badge-risk");
-            badgeElement.innerText = targetData.risk;
-            badgeElement.className = "px-2 py-0.5 text-[9px] font-mono font-bold rounded";
-            if (targetData.risk === "High Risk") badgeElement.classList.add("bg-rose-500/10", "text-rose-400", "border", "border-rose-500/30");
-            else if (targetData.risk === "Moderate Risk") badgeElement.classList.add("bg-amber-500/10", "text-amber-400", "border", "border-amber-500/30");
-            else badgeElement.classList.add("bg-emerald-500/10", "text-emerald-400", "border", "border-emerald-500/30");
-
-            const listFlagsContainer = document.getElementById("det-flags");
-            listFlagsContainer.innerHTML = "";
-            targetData.flags.forEach(f => {
-                let labelStyle = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-                if (f.type === "CRITICAL") labelStyle = "bg-rose-500/10 text-rose-400 border-rose-500/20";
-                else if (f.type !== "NOMINAL") labelStyle = "bg-amber-500/10 text-amber-400 border-amber-500/20";
-
-                const nodeItem = document.createElement("div");
-                nodeItem.className = `p-2 rounded border text-[11px] flex font-mono items-start space-x-2 ${labelStyle}`;
-                nodeItem.innerHTML = `<span class="text-[8px] font-bold tracking-tighter px-1 bg-black/30 rounded mt-0.5">${f.type}</span><span>${f.text}</span>`;
-                listFlagsContainer.appendChild(nodeItem);
-            });
-        }
-
-        // --- Action Modals & Security Passcode Verifications ---
-        function openRecordModal(creationMode) {
-            document.getElementById("modal-title").innerText = `INITIATE NEW RECORD // DATA BASELINE: ${creationMode.toUpperCase()}`;
-            document.getElementById("modal-type").value = creationMode;
-            document.getElementById("record-modal").classList.remove("hidden");
-        }
-
-        function closeRecordModal() {
-            document.getElementById("record-modal").classList.add("hidden");
-            document.getElementById("record-form").reset();
-        }
-
-        function promptVaultAccess() {
-            const systemPasscodeSubmission = prompt("CRITICAL CORE DECRYPTION: Enter Security Override Level 5 Passcode:");
-            if (systemPasscodeSubmission === SECRET_PASSCODE) {
-                document.getElementById("vault-modal").classList.remove("hidden");
-            } else if (systemPasscodeSubmission !== null) {
-                alert("ACCESS SYSTEM DENIED: Invalid Passcode Cryptographic Hash.");
+            if (isNaN(amount) || amount <= 0) {
+                showToast("Please key in a valid payment metric amount.", "error");
+                return;
             }
+
+            if (type === 'withdraw') {
+                if (method === 'account') {
+                    // Total taken out would be amount + 1 JD fee
+                    if (acc.balance < (amount + fee)) {
+                        showToast(`Insufficient Funds! Required: ${(amount + fee)} JD. Balance negative block initiated. Choose Card Payment for fee.`, "error");
+                        return;
+                    }
+                    acc.balance -= (amount + fee);
+                    acc.logs.push(`[${timestamp}] Withdraw Action: Subtracted ${amount} JD cash + 1 JD fee directly from balance.`);
+                } else {
+                    // Card payment scenario for fee
+                    if (acc.balance < amount) {
+                        showToast(`Insufficient core funds to clear the baseline withdrawal amount of ${amount} JD.`, "error");
+                        return;
+                    }
+                    runCardPortal(() => {
+                        acc.balance -= amount;
+                        acc.logs.push(`[${timestamp}] Withdraw Action: Disbursed ${amount} JD. 1 JD fee handled successfully via external Card Portal.`);
+                        finalizeTx();
+                    });
+                    return; // exit function execution because gateway handles async callback 
+                }
+            } 
+            
+            else if (type === 'deposit') {
+                if (method === 'account') {
+                    if (amount <= fee) {
+                        showToast("Deposited value cannot be lower than or equal to the structural operational processing fee.", "error");
+                        return;
+                    }
+                    acc.balance += (amount - fee);
+                    acc.logs.push(`[${timestamp}] Deposit Action: Accepted ${amount} JD cash. Deducted 1 JD processing fee directly from bulk.`);
+                } else {
+                    runCardPortal(() => {
+                        acc.balance += amount;
+                        acc.logs.push(`[${timestamp}] Deposit Action: Processed ${amount} JD to cash vault. Fee handled externally via Card Portal processing.`);
+                        finalizeTx();
+                    });
+                    return;
+                }
+            }
+
+            finalizeTx();
         }
 
-        function closeVault() { document.getElementById("vault-modal").classList.add("hidden"); }
+        function processSavings(type) {
+            const acc = bankDB[activeAccountID];
+            const amount = parseFloat(document.getElementById('savings-amount').value);
+            const timestamp = new Date().toLocaleString();
 
-        // Form Submission Processor Logic
-        document.getElementById("record-form").addEventListener("submit", function(e) {
-            e.preventDefault();
-            const inputName = document.getElementById("form-name").value;
-            const inputGender = document.getElementById("form-gender").value;
-            const inputRisk = document.getElementById("form-risk").value;
-            const inputNarrative = document.getElementById("form-narrative").value;
-            const inputType = document.getElementById("modal-type").value;
-            const mockIndex = Math.floor(Math.random() * 65);
-
-            const freshlyInjectedObject = {
-                uid: `GRID-MAN-${Math.floor(Math.random() * 89999 + 10000)}`,
-                name: inputName,
-                gender: inputGender,
-                dob: `1986-11-04 (Age 39 - System Commit)`,
-                photo: `https://randomuser.me/api/portraits/${inputGender === "Male" ? "men" : "women"}/${mockIndex}.jpg`,
-                nationality: document.getElementById("form-nationality").value,
-                location: "Unverified Local Coordinates",
-                occupation: inputType === "Secret Arrest File" ? "Detained State Proxy Asset" : "Registered Field Consultant",
-                networth: "$0.00 FREEZE ORDER",
-                passport: "REVOKED / EXPIRED",
-                risk: inputRisk,
-                clearance: inputType === "Secret Arrest File" ? "SPECIAL DETENTION LOG" : "STANDARD DATA CLEARANCE",
-                flags: [{ type: inputRisk === "High Risk" ? "CRITICAL" : "MANUAL", text: `Manual operator log adjustment tracking committed via terminal access authority.` }],
-                narrative: `[OPERATOR MANUAL AMENDMENT]: ${inputNarrative}`
-            };
-
-            internalManifestDatabase.unshift(freshlyInjectedObject);
-            closeRecordModal();
-            executeSystemFilterPipeline();
-            displayFullDossierDetails(freshlyInjectedObject);
-        });
-
-        // --- Core Interface Bootup Listeners ---
-        document.getElementById("login-form").addEventListener("submit", function(e) {
-            e.preventDefault();
-            if (document.getElementById("username").value === AUTH_CREDS.user && document.getElementById("password").value === AUTH_CREDS.pass) {
-                document.getElementById("login-page").classList.add("hidden");
-                document.getElementById("app-container").classList.remove("hidden");
-                generateMassiveRandomDatabase();
-                executeSystemFilterPipeline();
-            } else {
-                const systemErrorNode = document.getElementById("login-error");
-                systemErrorNode.classList.remove("hidden");
-                setTimeout(() => systemErrorNode.classList.add("hidden"), 4000);
+            if (isNaN(amount) || amount <= 0) {
+                showToast("Please state a valid structural value asset target.", "error");
+                return;
             }
-        });
 
-        document.getElementById("logout-btn").addEventListener("click", () => {
-            document.getElementById("app-container").classList.add("hidden");
-            document.getElementById("login-page").classList.remove("hidden");
-            document.getElementById("password").value = "";
-        });
+            if (type === 'deposit') {
+                // Free, moving from core balance into savings lock vault
+                if (acc.balance < amount) {
+                    showToast("Insufficient capital ready in core account balance to fulfill savings transition request.", "error");
+                    return;
+                }
+                acc.balance -= amount;
+                acc.savingsBalance += amount;
+                acc.logs.push(`[${timestamp}] System Lock: Tied ${amount} JD into active savings assets. Fee: FREE.`);
+            } 
+            
+            else if (type === 'break') {
+                const breakingFee = 3;
+                if (acc.savingsBalance < amount) {
+                    showToast("Requested amount breaks bounds of currently locked assets.", "error");
+                    return;
+                }
+                
+                // Break transaction logic
+                if (acc.balance < breakingFee) {
+                    showToast(`Insufficient liquid account funds to reconcile the 3 JD early structural breaking fee penalty. Balance must stay positive.`, "error");
+                    return;
+                }
+                
+                acc.savingsBalance -= amount;
+                acc.balance += (amount - breakingFee);
+                acc.logs.push(`[${timestamp}] Term Break: Cracked asset structural deposit of ${amount} JD. Deducted statutory penalty fee of 3 JD.`);
+            }
 
-        document.getElementById("search-input").addEventListener("input", (e) => {
-            searchFilterString = e.target.value.toLowerCase();
-            executeSystemFilterPipeline();
-        });
+            finalizeTx();
+        }
 
-        document.querySelectorAll(".filter-btn").forEach(buttonNode => {
-            buttonNode.addEventListener("click", (e) => {
-                document.querySelectorAll(".filter-btn").forEach(b => {
-                    b.classList.remove("bg-slate-800", "border-slate-700", "text-amber-500");
-                    b.classList.add("border-transparent");
-                });
-                const selectedTarget = e.currentTarget;
-                selectedTarget.classList.remove("border-transparent");
-                selectedTarget.classList.add("bg-slate-800", "border-slate-700", "text-amber-500");
-                activeFilter = selectedTarget.getAttribute("data-filter");
-                executeSystemFilterPipeline();
-            });
-        });
+        function finalizeTx() {
+            saveDB();
+            loadWorkstation();
+            document.getElementById('tx-amount').value = '';
+            document.getElementById('savings-amount').value = '';
+            showToast("Database records synced and updated safely.");
+        }
     </script>
 </body>
 </html>
