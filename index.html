@@ -20,8 +20,20 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg); color: var(--text); padding: 20px; }
-        header { background: var(--primary); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         
+        /* Ribbon Styles */
+        header { background: var(--primary); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .ribbon-metrics { display: flex; flex-wrap: wrap; gap: 20px; background: rgba(21, 128, 61, 0.2); padding: 12px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); }
+        .metric-item { font-size: 0.95rem; font-weight: 500; }
+        .metric-item span { font-weight: bold; color: #38bdf8; }
+        .metric-item .profit-val { color: #4ade80; }
+
+        /* Login Screen Setup */
+        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #0f172a; z-index: 9999; display: flex; justify-content: center; align-items: center; }
+        .login-card { background: white; padding: 35px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+
+        #main-dashboard { display: none; }
         .container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
         @media (max-width: 1024px) { .container { grid-template-columns: 1fr; } }
 
@@ -70,131 +82,168 @@
 </head>
 <body>
 
-    <header>
-        <h1>Apex Bank Pro Dashboard</h1>
-        <div>Database Status: Active</div>
-    </header>
-
-    <div class="container">
-        <div>
-            <div class="card">
-                <h2>1. Open Customer Account</h2>
-                <form id="create-account-form">
-                    <div class="form-row">
-                        <div class="form-group"><label>First Name</label><input type="text" id="cust-first" required></div>
-                        <div class="form-group"><label>Last Name</label><input type="text" id="cust-last" required></div>
-                    </div>
-                    <div class="form-group"><label>ID / Passport Number</label><input type="text" id="cust-id" required></div>
-                    <div class="form-group"><label>Address</label><input type="text" id="cust-address" required></div>
-                    <div class="form-group"><label>Date of Birth</label><input type="date" id="cust-dob" required></div>
-                    <div class="form-group"><label>Initial Core Deposit (JD)</label><input type="number" id="cust-initial" min="0" value="0" required></div>
-                    <button type="submit">Generate &amp; Open Account</button>
-                    <small style="color: var(--manager); display:block; margin-top:5px; font-size:0.8rem;">*Note: Creating an account triggers a global 1% savings profit evaluation.</small>
-                </form>
+    <div id="login-screen">
+        <div class="login-card">
+            <h2 style="text-align: center; margin-bottom:20px; border:none;">Database Terminal Access</h2>
+            <div class="form-group">
+                <label>Employee Username</label>
+                <input type="text" id="sys-username" placeholder="e.g., jaber or employee name">
             </div>
-
-            <div class="card">
-                <h2>2. Access Customer Account</h2>
-                
-                <div class="auth-box">
-                    <h3>Standard Employee Access</h3>
-                    <div class="form-group"><label>Account ID</label><input type="text" id="auth-acc-id" placeholder="ACC-XXXXXX"></div>
-                    <div class="form-group"><label>Passcode</label><input type="password" id="auth-passcode" placeholder="4-digit PIN"></div>
-                    <button onclick="accessAccount()">Access Securely</button>
-                </div>
-
-                <div class="manager-box">
-                    <h3>Manager Name-Bypass Gateway</h3>
-                    <div class="form-row">
-                        <div class="form-group"><label>First Name</label><input type="text" id="bypass-first" placeholder="John"></div>
-                        <div class="form-group"><label>Last Name</label><input type="text" id="bypass-last" placeholder="Doe"></div>
-                    </div>
-                    <div class="form-group"><label>Manager Passcode</label><input type="password" id="bypass-code" placeholder="******"></div>
-                    <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
-                </div>
-                
-                <button class="secondary" onclick="lockAccount()">Lock Terminal View</button>
+            <div class="form-group">
+                <label>Terminal Passcode</label>
+                <input type="password" id="sys-passcode" placeholder="******">
             </div>
-
-            <div class="card" style="border: 1px solid var(--manager);">
-                <h2 style="color: var(--manager); border-bottom-color: var(--manager);">3. Global Fee Adjustment</h2>
-                <div class="form-group"><label>Deposit Fee (JD)</label><input type="number" id="fee-deposit-cfg" value="1"></div>
-                <div class="form-group"><label>Withdraw Fee (JD)</label><input type="number" id="fee-withdraw-cfg" value="1"></div>
-                <div class="form-group"><label>Breaking Deposit Fee (JD)</label><input type="number" id="fee-break-cfg" value="3"></div>
-                <div class="form-group"><label>Account Transfer Fee (JD)</label><input type="number" id="fee-transfer-cfg" value="1" readonly></div>
-                <div class="form-group"><label>Manager Passcode Authorization</label><input type="password" id="fee-mgr-code" placeholder="Enter 250606 to apply"></div>
-                <button class="manager-btn" onclick="updateFeeStructure()">Save New Fee Matrices</button>
-            </div>
+            <button onclick="handleSystemLogin()" style="margin-top:10px;">Authenticate &amp; Initialize</button>
+            <p style="font-size:0.75rem; text-align:center; color:#64748b; margin-top:15px;">Root Manager: jaber | Code: 250606</p>
         </div>
+    </div>
 
-        <div>
-            <div class="card">
-                <h2>4. Active Customer Workstation</h2>
-                <div id="no-account-selected" style="text-align: center; padding: 40px; color: #64748b;">
-                    <p>No account loaded. Authenticate or use the Manager Bypass Gateway on the left.</p>
+    <div id="main-dashboard">
+        <header>
+            <div class="header-top">
+                <div>
+                    <h1 style="font-size: 1.8rem;">Apex Bank Pro Admin Control</h1>
+                    <small>Logged in as: <strong id="active-user-lbl" style="color:#67e8f9;">-</strong></small>
+                </div>
+                <button onclick="handleSystemLogout()" class="secondary" style="width:auto; padding: 6px 15px; font-size:0.85rem;">Lock Terminal Session</button>
+            </div>
+            
+            <div class="ribbon-metrics">
+                <div class="metric-item">Accounts Created: <span id="ribbon-accounts">0</span></div>
+                <div class="metric-item">Total Money in Vault: <span id="ribbon-vault">0.00 JD</span></div>
+                <div class="metric-item">Fees Collected: <span id="ribbon-fees">0.00 JD</span></div>
+                <div class="metric-item">Bank Net Profit: <span id="ribbon-profit" class="profit-val">0.00 JD</span></div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div>
+                <div class="card">
+                    <h2>1. Open Customer Account</h2>
+                    <form id="create-account-form">
+                        <div class="form-row">
+                            <div class="form-group"><label>First Name</label><input type="text" id="cust-first" required></div>
+                            <div class="form-group"><label>Last Name</label><input type="text" id="cust-last" required></div>
+                        </div>
+                        <div class="form-group"><label>ID / Passport Number</label><input type="text" id="cust-id" required></div>
+                        <div class="form-group"><label>Address</label><input type="text" id="cust-address" required></div>
+                        <div class="form-group"><label>Date of Birth</label><input type="date" id="cust-dob" required></div>
+                        <div class="form-group"><label>Initial Core Deposit (JD)</label><input type="number" id="cust-initial" min="0" value="0" required></div>
+                        <button type="submit">Generate &amp; Open Account</button>
+                    </form>
                 </div>
 
-                <div id="account-view" class="account-details">
-                    <div class="stat-grid">
-                        <div class="stat-box"><span>Account Holder</span><strong id="view-name">-</strong></div>
-                        <div class="stat-box"><span>Account ID</span><strong id="view-id">-</strong></div>
-                        <div class="stat-box"><span>Core Balance</span><strong id="view-balance">0.00 JD</strong></div>
-                        <div class="stat-box"><span>Tied Savings Deposit</span><strong id="view-savings" style="color: var(--warning);">0.00 JD</strong></div>
+                <div class="card">
+                    <h2>2. Access Customer Account</h2>
+                    
+                    <div class="auth-box">
+                        <h3>Standard Customer Authentication</h3>
+                        <div class="form-group"><label>Account ID</label><input type="text" id="auth-acc-id" placeholder="ACC-XXXXXX"></div>
+                        <div class="form-group"><label>Customer Passcode PIN</label><input type="password" id="auth-passcode" placeholder="4-digit PIN"></div>
+                        <button onclick="accessAccount()">Verify Customer Credentials</button>
                     </div>
 
-                    <div style="font-size: 0.9rem; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <div><strong>ID:</strong> <span id="info-id"></span></div>
-                        <div><strong>DOB:</strong> <span id="info-dob"></span></div>
-                        <div style="grid-column: span 2"><strong>Address:</strong> <span id="info-address"></span></div>
+                    <div class="manager-box">
+                        <h3>Manager Name-Bypass Gateway</h3>
+                        <div class="form-row">
+                            <div class="form-group"><label>First Name</label><input type="text" id="bypass-first" placeholder="John"></div>
+                            <div class="form-group"><label>Last Name</label><input type="text" id="bypass-last" placeholder="Doe"></div>
+                        </div>
+                        <div class="form-group"><label>Manager Passcode</label><input type="password" id="bypass-code" placeholder="******"></div>
+                        <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
+                    </div>
+                    
+                    <button class="secondary" onclick="lockAccount()">Clear Active Workstation</button>
+                </div>
+
+                <div id="manager-only-panel" class="card" style="border: 2px solid var(--manager); display:none;">
+                    <h2 style="color: var(--manager); border-bottom-color: var(--manager);">3. Manager Operations Vault</h2>
+                    
+                    <div style="background:#f3e8ff; padding:12px; border-radius:6px; margin-bottom:15px; border: 1px solid #c084fc;">
+                        <h4 style="color:var(--manager); font-size:0.9rem; margin-bottom:8px;">Add New Employee Login</h4>
+                        <div class="form-group"><label style="font-size:0.8rem;">New Username</label><input type="text" id="new-emp-user" placeholder="username"></div>
+                        <div class="form-group"><label style="font-size:0.8rem;">New Passcode</label><input type="password" id="new-emp-pass" placeholder="passcode"></div>
+                        <button class="manager-btn" style="font-size:0.85rem; padding:6px;" onclick="registerNewEmployee()">Provision Staff Credentials</button>
                     </div>
 
-                    <div class="form-group">
-                        <label>Customer Notes (Saves live on input)</label>
-                        <textarea id="view-notes" rows="2" oninput="updateNotes()"></textarea>
+                    <div>
+                        <h4 style="color:var(--manager); font-size:0.9rem; margin-bottom:5px;">Global Fee Matrix Modifier</h4>
+                        <div class="form-group"><label>Deposit Fee (JD)</label><input type="number" id="fee-deposit-cfg" value="1"></div>
+                        <div class="form-group"><label>Withdraw Fee (JD)</label><input type="number" id="fee-withdraw-cfg" value="1"></div>
+                        <div class="form-group"><label>Breaking Deposit Fee (JD)</label><input type="number" id="fee-break-cfg" value="3"></div>
+                        <button class="manager-btn" onclick="updateFeeStructure()">Save Matrix Structural Settings</button>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="card">
+                    <h2>4. Active Customer Workstation</h2>
+                    <div id="no-account-selected" style="text-align: center; padding: 40px; color: #64748b;">
+                        <p>No active customer portfolio loaded. Please verify credentials via left authentication protocols.</p>
                     </div>
 
-                    <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border);">
-
-                    <div style="background: #fdf4ff; border: 1px solid #d8b4fe; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
-                        <label style="color: var(--manager); font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
-                            <input type="checkbox" id="bypass-fees-checkbox" style="width: auto;" onchange="toggleFeeBypassPrompt(this)">
-                            Bypass Fees via Manager Override
-                        </label>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        
-                        <div style="border-right: 1px solid var(--border); padding-right: 15px;">
-                            <h3>Standard Actions / Transfers</h3>
-                            <div class="form-group"><label>Amount (JD)</label><input type="number" id="tx-amount" min="0.01" step="0.01" placeholder="0.00"></div>
-                            <div class="form-group">
-                                <label>Fee Settlement Option</label>
-                                <select id="tx-fee-method">
-                                    <option value="account">Deduct from Account / Cash</option>
-                                    <option value="card">Process via External Card Portal</option>
-                                </select>
-                            </div>
-                            <div style="display:flex; gap: 5px; margin-bottom: 15px;">
-                                <button onclick="processStandard('deposit')" style="background: var(--success); font-size: 0.85rem;">Deposit</button>
-                                <button onclick="processStandard('withdraw')" style="background: var(--danger); font-size: 0.85rem;">Withdraw</button>
-                            </div>
-
-                            <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 4px;">
-                                <h4 style="font-size:0.85rem; margin-bottom:5px;">Internal Account Transfer</h4>
-                                <div class="form-group"><label style="font-size:0.8rem;">Target Account ID</label><input type="text" id="transfer-target" placeholder="ACC-XXXXXX"></div>
-                                <button onclick="processTransfer()" class="secondary" style="font-size:0.85rem; background: var(--primary-light);">Execute Transfer</button>
-                            </div>
+                    <div id="account-view" class="account-details">
+                        <div class="stat-grid">
+                            <div class="stat-box"><span>Account Holder</span><strong id="view-name">-</strong></div>
+                            <div class="stat-box"><span>Account ID</span><strong id="view-id">-</strong></div>
+                            <div class="stat-box"><span>Core Balance</span><strong id="view-balance">0.00 JD</strong></div>
+                            <div class="stat-box"><span>Tied Savings Deposit</span><strong id="view-savings" style="color: var(--warning);">0.00 JD</strong></div>
                         </div>
 
-                        <div>
-                            <h3>Tied Savings Vault</h3>
-                            <div class="form-group"><label>Amount (JD)</label><input type="number" id="savings-amount" min="1" placeholder="0.00"></div>
-                            <div style="display:flex; flex-direction: column; gap: 5px;">
-                                <button onclick="processSavings('deposit')" style="background: var(--warning); color: black;">Lock in Savings</button>
-                                <button onclick="processSavings('break')" class="secondary" style="background: #94a3b8;">Break Savings Deposit</button>
+                        <div style="font-size: 0.9rem; margin-bottom: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div><strong>ID:</strong> <span id="info-id"></span></div>
+                            <div><strong>DOB:</strong> <span id="info-dob"></span></div>
+                            <div style="grid-column: span 2"><strong>Address:</strong> <span id="info-address"></span></div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Customer Relationship Notes (Saves live on input)</label>
+                            <textarea id="view-notes" rows="2" oninput="updateNotes()"></textarea>
+                        </div>
+
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border);">
+
+                        <div style="background: #fdf4ff; border: 1px solid #d8b4fe; padding: 10px; border-radius: 4px; margin-bottom: 15px;">
+                            <label style="color: var(--manager); font-weight: bold; display: inline-flex; align-items: center; gap: 5px;">
+                                <input type="checkbox" id="bypass-fees-checkbox" style="width: auto;" onchange="toggleFeeBypassPrompt(this)">
+                                Bypass Fees via Manager Authorization Override
+                            </label>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            
+                            <div style="border-right: 1px solid var(--border); padding-right: 15px;">
+                                <h3>Standard Actions / Transfers</h3>
+                                <div class="form-group"><label>Amount (JD)</label><input type="number" id="tx-amount" min="0.01" step="0.01" placeholder="0.00"></div>
+                                <div class="form-group">
+                                    <label>Fee Settlement Option</label>
+                                    <select id="tx-fee-method">
+                                        <option value="account">Deduct from Account / Cash</option>
+                                        <option value="card">Process via External Card Portal</option>
+                                    </select>
+                                </div>
+                                <div style="display:flex; gap: 5px; margin-bottom: 15px;">
+                                    <button onclick="processStandard('deposit')" style="background: var(--success); font-size: 0.85rem;">Deposit</button>
+                                    <button onclick="processStandard('withdraw')" style="background: var(--danger); font-size: 0.85rem;">Withdraw</button>
+                                </div>
+
+                                <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 4px;">
+                                    <h4 style="font-size:0.85rem; margin-bottom:5px;">Internal Account Transfer</h4>
+                                    <div class="form-group"><label style="font-size:0.8rem;">Target Account ID</label><input type="text" id="transfer-target" placeholder="ACC-XXXXXX"></div>
+                                    <button onclick="processTransfer()" class="secondary" style="font-size:0.85rem; background: var(--primary-light);">Execute Transfer</button>
+                                </div>
+                            </div>
+
+                            <div>
+                                <h3>Tied Savings Vault</h3>
+                                <div class="form-group"><label>Amount (JD)</label><input type="number" id="savings-amount" min="1" placeholder="0.00"></div>
+                                <div style="display:flex; flex-direction: column; gap: 5px;">
+                                    <button onclick="processSavings('deposit')" style="background: var(--warning); color: black;">Lock in Savings</button>
+                                    <button onclick="processSavings('break')" class="secondary" style="background: #94a3b8;">Break Savings Deposit</button>
                             </div>
                             <div style="margin-top:10px; padding: 6px; background: #fffbeb; font-size: 0.75rem; border-radius:4px; border:1px solid #fef3c7;">
-                                Current Fee Matrix Tracker:<br>
+                                Active Matrix Rates:<br>
                                 <span id="fee-tracker-txt">Deposit: 1 JD | Withdraw: 1 JD | Lock: Free | Break: 3 JD | Transfer: 1 JD</span>
                             </div>
                         </div>
@@ -206,7 +255,7 @@
             <div class="card">
                 <h2>5. Live Account Audit Ledger</h2>
                 <div id="log-box" class="log-container">
-                    <div class="log-entry">[SYSTEM] Waiting for terminal connection...</div>
+                    <div class="log-entry">[SYSTEM] Waiting for dashboard connection sequence...</div>
                 </div>
             </div>
         </div>
@@ -217,28 +266,35 @@
             <h2 style="border:none;">Secure Card Payment Gateway</h2>
             <p style="margin: 10px 0; color:#475569;">Routing fee settlement payload securely via merchant channels...</p>
             <div class="spinner"></div>
-            <p style="font-size: 0.8rem; color: #94a3b8;">Executing simulation pipeline... Success imminent.</p>
+            <p style="font-size: 0.8rem; color: #94a3b8;">Simulating active authorization hook...</p>
         </div>
     </div>
 
     <div id="toast" class="toast"></div>
 
     <script>
+        const MGR_USER = "jaber";
         const MGR_PASSCODE = "250606";
 
-        // Global Configurations
-        let bankDB = JSON.parse(localStorage.getItem('bankDB_v2')) || {};
-        let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v2')) || {
-            deposit: 1,
-            withdraw: 1,
-            break: 3,
-            transfer: 1
-        };
+        // Global DB state structures
+        let bankDB = JSON.parse(localStorage.getItem('bankDB_v3')) || {};
+        let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v3')) || { deposit: 1, withdraw: 1, break: 3, transfer: 1 };
+        let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v3')) || {}; // structural storage for added users
+        
+        // Ledger tracking metrics for tracking ribbon calculations 
+        let internalFinances = JSON.parse(localStorage.getItem('internalFinances_v3')) || { totalFeesCollected: 0, totalSavingsProfitGiven: 0 };
+
         let activeAccountID = null;
+        let activeEmployeeUser = null;
         let isFeeBypassed = false;
 
-        function saveDB() { localStorage.setItem('bankDB_v2', JSON.stringify(bankDB)); }
-        function saveFees() { localStorage.setItem('feeStructure_v2', JSON.stringify(feeStructure)); }
+        function saveAllData() {
+            localStorage.setItem('bankDB_v3', JSON.stringify(bankDB));
+            localStorage.setItem('feeStructure_v3', JSON.stringify(feeStructure));
+            localStorage.setItem('employeeDB_v3', JSON.stringify(employeeDB));
+            localStorage.setItem('internalFinances_v3', JSON.stringify(internalFinances));
+            calculateRibbonMetrics();
+        }
 
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
@@ -246,6 +302,83 @@
             toast.className = `toast ${type}`;
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        // --- SECTION 1: SYSTEM PRE-LOGIN GATEWAYS ---
+        function handleSystemLogin() {
+            const userIn = document.getElementById('sys-username').value.trim();
+            const passIn = document.getElementById('sys-passcode').value.trim();
+
+            if (userIn === MGR_USER && passIn === MGR_PASSCODE) {
+                activeEmployeeUser = MGR_USER;
+                showToast("Welcome Root Manager Jaber. Systems operational.", "manager");
+                document.getElementById('manager-only-panel').style.display = 'block';
+                enterDashboard();
+            } else if (employeeDB[userIn] && employeeDB[userIn] === passIn) {
+                activeEmployeeUser = userIn;
+                showToast(`Welcome staff member: ${userIn}. Access authorized.`);
+                document.getElementById('manager-only-panel').style.display = 'none';
+                enterDashboard();
+            } else {
+                showToast("Authentication Failed. Invalid system configuration keys.", "error");
+            }
+        }
+
+        function enterDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('main-dashboard').style.display = 'block';
+            document.getElementById('active-user-lbl').innerText = activeEmployeeUser;
+            
+            // reset fields
+            document.getElementById('sys-username').value = '';
+            document.getElementById('sys-passcode').value = '';
+            
+            calculateRibbonMetrics();
+            updateFeeDisplayLabels();
+        }
+
+        function handleSystemLogout() {
+            activeEmployeeUser = null;
+            lockAccount();
+            document.getElementById('main-dashboard').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        function registerNewEmployee() {
+            const empUser = document.getElementById('new-emp-user').value.trim();
+            const empPass = document.getElementById('new-emp-pass').value.trim();
+
+            if (!empUser || !empPass) { showToast("Provide a valid username and passcode structural key.", "error"); return; }
+            if (empUser === MGR_USER) { showToast("Cannot override protected username index profile.", "error"); return; }
+
+            employeeDB[empUser] = empPass;
+            saveAllData();
+            showToast(`Employee profile '${empUser}' registered successfully.`, "manager");
+            document.getElementById('new-emp-user').value = '';
+            document.getElementById('new-emp-pass').value = '';
+        }
+
+        // --- SECTION 2: RIBBON CALCULATOR MATRIX ---
+        function calculateRibbonMetrics() {
+            let accountsCount = Object.keys(bankDB).length;
+            let vaultTotal = 0;
+
+            Object.keys(bankDB).forEach(id => {
+                vaultTotal += bankDB[id].balance;
+                vaultTotal += bankDB[id].savingsBalance;
+            });
+
+            let totalFees = internalFinances.totalFeesCollected || 0;
+            let totalDistributedProfit = internalFinances.totalSavingsProfitGiven || 0;
+            let netProfit = totalFees - totalDistributedProfit;
+
+            document.getElementById('ribbon-accounts').innerText = accountsCount;
+            document.getElementById('ribbon-vault').innerText = `${vaultTotal.toFixed(2)} JD`;
+            document.getElementById('ribbon-fees').innerText = `${totalFees.toFixed(2)} JD`;
+            
+            const profitLbl = document.getElementById('ribbon-profit');
+            profitLbl.innerText = `${netProfit.toFixed(2)} JD`;
+            profitLbl.style.color = netProfit >= 0 ? '#4ade80' : '#ef4444';
         }
 
         function updateFeeDisplayLabels() {
@@ -256,7 +389,7 @@
             document.getElementById('fee-break-cfg').value = feeStructure.break;
         }
 
-        // 1. Core Account Generator + Global 1% compounding formula logic
+        // --- SECTION 3: BANK CUSTOMER CORE OPERATIONS ---
         document.getElementById('create-account-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -277,24 +410,23 @@
                 savingsBalance: 0,
                 notes: '',
                 logs: [
-                    `[${timestamp}] Account systematically created.`,
-                    `[${timestamp}] Initial core deposit of ${initialDeposit} JD registered.`
+                    `[${timestamp}] [Processed by: ${activeEmployeeUser}] Account initialized in database storage scope.`,
+                    `[${timestamp}] [Processed by: ${activeEmployeeUser}] Opening cash vault deposit of ${initialDeposit} JD applied.`
                 ]
             };
 
-            // Before finalizing compilation, apply the global 1% growth logic to ALL current active accounts
+            // Run structural 1% incremental evaluation calculation matrix rules
             evaluateGlobalSavingsGrowth();
 
             bankDB[accountId] = newAccount;
-            saveDB();
+            saveAllData();
 
-            alert(`ACCOUNT PROVISIONED!\n\nID: ${accountId}\nPasscode PIN: ${passcode}`);
+            alert(`CUSTOMER PROVISION STATUS: SUCCESS!\n\nProvide Credentials:\nAccount ID: ${accountId}\nPIN Passcode: ${passcode}`);
             this.reset();
-            showToast(`Account ${accountId} initialized. All background tied savings calculated.`, 'success');
+            showToast(`Customer account profile compiled safely. Systems calculated interest loops.`);
             if(activeAccountID) loadWorkstation();
         });
 
-        // 1% Compound evaluator (Adds tracking notes only on cumulative batches of 5 JD profit intervals)
         function evaluateGlobalSavingsGrowth() {
             const timestamp = new Date().toLocaleString();
             Object.keys(bankDB).forEach(id => {
@@ -303,31 +435,33 @@
                     let baseInterest = acc.savingsBalance * 0.01;
                     acc.savingsBalance += baseInterest;
                     
-                    // Track structural milestone adjustments matching sets of 5 JD markers
+                    // Increment the system-wide payout metrics ledger tracking pool
+                    internalFinances.totalSavingsProfitGiven += baseInterest;
+                    
                     if(!acc.trackedProfitPool) acc.trackedProfitPool = 0;
                     acc.trackedProfitPool += baseInterest;
 
                     if (acc.trackedProfitPool >= 5) {
                         let intervalsOfFive = Math.floor(acc.trackedProfitPool / 5);
                         let loggableYield = intervalsOfFive * 5;
-                        acc.logs.push(`[${timestamp}] [savings profit] Threshold reached: ${loggableYield} JD applied to tied assets.`);
-                        acc.trackedProfitPool -= loggableYield; // retain remainder fraction for upcoming evaluations
+                        acc.logs.push(`[${timestamp}] [savings profit] Cumulative growth milestone triggered: ${loggableYield} JD assigned to tied asset structures.`);
+                        acc.trackedProfitPool -= loggableYield;
                     }
                 }
             });
         }
 
-        // 2. Gateway Portals (Standard & Manager Bypass via Names)
+        // --- SECTION 4: CUSTOMER SELECTION WORKSTATION ---
         function accessAccount() {
             const idInput = document.getElementById('auth-acc-id').value.trim();
             const passInput = document.getElementById('auth-passcode').value.trim();
 
-            if (!bankDB[idInput]) { showToast("Account ID not discovered in records.", "error"); return; }
-            if (bankDB[idInput].passcode !== passInput) { showToast("Invalid credentials provided.", "error"); return; }
+            if (!bankDB[idInput]) { showToast("Account ID records empty matching parameters.", "error"); return; }
+            if (bankDB[idInput].passcode !== passInput) { showToast("Invalid structural pass identifier code.", "error"); return; }
 
             activeAccountID = idInput;
             loadWorkstation();
-            showToast("Secure access authorized.");
+            showToast(`Loaded customer portal workspace for ${bankDB[idInput].id}.`);
         }
 
         function managerBypassAccess() {
@@ -335,10 +469,9 @@
             const lName = document.getElementById('bypass-last').value.trim().toLowerCase();
             const mgrPass = document.getElementById('bypass-code').value.trim();
 
-            if (mgrPass !== MGR_PASSCODE) { showToast("Access Denied: Bad Manager Key.", "error"); return; }
-            if (!fName || !lName) { showToast("Provide a matching first and last profile name.", "error"); return; }
+            if (mgrPass !== MGR_PASSCODE) { showToast("Bypass Refused: Unauthorized management credentials.", "error"); return; }
+            if (!fName || !lName) { showToast("Fill name specifications completely.", "error"); return; }
 
-            // Seek target index mapping matching parameters
             let targetId = null;
             Object.keys(bankDB).forEach(id => {
                 if(bankDB[id].firstName.toLowerCase() === fName && bankDB[id].lastName.toLowerCase() === lName) {
@@ -346,15 +479,12 @@
                 }
             });
 
-            if(!targetId) {
-                showToast("No database entries matched that Name profile.", "error");
-                return;
-            }
+            if(!targetId) { showToast("No registry objects mirror those identifier metrics.", "error"); return; }
 
             activeAccountID = targetId;
             loadWorkstation();
-            showToast(`Manager Bypass Successful: Loaded ${bankDB[targetId].id}`, "manager");
-            // clear inputs
+            showToast(`Manager Bypass Applied: Active Workstation linked to ${bankDB[targetId].id}`, "manager");
+            
             document.getElementById('bypass-first').value = '';
             document.getElementById('bypass-last').value = '';
             document.getElementById('bypass-code').value = '';
@@ -363,13 +493,13 @@
         function lockAccount() {
             activeAccountID = null;
             isFeeBypassed = false;
-            document.getElementById('bypass-fees-checkbox').checked = false;
+            const chk = document.getElementById('bypass-fees-checkbox');
+            if(chk) chk.checked = false;
             document.getElementById('no-account-selected').style.display = 'block';
             document.getElementById('account-view').style.display = 'none';
-            document.getElementById('log-box').innerHTML = `<div class="log-entry">[SYSTEM] Terminal securely locked.</div>`;
+            document.getElementById('log-box').innerHTML = `<div class="log-entry">[SYSTEM] Workspace cleared.</div>`;
         }
 
-        // Workstation Engine Dynamic Builders
         function loadWorkstation() {
             const acc = bankDB[activeAccountID];
             if (!acc) return;
@@ -388,7 +518,6 @@
             document.getElementById('view-notes').value = acc.notes || '';
 
             renderLogs(acc.logs);
-            updateFeeDisplayLabels();
         }
 
         function renderLogs(logs) {
@@ -399,18 +528,17 @@
         function updateNotes() {
             if (!activeAccountID) return;
             bankDB[activeAccountID].notes = document.getElementById('view-notes').value;
-            saveDB();
+            localStorage.setItem('bankDB_v3', JSON.stringify(bankDB));
         }
 
-        // Fee Overrides & Fee Modifications 
         function toggleFeeBypassPrompt(checkbox) {
             if(checkbox.checked) {
-                let pass = prompt("Enter Manager Passcode to authorize total fee exceptions:");
+                let pass = prompt("Provide Manager override code to cancel operation transaction cost models:");
                 if(pass === MGR_PASSCODE) {
                     isFeeBypassed = true;
-                    showToast("Manager Mode: Transaction fees bypassed for current window context.", "manager");
+                    showToast("Manager System Privilege: Transaction processing rates set to 0 JD.", "manager");
                 } else {
-                    alert("Unauthorized!");
+                    alert("Verification failure!");
                     checkbox.checked = false;
                     isFeeBypassed = false;
                 }
@@ -420,17 +548,13 @@
         }
 
         function updateFeeStructure() {
-            const mCode = document.getElementById('fee-mgr-code').value;
-            if (mCode !== MGR_PASSCODE) { showToast("Invalid structural update validation signature.", "error"); return; }
-
             feeStructure.deposit = parseFloat(document.getElementById('fee-deposit-cfg').value) || 0;
             feeStructure.withdraw = parseFloat(document.getElementById('fee-withdraw-cfg').value) || 0;
             feeStructure.break = parseFloat(document.getElementById('fee-break-cfg').value) || 0;
             
-            saveFees();
+            saveAllData();
             updateFeeDisplayLabels();
-            document.getElementById('fee-mgr-code').value = '';
-            showToast("Global operational pricing values modified successfully.", "manager");
+            showToast("Global operational cost policies modified.", "manager");
         }
 
         function runCardPortal(callback) {
@@ -439,7 +563,7 @@
             setTimeout(() => { overlay.style.display = 'none'; callback(); }, 2500);
         }
 
-        // 3. Transactions Processing Matrix
+        // --- SECTION 5: BALANCING AND TRANSACTIONS ENGINES ---
         function processStandard(type) {
             const acc = bankDB[activeAccountID];
             const amount = parseFloat(document.getElementById('tx-amount').value);
@@ -448,21 +572,23 @@
             
             const dynamicFee = isFeeBypassed ? 0 : (type === 'deposit' ? feeStructure.deposit : feeStructure.withdraw);
 
-            if (isNaN(amount) || amount <= 0) { showToast("Enter a valid processing amount structural metric.", "error"); return; }
+            if (isNaN(amount) || amount <= 0) { showToast("Please submit valid monetary units.", "error"); return; }
 
             if (type === 'withdraw') {
                 if (method === 'account') {
                     if (acc.balance < (amount + dynamicFee)) {
-                        showToast(`Insufficient Liquid Assets! Overdraft protection blocked. Needed: ${(amount + dynamicFee)} JD. Try choosing External Card Processing for fee coverage.`, "error");
+                        showToast(`Overdraft Blocked! Total needed: ${(amount + dynamicFee)} JD. Use Card payment for fee to bypass baseline calculation negative checks.`, "error");
                         return;
                     }
                     acc.balance -= (amount + dynamicFee);
-                    acc.logs.push(`[${timestamp}] Withdrawal: Took out ${amount} JD cash. Charged standard processing fee of ${dynamicFee} JD via core balance.`);
+                    internalFinances.totalFeesCollected += dynamicFee;
+                    acc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Withdrawal: Dispensed ${amount} JD. Deducted fee of ${dynamicFee} JD from core ledger.`);
                 } else {
-                    if (acc.balance < amount) { showToast("Insufficient base funds for core payout value requirement.", "error"); return; }
+                    if (acc.balance < amount) { showToast("Insufficient capital within basic cash account values.", "error"); return; }
                     runCardPortal(() => {
                         acc.balance -= amount;
-                        acc.logs.push(`[${timestamp}] Withdrawal: Took out ${amount} JD. Transaction fee processing payload of ${dynamicFee} JD settled via External Card Portal.`);
+                        internalFinances.totalFeesCollected += dynamicFee;
+                        acc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Withdrawal: Dispensed ${amount} JD. External Card clearance confirmed processing fee of ${dynamicFee} JD.`);
                         finalizeTx();
                     });
                     return;
@@ -471,13 +597,15 @@
             
             else if (type === 'deposit') {
                 if (method === 'account') {
-                    if (!isFeeBypassed && amount <= dynamicFee) { showToast("Bulk deposit cannot balance equal to or less than operating matrix fees.", "error"); return; }
+                    if (!isFeeBypassed && amount <= dynamicFee) { showToast("Deposit must scale larger than processing framework rates.", "error"); return; }
                     acc.balance += (amount - dynamicFee);
-                    acc.logs.push(`[${timestamp}] Deposit: Added ${amount} JD cash. Retained administrative processing fee of ${dynamicFee} JD.`);
+                    internalFinances.totalFeesCollected += dynamicFee;
+                    acc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Deposit: Received ${amount} JD. Collected processing cost of ${dynamicFee} JD from bulk.`);
                 } else {
                     runCardPortal(() => {
                         acc.balance += amount;
-                        acc.logs.push(`[${timestamp}] Deposit: Loaded ${amount} JD cash payload. Standalone fee of ${dynamicFee} JD clearing completed over network card link.`);
+                        internalFinances.totalFeesCollected += dynamicFee;
+                        acc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Deposit: Received ${amount} JD. Independent fee network processed card authorization for ${dynamicFee} JD.`);
                         finalizeTx();
                     });
                     return;
@@ -491,64 +619,65 @@
             const amount = parseFloat(document.getElementById('savings-amount').value);
             const timestamp = new Date().toLocaleString();
 
-            if (isNaN(amount) || amount <= 0) { showToast("Enter a valid savings value amount.", "error"); return; }
+            if (isNaN(amount) || amount <= 0) { showToast("Define a structured positive evaluation numerical string.", "error"); return; }
 
             if (type === 'deposit') {
-                if (acc.balance < amount) { showToast("Insufficient liquidity to complete transition to tied savings assets.", "error"); return; }
+                if (acc.balance < amount) { showToast("Core operational balance values lack required coverage assets.", "error"); return; }
                 acc.balance -= amount;
                 acc.savingsBalance += amount;
-                acc.logs.push(`[${timestamp}] Asset Move: Transferred ${amount} JD to locked savings status. Fee: FREE.`);
+                acc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Asset Lock: Moved ${amount} JD into tied savings positions. Fee: FREE.`);
             } 
             
             else if (type === 'break') {
                 const dynamicFee = isFeeBypassed ? 0 : feeStructure.break;
-                if (acc.savingsBalance < amount) { showToast("Target asset extraction exceeds available locked balances.", "error"); return; }
-                if (acc.balance < dynamicFee) { showToast(`Breaking penalty demands ${dynamicFee} JD liquid asset availability. Core balance must stay positive.`, "error"); return; }
+                if (acc.savingsBalance < amount) { showToast("Extraction scope breaks bounds of active user locked portfolio.", "error"); return; }
+                if (acc.balance < dynamicFee) { showToast(`Breaking penalty fees require ${dynamicFee} JD liquidity in primary account core. Balance must stay positive.`, "error"); return; }
                 
                 acc.savingsBalance -= amount;
                 acc.balance += (amount - dynamicFee);
-                acc.logs.push(`[${timestamp}] Term Break: Cracked ${amount} JD out of locked assets. Applied breaking penalty fee of ${dynamicFee} JD.`);
+                internalFinances.totalFeesCollected += dynamicFee;
+                acc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Term Break: Unlocked ${amount} JD asset bundle. System executed penalty fee of ${dynamicFee} JD.`);
             }
             finalizeTx();
         }
 
-        // Account Transfer Processing Architecture
         function processTransfer() {
             const sourceAcc = bankDB[activeAccountID];
             const targetId = document.getElementById('transfer-target').value.trim();
             const amount = parseFloat(document.getElementById('tx-amount').value);
             const timestamp = new Date().toLocaleString();
             
-            const dynamicFee = isFeeBypassed ? 0 : feeStructure.transfer; // 1 JD default or dynamic structure
+            const dynamicFee = isFeeBypassed ? 0 : feeStructure.transfer;
 
-            if (!bankDB[targetId]) { showToast("Target Destination Account Registry ID could not be located.", "error"); return; }
-            if (targetId === activeAccountID) { showToast("Invalid Action: Cannot pass capital loops directly back to same source index.", "error"); return; }
-            if (isNaN(amount) || amount <= 0) { showToast("Specify a transfer transaction value limit payload.", "error"); return; }
+            if (!bankDB[targetId]) { showToast("Target clearing index registration points missing from database.", "error"); return; }
+            if (targetId === activeAccountID) { showToast("Self-routing internal processing loops are forbidden.", "error"); return; }
+            if (isNaN(amount) || amount <= 0) { showToast("Provide legal transfer transaction quantity numbers.", "error"); return; }
 
             if (sourceAcc.balance < (amount + dynamicFee)) {
-                showToast(`Insufficient liquidation scope. Total out: ${(amount + dynamicFee)} JD (including transaction fee of ${dynamicFee} JD). Blocked to preserve structural assets.`, "error");
+                showToast(`Insufficient asset liquidity. Combined payout structure requires ${(amount + dynamicFee)} JD (Transfer + Transfer Fee).`, "error");
                 return;
             }
 
-            // Deduct from Source
+            // Debit Source
             sourceAcc.balance -= (amount + dynamicFee);
-            sourceAcc.logs.push(`[${timestamp}] Account Transfer Out: Routed ${amount} JD to index account ${targetId}. Fee: ${dynamicFee} JD.`);
+            internalFinances.totalFeesCollected += dynamicFee;
+            sourceAcc.logs.push(`[${timestamp}] [Processed by: ${activeEmployeeUser}] Transfer Outbound: Settled ${amount} JD payload to target ${targetId}. Fee: ${dynamicFee} JD.`);
 
-            // Deliver to target
+            // Credit Destination target
             const recipientAcc = bankDB[targetId];
             recipientAcc.balance += amount;
-            recipientAcc.logs.push(`[${timestamp}] Internal Clearing Received: Incoming collection of ${amount} JD deposited from account profile source ${activeAccountID}.`);
+            recipientAcc.logs.push(`[${timestamp}] Transfer Inbound: Accepted clearing deposit of ${amount} JD coming from account index source ${activeAccountID}.`);
 
             finalizeTx();
         }
 
         function finalizeTx() {
-            saveDB();
+            saveAllData();
             loadWorkstation();
             document.getElementById('tx-amount').value = '';
             document.getElementById('savings-amount').value = '';
             document.getElementById('transfer-target').value = '';
-            showToast("Transactional payload executed and synchronized.");
+            showToast("Transaction logged and variables compiled safely across network data layers.");
         }
     </script>
 </body>
