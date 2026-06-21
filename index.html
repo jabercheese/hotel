@@ -3,893 +3,1442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enterprise ER Medical Command Center</title>
+    <title>Amman English Bank - Core Interface & ATM Portal</title>
     <style>
         :root {
-            --level1: #dc3545;
-            --level2: #fd7e14;
-            --level3: #ffc107;
-            --level4: #28a745;
-            --level5: #6c757d;
-            --bg-dark: #0f172a;
-            --bg-light: #f8fafc;
-            --primary: #2563eb;
+            --primary: #1e3a8a;
+            --primary-light: #3b82f6;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --manager: #7c3aed;
+            --atm-screen: #0f172a;
         }
 
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: var(--bg-light);
-            color: #1e293b;
-        }
-
-        header {
-            background-color: var(--bg-dark);
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* Role Switcher Toolbar */
-        .role-bar {
-            background: #e2e8f0;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .role-btn {
-            padding: 8px 16px;
-            border: none;
-            background: #cbd5e1;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 4px;
-            transition: all 0.2s;
-        }
-        .role-btn.active {
-            background: var(--primary);
-            color: white;
-        }
-
-        .dashboard-layout {
-            display: grid;
-            grid-template-columns: 1fr 2.5fr;
-            gap: 20px;
-        }
-
-        .panel {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        h2 { margin-top: 0; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; font-size: 18px; color: var(--bg-dark); }
-        h3 { font-size: 15px; margin: 10px 0 5px 0; color: #475569;}
-
-        .form-group { margin-bottom: 12px; }
-        label { display: block; font-weight: 600; margin-bottom: 4px; font-size: 13px; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; font-size: 13px;}
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding: 20px; }
         
-        button {
-            width: 100%; padding: 10px; background-color: var(--primary); color: white;
-            border: none; border-radius: 4px; font-weight: bold; cursor: pointer; margin-top: 5px;
-        }
-        button:hover { background-color: #1d4ed8; }
-        .btn-danger { background-color: #ef4444; }
-        .btn-danger:hover { background-color: #dc2626; }
-        .btn-secondary { background-color: #64748b; }
-        .btn-secondary:hover { background-color: #475569; }
+        /* Ribbon Styles */
+        header { background: var(--primary); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .header-title-area { display: flex; align-items: center; gap: 15px; }
+        .bank-logo { width: 45px; height: 45px; fill: #38bdf8; }
+        .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .ribbon-metrics { display: flex; flex-wrap: wrap; gap: 20px; background: rgba(21, 128, 61, 0.2); padding: 12px 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); margin-top: 10px; }
+        .metric-item { font-size: 0.95rem; font-weight: 500; }
+        .metric-item span { font-weight: bold; color: #38bdf8; }
+        .metric-item .profit-val { color: #4ade80; }
 
-        /* Code Blue Callout */
-        .btn-code-blue {
-            background-color: #1e40af;
-            animation: pulse-blue 2s infinite;
-        }
-        @keyframes pulse-blue {
-            0% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(30, 64, 175, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(30, 64, 175, 0); }
-        }
+        /* Login Screen Setup */
+        #login-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: #0f172a; z-index: 9999; display: none; justify-content: center; align-items: center; }
+        .login-card { background: white; padding: 35px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
 
-        /* ER Rooms Grid */
-        .rooms-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 15px;
-        }
+        #main-dashboard { display: none; }
+        .container { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media (max-width: 1024px) { .container { grid-template-columns: 1fr; } }
 
-        .room-card {
-            background: #ffffff;
-            border-left: 8px solid #cbd5e1;
-            border-radius: 6px;
-            padding: 15px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: all 0.2s;
-            position: relative;
-        }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        h2 { margin-bottom: 15px; color: var(--primary); font-size: 1.4rem; border-bottom: 2px solid var(--border); padding-bottom: 5px; }
+        h3 { margin-top: 15px; margin-bottom: 10px; color: var(--text); font-size: 1.1rem; }
+        
+        .form-group { margin-bottom: 12px; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+        .form-row .form-group { flex: 1; margin-bottom: 0; }
+        label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        input, textarea, select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary-light); }
+        
+        /* Unified Static Prefix Wrapper Layout */
+        .prefix-input-container { display: flex; align-items: center; background: #ffffff; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+        .prefix-input-container span { background: #e2e8f0; color: #475569; padding: 8px 12px; font-weight: bold; font-size: 0.95rem; border-right: 1px solid var(--border); user-select: none; }
+        .prefix-input-container input { border: none; border-radius: 0; }
 
-        .urgency-1 { border-left-color: var(--level1); }
-        .urgency-2 { border-left-color: var(--level2); }
-        .urgency-3 { border-left-color: var(--level3); }
-        .urgency-4 { border-left-color: var(--level4); }
-        .urgency-5 { border-left-color: var(--level5); }
+        button { background: var(--primary); color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
+        button:hover { background: var(--primary-light); }
+        button.secondary { background: #64748b; }
+        button.secondary:hover { background: #475569; }
+        button.manager-btn { background: var(--manager); }
+        button.manager-btn:hover { background: #9333ea; }
+        button.danger-btn { background: var(--danger); }
+        button.danger-btn:hover { background: #dc2626; }
+        button.action-toggle-btn { padding: 4px 8px; font-size: 0.75rem; width: auto; display: inline-block; margin-top: 5px; }
 
-        /* Code Blue Dynamic Animation Styles */
-        .code-blue-active {
-            animation: shake 0.3s infinite, blink-blue-bg 0.5s infinite alternate !important;
-            border-left-color: #0000ff !important;
-        }
-        @keyframes shake {
-            0% { transform: translate(1px, 1px) rotate(0deg); }
-            100% { transform: translate(-1px, -2px) rotate(-1deg); }
-        }
-        @keyframes blink-blue-bg {
-            0% { background-color: #ffffff; box-shadow: inset 0 0 20px rgba(0,0,255,0.2); }
-            100% { background-color: #93c5fd; box-shadow: inset 0 0 30px rgba(0,0,255,0.6); }
-        }
+        .auth-box { background: #eff6ff; border: 1px dashed var(--primary-light); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .manager-box { background: #faf5ff; border: 1px dashed var(--manager); padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        
+        .account-details { display: none; }
+        .account-details.active { display: block; }
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #f1f5f9; padding: 10px; border-radius: 4px; text-align: center; }
+        .stat-box span { display: block; font-size: 0.8rem; color: #64748b; }
+        .stat-box strong { font-size: 1.2rem; color: var(--primary); }
 
-        .room-header {
-            display: flex; justify-content: space-between; align-items: center;
-            font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px;
-        }
+        .log-container { max-height: 250px; overflow-y: auto; background: #0f172a; color: #38bdf8; font-family: monospace; padding: 10px; border-radius: 4px; font-size: 0.85rem; }
+        .log-entry { margin-bottom: 6px; border-bottom: 1px solid #1e293b; padding-bottom: 4px; }
+        
+        /* Interactive Data Lists styles */
+        .data-list-item { background: #f8fafc; border: 1px solid var(--border); padding: 10px; margin-bottom: 8px; border-radius: 4px; cursor: pointer; transition: background 0.2s; position: relative; }
+        .data-list-item:hover { background: #f1f5f9; }
+        .status-badge { position: absolute; top: 10px; right: 10px; font-size: 0.75rem; font-weight: bold; padding: 2px 6px; border-radius: 3px; }
+        .status-badge.active { background: #d1fae5; color: #065f46; }
+        .status-badge.suspended { background: #fee2e2; color: #991b1b; }
 
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 11px; color: white; font-weight: bold; }
-        .b-1 { background-color: var(--level1); }
-        .b-2 { background-color: var(--level2); }
-        .b-3 { background-color: var(--level3); }
-        .b-4 { background-color: var(--level4); }
-        .b-5 { background-color: var(--level5); }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 15px 25px; border-radius: 4px; color: white; font-weight: bold; z-index: 2000; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.manager { background: var(--manager); }
 
-        .patient-clickable {
-            background: #f1f5f9; padding: 10px; border-radius: 6px; cursor: pointer;
-            border: 1px dashed #cbd5e1; margin-bottom: 10px; text-align: center; font-weight: 600;
-        }
-        .patient-clickable:hover { background: #e2e8f0; color: var(--primary); }
+        /* Modal Prompt Overlay */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); z-index: 10000; display: none; align-items: center; justify-content: center; }
+        .modal-card { background: white; padding: 25px; border-radius: 8px; width: 100%; max-width: 450px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .text-green-bold { color: #16a34a; font-weight: bold; }
+        .text-red-bold { color: #dc2626; font-weight: bold; }
 
-        .clinical-box {
-            background: #fafafa; border: 1px solid #e2e8f0; border-radius: 4px;
-            padding: 8px; margin-bottom: 6px; font-size: 12px;
-        }
-        .clinical-box strong { color: #475569; display: block; margin-bottom: 2px;}
+        /* --- ATM PORTAL INTERFACE --- */
+        #customer-atm-portal { display: block; max-width: 600px; margin: 40px auto; }
+        .atm-housing { background: #334155; border: 12px solid #1e293b; border-radius: 16px; padding: 20px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3); }
+        .atm-screen { background: var(--atm-screen); min-height: 380px; border-radius: 8px; padding: 25px; color: #38bdf8; font-family: monospace; position: relative; border: 4px solid #475569; display: flex; flex-direction: column; }
+        .atm-loading-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 320px; font-size: 1.5rem; letter-spacing: 1px; color: #f59e0b; }
+        .atm-keypad-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; max-width: 280px; margin: 15px auto 0 auto; }
+        .atm-key { background: #e2e8f0; color: #0f172a; font-size: 1.2rem; font-weight: bold; padding: 12px; border: none; border-radius: 6px; cursor: pointer; box-shadow: 0 3px 0 #94a3b8; text-align: center; }
+        .atm-key:active { transform: translateY(3px); box-shadow: none; }
+        .atm-key.clear-key { background: #f59e0b; color: white; box-shadow: 0 3px 0 #b45309; }
+        .atm-key.enter-key { background: #10b981; color: white; box-shadow: 0 3px 0 #047857; }
+        .atm-options-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .atm-opt-btn { background: #1e293b; border: 2px solid #38bdf8; color: #38bdf8; padding: 12px; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 1rem; }
+        .atm-opt-btn:hover { background: #38bdf8; color: #0f172a; }
+        .search-box-modifier { width: 100%; padding: 6px 10px; margin-bottom: 10px; border: 1px solid var(--manager); border-radius: 4px; font-size: 0.85rem; }
+        
+        /* Specific ATM Prefix Formatting Rules */
+        .atm-prefix-wrapper { display: inline-flex; align-items: center; background: #1e293b; border: 1px solid #475569; border-radius: 4px; margin: 0 auto; max-width: 260px; overflow: hidden; }
+        .atm-prefix-wrapper span { background: #334155; color: #38bdf8; padding: 8px 12px; font-weight: bold; }
+        .atm-prefix-wrapper input { border: none; background: transparent; color: white; text-align: left; padding: 8px 10px; width: 100%; font-family: monospace; font-size: 1rem; }
+        .atm-prefix-wrapper input:focus { outline: none; }
 
-        /* Modals */
-        .modal-overlay {
-            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(15, 23, 42, 0.6);
-            display: flex; justify-content: center; align-items: center; z-index: 1000; visibility: hidden;
-        }
-        .modal-overlay.active { visibility: visible; }
-        .modal-content { background: white; padding: 25px; border-radius: 8px; width: 450px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white;}
-        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 12px; }
-        th { background-color: var(--bg-dark); color: white; }
+        /* Manager Tabs Styles */
+        .mgr-tab-bar { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid var(--manager); padding-bottom: 8px; }
+        .mgr-tab-btn { background: #f1f5f9; color: #475569; padding: 6px 12px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 4px; font-weight: bold; width: auto; cursor: pointer; transition: all 0.2s; }
+        .mgr-tab-btn.active { background: var(--manager); color: white; border-color: var(--manager); }
+        .mgr-tab-content { display: none; }
+        .mgr-tab-content.active { display: block; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Emergency Command Center</h1>
-        <div id="activeRoleDisplay" style="font-weight: bold; color: #38bdf8;">Current Portal: Admission Officer</div>
-    </header>
-
-    <div class="role-bar">
-        <span><strong>Access Gateway:</strong></span>
-        <button class="role-btn active" id="btn-role-admission" onclick="switchPortal('admission')">Admission Portal</button>
-        <button class="role-btn" id="btn-role-doctor" onclick="switchPortal('doctor')">Doctor Portal</button>
-        <button class="role-btn" id="btn-role-labs" onclick="switchPortal('labs')">Laboratory Portal</button>
-        <button class="role-btn" id="btn-role-manager" onclick="switchPortal('manager')" style="background-color: #a855f7; color: white;">Manager Portal</button>
-    </div>
-
-    <div class="dashboard-layout">
-        <div class="left-column">
-            
-            <div id="panel-admission" class="panel portal-workspace">
-                <h2>New Intake Triage</h2>
+    <!-- TRANSACTION CONFIRMATION SCREEN MODAL -->
+    <div id="tx-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h3 style="margin-top:0; border-bottom: 2px solid var(--border); padding-bottom: 8px;" id="modal-title">Confirm Transaction</h3>
+            <div style="margin: 15px 0; font-size: 1.05rem; line-height: 1.6;">
+                <p id="modal-amount-line">Amount: <span id="modal-amount-val" class="text-green-bold">0.00 JD</span></p>
+                <p id="modal-fee-line">Dynamic Processing Fee: <span id="modal-fee-val" class="text-red-bold">0.00 JD</span></p>
                 
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 8px; border-radius: 4px; margin-bottom: 15px;">
-                    <label><strong>Retrieve Registered Patient Data:</strong></label>
-                    <input type="text" id="searchQuery" placeholder="Enter Hospital ID or Last Name" style="margin-bottom: 5px;">
-                    <input type="date" id="searchDob" placeholder="Verify DOB if searching by Name" style="margin-bottom: 5px;">
-                    <button type="button" class="btn-secondary" onclick="lookupPatient()" style="padding:4px; font-size:12px;">Query Records</button>
+                <!-- Fee Bypass Checkbox for Manager Only -->
+                <div id="manager-bypass-checkbox-area" style="display:none; margin-top:12px; padding:10px; background:#faf5ff; border:1px dashed var(--manager); border-radius:4px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;">
+                        <input type="checkbox" id="bypass-fee-toggle" style="width:auto; cursor:pointer;">
+                        <span style="color:var(--manager); font-weight:bold; font-size:0.9rem;">Waive operational cash fee (Manager Override)</span>
+                    </label>
                 </div>
-
-                <form id="admissionForm">
-                    <div class="form-group">
-                        <label>First Name</label>
-                        <input type="text" id="pFirstName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Last Name</label>
-                        <input type="text" id="pLastName" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Date of Birth</label>
-                        <input type="date" id="pDob" onchange="calculateFormAge()" required>
-                        <small id="calculatedAgeForm" style="color: var(--primary); font-weight: bold;"></small>
-                    </div>
-                    <div class="form-group">
-                        <label>Insurance ID (Optional)</label>
-                        <input type="text" id="pInsurance">
-                    </div>
-                    <div class="form-group">
-                        <label>Symptoms / Chief Complaint</label>
-                        <textarea id="pSymptoms" rows="2" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Trauma Classification</label>
-                        <select id="pUrgency">
-                            <option value="1">Level 1: IMMEDIATE - LIFE THREATENING</option>
-                            <option value="2">Level 2: Very Urgent</option>
-                            <option value="3">Level 3: Urgent</option>
-                            <option value="4">Level 4: Standard</option>
-                            <option value="5">Level 5: Non-Urgent</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Allocation Destination</label>
-                        <select id="pRoom" required></select>
-                    </div>
-                    <button type="submit">Complete Intake & Bed Assign</button>
-                </form>
             </div>
-
-            <div id="panel-clinical-info" class="panel portal-workspace" style="display:none;">
-                <h2>Clinical Operations Mode</h2>
-                <p style="font-size:13px; color: #64748b;">Please click a patient card inside an active ER room bay to perform dynamic interactions, evaluate records, authorize diagnostic routing paths, log treatments, or dispatch clinical release forms.</p>
-            </div>
-
-            <div id="panel-manager" class="panel portal-workspace" style="display:none;">
-                <h2>System Manager Controls</h2>
-                <div class="form-group">
-                    <label>Master Passcode Config</label>
-                    <input type="text" id="mgrPasscodeField" value="1234">
-                    <button onclick="updateMasterPasscode()">Update Passcode</button>
-                </div>
-                <hr>
-                <div class="form-group">
-                    <label>Authorize New Medical Practitioner Name</label>
-                    <input type="text" id="newDocName" placeholder="Dr. Jennifer Evans, MD">
-                    <button class="btn-secondary" onclick="addDoctor()">Authorize Doctor</button>
-                </div>
-                <h3>Active Roster Staff</h3>
-                <ul id="managerDocList" style="font-size:13px; padding-left: 20px;"></ul>
-            </div>
-
-        </div>
-
-        <div class="right-column">
-            <div class="panel">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h2 style="margin:0; border:none;">Live Emergency Bed Matrix</h2>
-                    <button class="btn-danger btn-code-blue" style="width: auto; padding: 6px 12px; font-size:12px;" onclick="triggerGlobalCodeBlue()">TRIGGER ACTIVE CODE BLUE</button>
-                </div>
-                <div class="rooms-grid" id="roomsGrid"></div>
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button id="modal-confirm-btn" style="background:var(--success);">Confirm &amp; Commit</button>
+                <button onclick="closeTxModal()" class="secondary">Cancel Process</button>
             </div>
         </div>
     </div>
 
-    <div class="panel">
-        <h2>Permanent Longitudinal Clinical Records Vault</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Patient ID</th>
-                    <th>Name</th>
-                    <th>Age/DOB</th>
-                    <th>Symptoms</th>
-                    <th>Dx (Diagnosis)</th>
-                    <th>Labs Summary</th>
-                    <th>Rx Medications</th>
-                    <th>Discharge Status & Referrals</th>
-                </tr>
-            </thead>
-            <tbody id="historyTableBody"></tbody>
-        </table>
+    <!-- MAIN INTERACTIVE LANDING PAGE: CUSTOMER ATM PORTAL -->
+    <div id="customer-atm-portal">
+        <div style="text-align:center; margin-bottom:15px;">
+            <h1 style="color:var(--primary); font-size:1.8rem;">Amman English Bank ATM</h1>
+            <p style="color:#64748b; font-size:0.9rem;">Automated Terminal Processing Node</p>
+        </div>
+        <div class="atm-housing">
+            <div id="atm-screen-wrapper" class="atm-screen">
+                <!-- Dynamic Content Rendered via Javascript Engine -->
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 25px;">
+            <button onclick="openStaffGatewayPanel()" class="secondary" style="width:auto; padding:6px 12px; font-size:0.8rem; background:#475569;">LOG IN as staff</button>
+        </div>
     </div>
 
-    <div class="modal-overlay" id="secureModal">
-        <div class="modal-content">
-            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px;">
-                <h2 id="modalPatientTitle" style="margin:0; border:none;">Protected Health Record</h2>
-                <button onclick="closeModal()" style="width:auto; margin:0; padding:4px 8px; background:#ef4444;">X</button>
+    <!-- MANDATORY STAFF SECURITY ACCESS GATEWAY PANEL -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <svg class="bank-logo" viewBox="0 0 24 24" style="fill: var(--primary);">
+                    <path d="M12 2L2 7h20L12 2zm9 8H3v10h3v-7h2v7h3v-7h2v7h3v-7h2v7h3V10zm-9 12H2v2h20v-2H12z"/>
+                </svg>
+                <h2 style="border:none; margin-top:5px; font-size:1.4rem; color:#0f172a;">Staff Gateway Terminal</h2>
+                <p style="color:#64748b; font-size:0.85rem;">System Terminal Administration Gateway</p>
+            </div>
+            <div id="staff-login-fields-area">
+                <div class="form-group">
+                    <label>Employee Username</label>
+                    <input type="text" id="sys-username" placeholder="Username">
+                </div>
+                <div class="form-group">
+                    <label>Terminal Passcode</label>
+                    <input type="password" id="sys-passcode" placeholder="******">
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px;">
+                    <button onclick="handleSystemLogin()">Authenticate &amp; Initialize</button>
+                    <button onclick="closeStaffGatewayPanel()" class="secondary">Back to ATM</button>
+                </div>
+            </div>
+            <!-- Loading message display zone -->
+            <div id="staff-login-loading-zone" style="display:none; text-align:center; padding:20px 0;">
+                <p style="color:var(--warning); font-weight:bold; font-size:1.1rem;" id="staff-loading-txt">Logging in...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN ADMINISTRATIVE ACCOUNT MANAGEMENT DASHBOARD -->
+    <div id="main-dashboard">
+        <header>
+            <div class="header-top">
+                <div class="header-title-area">
+                    <svg class="bank-logo" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7h20L12 2zm9 8H3v10h3v-7h2v7h3v-7h2v7h3v-7h2v7h3V10zm-9 12H2v2h20v-2H12z"/>
+                    </svg>
+                    <div>
+                        <h1 style="font-size: 1.8rem; letter-spacing: 0.5px;">Amman English Bank</h1>
+                        <small>Logged in as: <strong id="active-user-lbl" style="color:#67e8f9;">-</strong></small>
+                    </div>
+                </div>
+                <button onclick="handleSystemLogout()" class="secondary" style="width:auto; padding: 6px 15px; font-size:0.85rem;">Lock Terminal Session</button>
             </div>
             
-            <div id="modalAuthGate">
-                <p style="font-size:13px; margin: 15px 0 5px 0; color:#ef4444; font-weight:bold;">🔒 Clinical Security Clearance Required</p>
-                <input type="password" id="gatePasscodeInput" placeholder="Enter System Passcode" style="margin-bottom:10px;">
-                <button onclick="verifyGatePasscode()">Authenticate Identity</button>
+            <!-- Metrics Display Ribbon Box -->
+            <div class="ribbon-metrics">
+                <div class="metric-item">Accounts Created: <span id="ribbon-accounts">0</span></div>
+                <div class="metric-item">Total Money in Vault: <span id="ribbon-vault">0.00 JD</span></div>
+                <div class="metric-item">Total All Accounts: <span id="ribbon-total-owed" style="color:#f472b6;">0.00 JD</span></div>
+                <div class="metric-item">Fees Collected: <span id="ribbon-fees">0.00 JD</span></div>
+                <div class="metric-item">Bank Net Profit: <span id="ribbon-profit" class="profit-val">0.00 JD</span></div>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- Open Account -->
+                <div class="card">
+                    <h2>1. Open Customer Account</h2>
+                    <form id="create-account-form">
+                        <div class="form-row">
+                            <div class="form-group"><label>First Name</label><input type="text" id="cust-first" required></div>
+                            <div class="form-group"><label>Last Name</label><input type="text" id="cust-last" required></div>
+                        </div>
+                        <div class="form-group"><label>ID / Passport Number</label><input type="text" id="cust-id" required></div>
+                        <div class="form-group"><label>Address</label><input type="text" id="cust-address" required></div>
+                        <div class="form-group"><label>Date of Birth</label><input type="date" id="cust-dob" required></div>
+                        <div class="form-group"><label>Initial Core Deposit (JD)</label><input type="number" id="cust-initial" min="0" value="0" required></div>
+                        <p style="font-size:0.8rem; color:var(--warning); margin-bottom:8px;">* Note: Compulsory structural opening fees must be paid cash-in-hand.</p>
+                        <button type="submit">Generate &amp; Open Account</button>
+                    </form>
+                </div>
+
+                <!-- Access Customer Portals -->
+                <div class="card">
+                    <h2>2. Access Customer Account</h2>
+                    
+                    <!-- Standard Auth -->
+                    <div class="auth-box">
+                        <h3>Standard Customer Authentication</h3>
+                        <div class="form-group">
+                            <label>Account ID</label>
+                            <div class="prefix-input-container">
+                                <span>ACC-</span>
+                                <input type="text" id="auth-acc-id" placeholder="XXXXXX" maxlength="6">
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Customer Passcode PIN</label><input type="password" id="auth-passcode" placeholder="4-digit PIN"></div>
+                        <button onclick="accessAccount()">Verify Customer Credentials</button>
+                    </div>
+                    
+                    <button class="secondary" onclick="lockAccount()">Clear Active Workstation</button>
+                </div>
+
+                <!-- Organized Manager Tabbed Framework panel -->
+                <div id="manager-only-panel" class="card" style="border: 2px solid var(--manager); display:none;">
+                    <h2 style="color: var(--manager); border-bottom-color: var(--manager);">3. Manager Operations Vault</h2>
+                    
+                    <!-- Manager Navigation Tab Bar Container -->
+                    <div class="mgr-tab-bar">
+                        <button class="mgr-tab-btn active" onclick="switchManagerPanelTab('mgr-tab-security', this)">Security Controls</button>
+                        <button class="mgr-tab-btn" onclick="switchManagerPanelTab('mgr-tab-financial', this)">Financial Overrides</button>
+                        <button class="mgr-tab-btn" onclick="switchManagerPanelTab('mgr-tab-staff', this)">Staff Directory</button>
+                        <button class="mgr-tab-btn" onclick="switchManagerPanelTab('mgr-tab-customers', this)">Customer Bank Registers</button>
+                    </div>
+
+                    <!-- TAB 1: SECURITY CREDENTIAL CONTROLS SECTION -->
+                    <div id="mgr-tab-security" class="mgr-tab-content active">
+                        <!-- Manager PIN Modification Portal -->
+                        <div class="manager-box" style="margin-bottom: 15px;">
+                            <h3 style="color: var(--manager);">Modify Customer PIN Passcode</h3>
+                            <div class="form-group">
+                                <label>Target Account ID</label>
+                                <div class="prefix-input-container">
+                                    <span>ACC-</span>
+                                    <input type="text" id="mgr-pin-acc-id" placeholder="XXXXXX" maxlength="6">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>New 4-Digit Passcode PIN</label>
+                                <input type="password" id="mgr-pin-new-value" placeholder="XXXX" maxlength="6">
+                            </div>
+                            <button class="manager-btn" onclick="executeManagerPinOverride()">Overwrite Customer Passcode</button>
+                        </div>
+
+                        <!-- Manager Name-Bypass Gateway -->
+                        <div class="manager-box" style="margin-bottom: 15px;">
+                            <h3>Manager Name-Bypass Gateway</h3>
+                            <div class="form-row">
+                                <div class="form-group"><label>First Name</label><input type="text" id="bypass-first" placeholder="John"></div>
+                                <div class="form-group"><label>Last Name</label><input type="text" id="bypass-last" placeholder="Doe"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Customer Date of Birth (DOB)</label>
+                                <input type="date" id="bypass-dob">
+                            </div>
+                            <div class="form-group"><label>Manager Passcode</label><input type="password" id="bypass-code" placeholder="******"></div>
+                            <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: FINANCIAL OPERATIONS CORRECTIONS OVERRIDES SECTION -->
+                    <div id="mgr-tab-financial" class="mgr-tab-content">
+                        <!-- Manual Financial Corrections Framework Override -->
+                        <div style="background:#fef2f2; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #fee2e2;">
+                            <h4 style="color:var(--danger); font-size:0.95rem; margin-bottom:5px;">Manual Financial Matrix Override</h4>
+                            <div class="form-group">
+                                <label style="font-size:0.8rem;">Physical Cash in Vault (JD)</label>
+                                <input type="number" step="0.01" id="override-vault-cash">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:0.8rem;">Fees Collected Archive (JD)</label>
+                                <input type="number" step="0.01" id="override-fees-collected">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:0.8rem;">Total Savings Profits Given Out (JD)</label>
+                                <input type="number" step="0.01" id="override-savings-profit">
+                            </div>
+                            <button class="danger-btn" style="padding: 6px 10px; font-size:0.85rem;" onclick="saveManualFinancialOverride()">Commit Matrix Corrections</button>
+                        </div>
+
+                        <!-- Manual Profit Tool Trigger -->
+                        <div style="background:#fae8ff; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #d8b4fe;">
+                            <h4 style="color:var(--manager); font-size:0.95rem; margin-bottom:5px;">Savings Dividend Payout Settings Matrix</h4>
+                            <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Triggers global dividend yields rounding up to the nearest full integer instantly into core balances.</p>
+                            
+                            <div class="form-group">
+                                <label style="font-size:0.85rem; font-weight:bold; color:var(--manager);">Dividend Yield Rate (%)</label>
+                                <input type="number" id="cfg-dividend-percent" value="1" min="0" step="0.1" style="border-color:var(--manager);">
+                            </div>
+                            <button class="manager-btn" onclick="triggerManualProfitPayout()">Distribute Dividends Globally</button>
+                        </div>
+
+                        <!-- Fee Configuration Matrix Forms -->
+                        <div style="margin-bottom:15px;">
+                            <h4 style="color:var(--manager); font-size:0.9rem; margin-bottom:5px;">Global Cash Fee Matrix Modifier</h4>
+                            <div class="form-group"><label>Account Opening Fee (JD)</label><input type="number" id="fee-open-cfg" value="0"></div>
+                            <div class="form-group"><label>Deposit Fee (JD)</label><input type="number" id="fee-deposit-cfg" value="1"></div>
+                            <div class="form-group"><label>Withdraw Fee (JD)</label><input type="number" id="fee-withdraw-cfg" value="1"></div>
+                            <div class="form-group"><label>Breaking Deposit Fee (JD)</label><input type="number" id="fee-break-cfg" value="3"></div>
+                            <button class="manager-btn" onclick="updateFeeStructure()">Save Structural Settings</button>
+                        </div>
+                        
+                        <!-- Global Purge Reset Sequence Box -->
+                        <div style="margin-top:25px; padding-top:15px; border-top:2px dashed var(--border);">
+                            <h4 style="color:var(--danger); font-size:0.9rem; margin-bottom:5px;">Master Database Reset Sequence</h4>
+                            <button class="danger-btn" onclick="executeFullSystemWipe()">Purge and Reset Everything</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: STAFF PROVISIONS MANAGEMENT DIRECTORY SECTION -->
+                    <div id="mgr-tab-staff" class="mgr-tab-content">
+                        <div style="background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
+                            <h4>Staff Database Index Profiles</h4>
+                            <input type="text" id="staff-search-input" class="search-box-modifier" placeholder="Search staff members by name..." oninput="handleStaffRegistrySearch()">
+                            <div id="staff-registry-box" style="margin-top:10px; max-height:200px; overflow-y:auto;"></div>
+                            <h4 style="margin-top:15px; color:var(--manager); font-size:0.85rem;">Global Internal Employee Audit Logs</h4>
+                            <div id="staff-global-logs-box" class="log-container" style="max-height:150px; font-size:0.75rem; background:#020617; margin-top:5px;"></div>
+                            
+                            <div style="background:#fff; border:1px solid var(--border); padding:10px; border-radius:4px; margin-top:10px;">
+                                <label>Register Staff Member</label>
+                                <div class="form-group"><input type="text" id="new-emp-user" placeholder="Username" style="padding:4px; font-size:0.85rem;"></div>
+                                <div class="form-group"><input type="password" id="new-emp-pass" placeholder="Passcode" style="padding:4px; font-size:0.85rem;"></div>
+                                <button class="manager-btn" style="font-size:0.8rem; padding:4px;" onclick="registerNewEmployee()">Provision Staff Credentials</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: CUSTOMER BANK REGISTERS LIST SEARCH INDEX SECTION -->
+                    <div id="mgr-tab-customers" class="mgr-tab-content">
+                        <div style="background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
+                            <h4>All Active Bank Accounts</h4>
+                            <input type="text" id="customer-search-input" class="search-box-modifier" placeholder="Search customers by name or ID..." oninput="handleCustomerRegistrySearch()">
+                            <div id="account-registry-box" style="max-height:350px; overflow-y:auto;"></div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
 
-            <div id="modalDocVerificationGate" style="display:none;">
-                <p style="font-size:13px; margin:15px 0 5px 0; font-weight:bold; color:var(--primary);">Identity Confirmed. Verify Patient DOB to unlock Chart:</p>
-                <input type="date" id="verifyDocInputDob" style="margin-bottom:10px;">
-                <button onclick="verifyPatientDobForDoctor()">Verify Patient Identity</button>
-                <p style="text-align:center; margin:8px 0; font-size:11px; color:#64748b;">- OR -</p>
-                <button class="btn-danger" onclick="bypassVerificationEmergency()">CRITICAL EMERGENCY BYPASS</button>
-            </div>
+            <!-- RIGHT COLUMN -->
+            <div>
+                <!-- Main Terminal Workstation -->
+                <div class="card">
+                    <h2>4. Active Customer Workstation</h2>
+                    <div id="no-account-selected" style="text-align: center; padding: 40px; color: #64748b;">
+                        <p>No active customer portfolio loaded. Please verify credentials via administration routing panels.</p>
+                    </div>
 
-            <div id="modalSecureBody" style="display:none; margin-top:15px;">
-                <div id="patientMetaProfile" style="background:#f1f5f9; padding:10px; border-radius:6px; font-size:12px; margin-bottom:15px;"></div>
-                
-                <div id="modalDoctorActions" class="clinical-box" style="border-color: #3b82f6;">
-                    <strong>Attending Physician Panel</strong>
-                    <div class="form-group">
-                        <label>Update Clinical Status Tracker</label>
-                        <select id="mdStatusSelect">
-                            <option value="Getting checked">Getting checked</option>
-                            <option value="Awaiting Labs">Awaiting Labs</option>
-                            <option value="In Diagnostics">In Diagnostics</option>
-                            <option value="Stable">Stable</option>
-                        </select>
+                    <div id="account-view" class="account-details">
+                        <div class="stat-grid">
+                            <div class="stat-box"><span>Account Holder</span><strong id="view-name">-</strong></div>
+                            <div class="stat-box"><span>Account ID</span><strong id="view-id">-</strong></div>
+                            <div class="stat-box"><span>Core Balance (Incl Profits)</span><strong id="view-balance">0.00 JD</strong></div>
+                            <div class="stat-box"><span>Tied Savings Deposit</span><strong id="view-savings" style="color: var(--warning);">0.00 JD</strong></div>
+                        </div>
+
+                        <!-- Editable Fields Component Matrix -->
+                        <div style="font-size: 0.9rem; margin-bottom: 15px; background: #f1f5f9; padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
+                            <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--primary);">Identity Management Tracking Data</h4>
+                            <div class="form-group">
+                                <label style="font-size:0.75rem;">ID / Passport Number</label>
+                                <input type="text" id="workstation-input-id" onchange="persistIdentityEdits('nationalId')">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label style="font-size:0.75rem;">Date of Birth</label>
+                                    <input type="date" id="workstation-input-dob" onchange="persistIdentityEdits('dob')">
+                                </div>
+                                <div class="form-group">
+                                    <label style="font-size:0.75rem;">Address Coordinates</label>
+                                    <input type="text" id="workstation-input-address" onchange="persistIdentityEdits('address')">
+                                </div>
+                            </div>
+                            <small id="editing-restriction-notice" style="color:var(--danger); font-size:0.75rem; display:none;">* Identity adjustments locked. Root Manager clearance required.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Customer Relationship Notes</label>
+                            <textarea id="view-notes" rows="2" oninput="updateNotes()"></textarea>
+                        </div>
+
+                        <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border);">
+
+                        <!-- Transactions Split Window Grid Layout -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                            
+                            <!-- Cash Flow Movements and Inter-account Transfers -->
+                            <div style="border-right: 1px solid var(--border); padding-right: 15px;">
+                                <h3>Standard Cash Vault Handling</h3>
+                                <p style="font-size:0.75rem; color:var(--danger); margin-bottom:8px;">* Fees strictly paid out-of-pocket via cash-in-hand.</p>
+                                <div class="form-group"><label>Amount (JD)</label><input type="number" id="tx-amount" min="0.01" step="0.01" placeholder="0.00"></div>
+                                <div style="display:flex; gap: 5px; margin-bottom: 15px;">
+                                    <button onclick="prepareStandardTx('deposit')" style="background: var(--success); font-size: 0.85rem;">Deposit Cash</button>
+                                    <button onclick="prepareStandardTx('withdraw')" style="background: var(--danger); font-size: 0.85rem;">Withdraw Cash</button>
+                                </div>
+
+                                <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 4px;">
+                                    <h4 style="font-size:0.85rem; margin-bottom:5px;">Internal Account Transfer</h4>
+                                    <div class="form-group">
+                                        <label style="font-size:0.8rem;">Target Account ID</label>
+                                        <div class="prefix-input-container">
+                                            <span>ACC-</span>
+                                            <input type="text" id="transfer-target" placeholder="XXXXXX" maxlength="6">
+                                        </div>
+                                    </div>
+                                    <button onclick="prepareTransferTx()" class="secondary" style="font-size:0.85rem; background: var(--primary-light);">Execute Transfer</button>
+                                </div>
+                            </div>
+
+                            <!-- Savings Vault Systems -->
+                            <div>
+                                <h3>Tied Savings Vault</h3>
+                                <div class="form-group"><label>Amount (JD)</label><input type="number" id="savings-amount" min="1" placeholder="0.00"></div>
+                                <div style="display:flex; flex-direction: column; gap: 5px;">
+                                    <button onclick="prepareSavingsTx('deposit')" style="background: var(--warning); color: black;">Lock in Savings</button>
+                                    <button onclick="prepareSavingsTx('break')" class="secondary" style="background: #94a3b8;">Break Savings Deposit</button>
+                                </div>
+                                <div style="margin-top:10px; padding: 6px; background: #fffbeb; font-size: 0.75rem; border-radius:4px; border:1px solid #fef3c7;">
+                                    Operational Cost Policies Matrix:<br>
+                                    <span id="fee-tracker-txt">Open: 0 | Deposit: 1 | Withdraw: 1 | Lock: Free | Break: 3 | Transfer: 1</span>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Triage Urgency Override</label>
-                        <select id="mdUrgencySelect">
-                            <option value="1">Level 1: Immediate</option>
-                            <option value="2">Level 2: Very Urgent</option>
-                            <option value="3">Level 3: Urgent</option>
-                            <option value="4">Level 4: Standard</option>
-                            <option value="5">Level 5: Non-Urgent</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Diagnosis (Dx) Entry</label>
-                        <textarea id="mdDxText" rows="2"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Prescribe Therapeutics & Medication Plans (Rx)</label>
-                        <textarea id="mdRxText" rows="2"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Clinical Discharge Officer Notes</label>
-                        <textarea id="mdDischargeNotesText" rows="2"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Outpatient Specialist Referral Route</label>
-                        <select id="mdReferralSelect">
-                            <option value="">None / Not Applicable</option>
-                            <option value="Cardiologist">Cardiology Specialist</option>
-                            <option value="Neurologist">Neurology Specialist</option>
-                            <option value="Orthopedic Surgeon">Orthopedic Surgery</option>
-                            <option value="Oncologist">Oncology</option>
-                            <option value="Pediatrician">Pediatrics</option>
-                            <option value="Gastroenterologist">Gastroenterology</option>
-                            <option value="Nephrologist">Nephrology</option>
-                        </select>
-                    </div>
-                    <button onclick="submitDoctorUpdates()">Commit Medical Records</button>
-                    <button class="btn-danger" id="btnDischargeExecution" onclick="executeDischarge()" style="margin-top:8px; display:none;">Authorize Complete Discharge & Clear Bed</button>
                 </div>
 
-                <div id="modalLabActions" class="clinical-box" style="border-color: #eab308;">
-                    <strong>Pathology & Laboratory Diagnostic Workspace</strong>
-                    <div class="form-group">
-                        <label>Lab Findings Summary / Diagnostics Text</label>
-                        <textarea id="labSummaryText" rows="3" placeholder="Input bloodwork counts, metabolic panels, toxicology, or imaging notes..."></textarea>
+                <!-- Ledger Audit Trail logs -->
+                <div class="card">
+                    <h2>5. Live Account Audit Ledger</h2>
+                    <div id="log-box" class="log-container">
+                        <div class="log-entry">[SYSTEM] Waiting for dashboard connection sequence...</div>
                     </div>
-                    <button style="background-color:#eab308; color:black;" onclick="submitLabResults()">Submit Findings & Set Status: "Labs Complete"</button>
-                </div>
-
-                <div class="clinical-box">
-                    <strong>Current Active Clinical Data Chart</strong>
-                    <div id="chartDisplayData"></div>
-                </div>
-
-                <div class="form-group" style="margin-top:10px;">
-                    <button class="btn-danger" id="modalCodeBlueBtn" onclick="toggleRoomCodeBlueFromModal()">ACTIVATE ROOM CODE BLUE ALERT</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <div id="toast" class="toast"></div>
 
     <script>
-        // CONFIG & APPLICATION STATE
-        const TOTAL_ROOMS = 10;
-        let currentPortal = 'admission'; 
-        let activeSelectedRoomName = null;
+        const MGR_USER = "jaber";
+        const MGR_PASSCODE = "250606";
 
-        // DB State objects loaded via localStorage or Defaults
-        let state = {
-            masterPasscode: "1234",
-            doctors: ["Dr. Gregory House, MD", "Dr. Meredith Grey, MD", "Dr. John Watson, MD"],
-            patientsLog: [], 
-            rooms: {}
+        let bankDB = JSON.parse(localStorage.getItem('bankDB_v6')) || {};
+        let feeStructure = JSON.parse(localStorage.getItem('feeStructure_v6')) || { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
+        let employeeDB = JSON.parse(localStorage.getItem('employeeDB_v6')) || {}; 
+        let globalConfig = JSON.parse(localStorage.getItem('globalConfig_v6')) || { dividendRate: 1.0 };
+        
+        let financialMatrix = JSON.parse(localStorage.getItem('financialMatrix_v6')) || { 
+            vaultCash: 500.00, 
+            totalFeesCollected: 0.00, 
+            totalSavingsProfitGiven: 0.00 
         };
 
-        // Initialize empty room allocations
-        for(let i = 1; i <= TOTAL_ROOMS; i++) {
-            state.rooms[`Room ${i}`] = null;
-        }
+        let staffSystemLogs = JSON.parse(localStorage.getItem('staffSystemLogs_v6')) || [
+            `[${new Date().toLocaleString()}] Amman English Bank core storage module instantiated.`
+        ];
 
-        const urgencyLabels = {
-            1: "Lvl 1: IMMEDIATE", 2: "Lvl 2: Very Urgent", 3: "Lvl 3: Urgent", 4: "Lvl 4: Standard", 5: "Lvl 5: Non-Urgent"
+        let activeAccountID = null;
+        let activeEmployeeUser = null;
+        let pendingTxCallback = null; 
+
+        // ATM Terminal App State
+        let atmState = {
+            currentScreen: 'WELCOME', // WELCOME, PIN_ENTRY, MAIN_MENU, AMOUNT_SELECT, TRANS_CONFIRM
+            accountContext: null,
+            inputAccountIdRawDigits: '',
+            inputPasscodeString: '',
+            selectedActionType: null 
         };
 
-        // STATE LIFECYCLE MANAGEMENT
-        function loadState() {
-            const data = localStorage.getItem('ER_COMMAND_STATE_2026');
-            if(data) {
-                try {
-                    const parsed = JSON.parse(data);
-                    if(parsed.masterPasscode) state.masterPasscode = parsed.masterPasscode;
-                    if(parsed.doctors) state.doctors = parsed.doctors;
-                    if(parsed.patientsLog) state.patientsLog = parsed.patientsLog;
-                    if(parsed.rooms) {
-                        // Ensure layout shape safety across sessions
-                        for(let r in state.rooms) {
-                            if(parsed.rooms[r] !== undefined) state.rooms[r] = parsed.rooms[r];
-                        }
-                    }
-                } catch(e) { console.error("State recovery anomaly: ", e); }
+        window.onload = function() {
+            renderAtmTerminalEngine();
+            calculateRibbonMetrics();
+            updateFeeDisplayLabels();
+            document.getElementById('cfg-dividend-percent').value = globalConfig.dividendRate;
+        };
+
+        function saveAllData() {
+            localStorage.setItem('bankDB_v6', JSON.stringify(bankDB));
+            localStorage.setItem('feeStructure_v6', JSON.stringify(feeStructure));
+            localStorage.setItem('employeeDB_v6', JSON.stringify(employeeDB));
+            localStorage.setItem('financialMatrix_v6', JSON.stringify(financialMatrix));
+            localStorage.setItem('staffSystemLogs_v6', JSON.stringify(staffSystemLogs));
+            localStorage.setItem('globalConfig_v6', JSON.stringify(globalConfig));
+            calculateRibbonMetrics();
+            if (activeEmployeeUser === MGR_USER) {
+                renderManagerLists();
             }
-            saveState();
         }
 
-        function saveState() {
-            localStorage.setItem('ER_COMMAND_STATE_2026', JSON.stringify(state));
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.innerText = message;
+            toast.className = `toast ${type}`;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 4000);
         }
 
-        // APP INITIALIZER
-        function init() {
-            loadState();
-            switchPortal('admission');
-            updateRoomDropdown();
-            renderRoomsGrid();
-            renderHistoryTable();
-            renderManagerDoctors();
+        function pushStaffLog(message) {
+            const timestamp = new Date().toLocaleString();
+            staffSystemLogs.push(`[${timestamp}] [Staff: ${activeEmployeeUser}] ${message}`);
         }
 
-        // PORTAL ROUTER NAVIGATION 
-        function switchPortal(role) {
-            currentPortal = role;
-            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.portal-workspace').forEach(p => p.style.display = 'none');
+        // --- NEW TAB SWITCHING IMPLEMENTATION SYSTEM ---
+        function switchManagerPanelTab(targetTabId, triggerBtn) {
+            const tabs = document.querySelectorAll('.mgr-tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
             
-            document.getElementById(`btn-role-${role}`).classList.add('active');
-            document.getElementById('activeRoleDisplay').textContent = `Current Portal: ${role.toUpperCase()} CONSOLE`;
+            const tabButtons = document.querySelectorAll('.mgr-tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(targetTabId).classList.add('active');
+            triggerBtn.classList.add('active');
+        }
 
-            if(role === 'admission') {
-                document.getElementById('panel-admission').style.display = 'block';
-            } else if(role === 'manager') {
-                document.getElementById('panel-manager').style.display = 'block';
-            } else {
-                document.getElementById('panel-clinical-info').style.display = 'block';
+        // --- CUSTOMER ATM SYSTEM ENGINE LOGIC ---
+        function setAtmLoadingState(loadingWord, nextStepCallback, timeMs = 1500) {
+            const scr = document.getElementById('atm-screen-wrapper');
+            scr.innerHTML = `
+                <div class="atm-loading-view">
+                    <div>${loadingWord}</div>
+                    <div style="font-size:0.8rem; margin-top:10px; color:#64748b;">Please wait...</div>
+                </div>
+            `;
+            setTimeout(nextStepCallback, timeMs);
+        }
+
+        function renderAtmTerminalEngine() {
+            const scr = document.getElementById('atm-screen-wrapper');
+            
+            if (atmState.currentScreen === 'WELCOME') {
+                scr.innerHTML = `
+                    <div style="text-align:center; padding-top:40px;">
+                        <h2 style="color:#38bdf8; border:none; margin-bottom:10px;">WELCOME TO AEB ATM</h2>
+                        <p style="color:#64748b; font-size:0.85rem; margin-bottom:30px;">Insert account numeric identity to begin processing</p>
+                        <div class="form-group" style="text-align:center;">
+                            <label style="color:#38bdf8; text-align:center; margin-bottom:8px;">Account Registration Number</label>
+                            <div class="atm-prefix-wrapper">
+                                <span>ACC-</span>
+                                <input type="text" id="atm-acc-digits-field" placeholder="XXXXXX" maxlength="6" value="${atmState.inputAccountIdRawDigits}">
+                            </div>
+                        </div>
+                        <button onclick="processAtmAccountSubmission()" style="max-width:200px; margin-top:20px; background:#1e3a8a; border:1px solid #38bdf8;">Next Step</button>
+                    </div>
+                `;
+            } 
+            else if (atmState.currentScreen === 'PIN_ENTRY') {
+                scr.innerHTML = `
+                    <div style="text-align:center;">
+                        <h3 style="color:#38bdf8; margin-bottom:5px;">SECURE PIN IDENTIFICATION</h3>
+                        <p style="color:#64748b; font-size:0.75rem; margin-bottom:15px;">Account: ACC-${atmState.inputAccountIdRawDigits}</p>
+                        <div style="margin:10px 0;">
+                            <input type="password" id="atm-masked-pin-display" readonly style="background:#0f172a; color:#10b981; border:2px solid #475569; font-size:1.6rem; text-align:center; letter-spacing:6px; max-width:220px;" value="${'*'.repeat(atmState.inputPasscodeString.length)}">
+                        </div>
+                        <div class="atm-keypad-grid">
+                            ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => `<button class="atm-key" onclick="pressAtmPinNumber(${n})">${n}</button>`).join('')}
+                            <button class="atm-key clear-key" onclick="pressAtmPinClear()">CLEAR</button>
+                            <button class="atm-key" onclick="pressAtmPinNumber(0)">0</button>
+                            <button class="atm-key enter-key" onclick="processAtmPinSubmission()">ENTER</button>
+                        </div>
+                        <p style="margin-top:15px;"><a href="#" onclick="resetAtmWorkflow()" style="color:#64748b; font-size:0.8rem; text-decoration:none;">&larr; Cancel session</a></p>
+                    </div>
+                `;
             }
-            renderRoomsGrid();
-        }
-
-        // CHRONOLOGICAL AGE CALCULATOR ENGINE
-        function calculateAge(dobString) {
-            if(!dobString) return "N/A";
-            const birthDate = new Date(dobString);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            const m = today.getMonth() - birthDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-                age--;
+            else if (atmState.currentScreen === 'MAIN_MENU') {
+                const acc = bankDB[atmState.accountContext];
+                scr.innerHTML = `
+                    <div>
+                        <div style="display:flex; justify-content:between; border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:15px;">
+                            <div><span style="color:#64748b;">Holder:</span> <strong style="color:white;">${acc.firstName} ${acc.lastName}</strong></div>
+                            <div style="margin-left:auto;"><span style="color:#64748b;">ID:</span> <strong style="color:white;">ACC-${atmState.inputAccountIdRawDigits}</strong></div>
+                        </div>
+                        <div style="background:#1e293b; padding:15px; border-radius:6px; margin-bottom:20px;">
+                            <div style="margin-bottom:8px;">Balance: <strong style="color:#10b981; font-size:1.2rem;">${acc.balance.toFixed(2)} JD</strong></div>
+                            <div>Fixed deposit: <strong style="color:var(--warning); font-size:1.1rem;">${acc.savingsBalance.toFixed(2)} JD</strong></div>
+                            <small style="color:#64748b; display:block; margin-top:5px;">* Note: Fixed saving structures cannot be customized or modified at ATM modules.</small>
+                        </div>
+                        <h3 style="color:#38bdf8; text-align:center;">SELECT TRANSACTION ROUTE</h3>
+                        <div class="atm-options-layout">
+                            <button class="atm-opt-btn" onclick="selectAtmActionRoute('deposit')">DEPOSIT FUNDS</button>
+                            <button class="atm-opt-btn" onclick="selectAtmActionRoute('withdraw')">WITHDRAW CASH</button>
+                        </div>
+                        <div style="text-align:center; margin-top:25px;">
+                            <button onclick="resetAtmWorkflow()" class="secondary" style="width:auto; padding:5px 12px; font-size:0.8rem;">Terminate Session</button>
+                        </div>
+                    </div>
+                `;
             }
-            return age >= 0 ? `${age} Y/O` : "Newborn/Infant";
-        }
+            else if (atmState.currentScreen === 'AMOUNT_SELECT') {
+                scr.innerHTML = `
+                    <div style="text-align:center;">
+                        <h3 style="color:#38bdf8; margin-bottom:15px; text-transform:uppercase;">Select ${atmState.selectedActionType} Amount</h3>
+                        <div class="atm-options-layout" style="max-width:440px; margin:0 auto;">
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(100)">100 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(200)">200 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(300)">300 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(400)">400 JD</button>
+                            <button class="atm-opt-btn" onclick="submitAtmAmountChoice(500)">500 JD</button>
+                            <button class="atm-opt-btn" style="border-color:var(--warning); color:var(--warning);" onclick="displayAtmCustomAmountField()">OTHER</button>
+                        </div>
+                        
+                        <div id="atm-custom-input-block" style="display:none; margin-top:20px; background:#1e293b; padding:12px; border-radius:6px;">
+                            <label style="color:white; font-size:0.8rem; margin-bottom:5px;">Enter custom metric amount:</label>
+                            <input type="number" id="atm-custom-numeric-val" min="1" step="1" placeholder="Enter amount" style="background:#0f172a; color:white; text-align:center; max-width:180px; margin:0 auto 10px auto; display:block;">
+                            <button onclick="submitAtmCustomAmountChoice()" style="width:auto; padding:5px 15px; font-size:0.85rem;">Apply</button>
+                        </div>
 
-        function calculateFormAge() {
-            const dob = document.getElementById('pDob').value;
-            document.getElementById('calculatedAgeForm').textContent = dob ? `Calculated Age: ${calculateAge(dob)}` : "";
-        }
-
-        // AUTO-GENERATOR ID SEQUENCE
-        function generatePatientID() {
-            let randStr = '';
-            for(let i = 0; i < 5; i++) {
-                randStr += Math.floor(Math.random() * 10);
+                        <div style="text-align:center; margin-top:20px;">
+                            <button onclick="revertAtmToMenu()" class="secondary" style="width:auto; padding:4px 10px; font-size:0.8rem;">&larr; Back to menu</button>
+                        </div>
+                    </div>
+                `;
             }
-            return `ER-${randStr}`;
-        }
-
-        // DOM UTILITY COMPONENT POPULATORS
-        function updateRoomDropdown() {
-            const select = document.getElementById('pRoom');
-            select.innerHTML = '<option value="" disabled selected>Choose Available Bed...</option>';
-            for(let r in state.rooms) {
-                if(!state.rooms[r]) {
-                    let opt = document.createElement('option');
-                    opt.value = r; opt.textContent = `${r} (Vacant)`;
-                    select.appendChild(opt);
+            else if (atmState.currentScreen === 'TRANS_CONFIRM') {
+                const acc = bankDB[atmState.accountContext];
+                const amount = atmState.processedAmountValue;
+                const fee = (atmState.selectedActionType === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
+                
+                if (atmState.selectedActionType === 'deposit') {
+                    const totalRequired = amount + fee;
+                    scr.innerHTML = `
+                        <div style="text-align:center; padding-top:10px;">
+                            <h3 style="color:var(--warning); margin-bottom:15px;">TRANSACTION IN-VOICE RECEIPT</h3>
+                            <div style="background:#1e293b; padding:20px; border-radius:6px; text-align:left; max-width:360px; margin:0 auto 20px auto; line-height:1.6;">
+                                <p style="color:white;">Deposit Target: <strong>${amount.toFixed(2)} JD</strong></p>
+                                <p style="color:var(--danger); font-weight:bold;">Processing Fee: ${fee.toFixed(2)} JD</p>
+                                <hr style="border-color:#475569; margin:10px 0;">
+                                <p style="color:#10b981; font-size:1.1rem;"><strong>Total to enter in ATM: ${totalRequired.toFixed(2)} JD</strong></p>
+                            </div>
+                            <div style="display:flex; justify-content:center; gap:10px;">
+                                <button onclick="executeAtmTransactionCommit()" style="background:#10b981; max-width:180px;">Confirm Cash Inserted</button>
+                                <button onclick="revertAtmToMenu()" class="secondary" style="max-width:120px;">Cancel</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    const totalDeducted = amount + fee;
+                    scr.innerHTML = `
+                        <div style="text-align:center; padding-top:10px;">
+                            <h3 style="color:var(--warning); margin-bottom:15px;">TRANSACTION IN-VOICE RECEIPT</h3>
+                            <div style="background:#1e293b; padding:20px; border-radius:6px; text-align:left; max-width:360px; margin:0 auto 20px auto; line-height:1.6;">
+                                <p style="color:white;">Withdraw Cash: <strong>${amount.toFixed(2)} JD</strong></p>
+                                <p style="color:var(--danger); font-weight:bold;">Processing Fee: ${fee.toFixed(2)} JD</p>
+                                <hr style="border-color:#475569; margin:10px 0;">
+                                <p style="color:white;">Total Balance Deducted: <strong>${totalDeducted.toFixed(2)} JD</strong></p>
+                            </div>
+                            <div style="display:flex; justify-content:center; gap:10px;">
+                                <button onclick="executeAtmTransactionCommit()" style="background:var(--danger); max-width:180px;">Confirm Dispersion</button>
+                                <button onclick="revertAtmToMenu()" class="secondary" style="max-width:120px;">Cancel</button>
+                            </div>
+                        </div>
+                    `;
                 }
             }
         }
 
-        function renderManagerDoctors() {
-            const ul = document.getElementById('managerDocList');
-            ul.innerHTML = '';
-            state.doctors.forEach(doc => {
-                let li = document.createElement('li');
-                li.textContent = doc;
-                ul.appendChild(li);
-            });
+        function processAtmAccountSubmission() {
+            const rawDigits = document.getElementById('atm-acc-digits-field').value.trim();
+            if (!rawDigits) { alert("Please provide a valid account numeric parameter."); return; }
+            
+            const constructedFullId = `ACC-${rawDigits}`;
+            let matchedId = Object.keys(bankDB).find(k => k.toLowerCase() === constructedFullId.toLowerCase());
+            if (!matchedId) { alert("Account ID numbers could not be found within database profiles."); return; }
+
+            atmState.inputAccountIdRawDigits = rawDigits;
+            setAtmLoadingState("Verifying Account Key", function() {
+                atmState.currentScreen = 'PIN_ENTRY';
+                renderAtmTerminalEngine();
+            }, 1200);
         }
 
-        function addDoctor() {
-            const input = document.getElementById('newDocName');
-            if(input.value.trim()) {
-                state.doctors.push(input.value.trim());
-                input.value = "";
-                saveState();
-                renderManagerDoctors();
-                alert("New Medical Practitioner authorized successfully.");
+        function pressAtmPinNumber(num) {
+            if (atmState.inputPasscodeString.length < 4) {
+                atmState.inputPasscodeString += num;
+                renderAtmTerminalEngine();
             }
         }
 
-        function updateMasterPasscode() {
-            const code = document.getElementById('mgrPasscodeField').value.trim();
-            if(code) {
-                state.masterPasscode = code;
-                saveState();
-                alert(`Master Passcode successfully updated to: ${code}`);
-            }
+        function pressAtmPinClear() {
+            atmState.inputPasscodeString = '';
+            renderAtmTerminalEngine();
         }
 
-        // PRE-EXISTING RECORDS RETRIEVAL SYSTEM
-        function lookupPatient() {
-            const query = document.getElementById('searchQuery').value.trim().toLowerCase();
-            const dobVerify = document.getElementById('searchDob').value;
-
-            if(!query) {
-                alert("Please supply either a distinct Patient ID or Last Name to query database archives.");
+        function processAtmPinSubmission() {
+            if (atmState.inputPasscodeString.length < 4) { alert("Please input complete four digit validation keys."); return; }
+            
+            const constructedFullId = `ACC-${atmState.inputAccountIdRawDigits}`;
+            const targetAcc = bankDB[constructedFullId];
+            if (targetAcc.passcode !== atmState.inputPasscodeString) {
+                alert("Passcode combination error. Connection terminated.");
+                pressAtmPinClear();
                 return;
             }
 
-            let foundMatch = null;
-            const isIDSearch = query.startsWith('er-');
+            if (targetAcc.isSuspended) {
+                alert("This account ledger holds a system suspended flag. Contact staff administration.");
+                resetAtmWorkflow();
+                return;
+            }
 
-            for(let i = state.patientsLog.length - 1; i >= 0; i--) {
-                let p = state.patientsLog[i];
-                if(isIDSearch) {
-                    if(p.id.toLowerCase() === query) { foundMatch = p; break; }
+            setAtmLoadingState("Checking Security Parameters", function() {
+                atmState.accountContext = constructedFullId;
+                atmState.currentScreen = 'MAIN_MENU';
+                renderAtmTerminalEngine();
+            }, 1500);
+        }
+
+        function selectAtmActionRoute(type) {
+            atmState.selectedActionType = type;
+            setAtmLoadingState("Loading Transaction Interface", function() {
+                atmState.currentScreen = 'AMOUNT_SELECT';
+                renderAtmTerminalEngine();
+            }, 1000);
+        }
+
+        function displayAtmCustomAmountField() {
+            document.getElementById('atm-custom-input-block').style.display = 'block';
+        }
+
+        function submitAtmAmountChoice(amount) {
+            const acc = bankDB[atmState.accountContext];
+            const fee = (atmState.selectedActionType === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
+            
+            if (atmState.selectedActionType === 'withdraw' && acc.balance < (amount + fee)) {
+                alert("Operational Failure: Core accounts lack specified balance capacities.");
+                return;
+            }
+
+            atmState.processedAmountValue = amount;
+            setAtmLoadingState("Calculating Operational Expenses", function() {
+                atmState.currentScreen = 'TRANS_CONFIRM';
+                renderAtmTerminalEngine();
+            }, 1200);
+        }
+
+        function submitAtmCustomAmountChoice() {
+            const val = parseFloat(document.getElementById('atm-custom-numeric-val').value);
+            if (isNaN(val) || val <= 0) { alert("Provide explicit numerical parameters."); return; }
+            submitAtmAmountChoice(val);
+        }
+
+        function executeAtmTransactionCommit() {
+            const acc = bankDB[atmState.accountContext];
+            const amount = atmState.processedAmountValue;
+            const fee = (atmState.selectedActionType === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
+            const timestamp = new Date().toLocaleString();
+
+            setAtmLoadingState("Processing Transaction ledgers", function() {
+                if (atmState.selectedActionType === 'withdraw') {
+                    if (acc.balance < (amount + fee)) {
+                        alert("Transaction dropped out due to dynamic capital fluctuations.");
+                        revertAtmToMenu();
+                        return;
+                    }
+                    financialMatrix.vaultCash += fee;
+                    financialMatrix.vaultCash -= amount;
+                    financialMatrix.totalFeesCollected += fee;
+
+                    acc.balance -= (amount + fee);
+                    acc.logs.push(`[${timestamp}] ATM Withdrawal: Dispensed ${amount} JD. Deducted ${fee} JD processing fee from core ledger balance.`);
                 } else {
-                    if(p.lastName.toLowerCase() === query) {
-                        if(!dobVerify) {
-                            alert("Identity safety standard protocol mismatch: Verification of Date of Birth is strictly required when querying matching last names.");
+                    financialMatrix.vaultCash += (amount + fee);
+                    financialMatrix.totalFeesCollected += fee;
+
+                    acc.balance += amount;
+                    acc.logs.push(`[${timestamp}] ATM Deposit: Credited ${amount} JD. Collected ${fee} JD processing fee into bank repositories.`);
+                }
+
+                saveAllData();
+                
+                atmState.currentScreen = 'MAIN_MENU';
+                renderAtmTerminalEngine();
+            }, 2000);
+        }
+
+        function revertAtmToMenu() {
+            atmState.currentScreen = 'MAIN_MENU';
+            renderAtmTerminalEngine();
+        }
+
+        function resetAtmWorkflow() {
+            atmState = { currentScreen: 'WELCOME', accountContext: null, inputAccountIdRawDigits: '', inputPasscodeString: '', selectedActionType: null };
+            renderAtmTerminalEngine();
+        }
+
+
+        // --- SECTION 1: PRE-LOGIN ADMINISTRATIVE DELAY ROUTERS ---
+        function openStaffGatewayPanel() {
+            document.getElementById('login-screen').style.display = 'flex';
+        }
+
+        function closeStaffGatewayPanel() {
+            document.getElementById('login-screen').style.display = 'none';
+        }
+
+        function handleSystemLogin() {
+            const userIn = document.getElementById('sys-username').value.trim().toLowerCase();
+            const passIn = document.getElementById('sys-passcode').value.trim();
+
+            if (!userIn || !passIn) { showToast("Authentication markers required.", "error"); return; }
+
+            // Trigger the mandatory 3-second staff logging in screen simulation delay
+            document.getElementById('staff-login-fields-area').style.display = 'none';
+            document.getElementById('staff-login-loading-zone').style.display = 'block';
+
+            setTimeout(function() {
+                // Return interface back to basic state ready for any future sequences
+                document.getElementById('staff-login-fields-area').style.display = 'block';
+                document.getElementById('staff-login-loading-zone').style.display = 'none';
+
+                if (userIn === MGR_USER.toLowerCase() && passIn === MGR_PASSCODE) {
+                    activeEmployeeUser = MGR_USER;
+                    showToast("Welcome Root Manager Jaber. Systems fully operational.", "manager");
+                    document.getElementById('manager-only-panel').style.display = 'block';
+                    pushStaffLog("Root Manager terminal verification established.");
+                    enterDashboard();
+                } else {
+                    let cleanEmployeeKey = Object.keys(employeeDB).find(k => k.toLowerCase() === userIn);
+                    
+                    if (cleanEmployeeKey && employeeDB[cleanEmployeeKey].password === passIn) {
+                        if (employeeDB[cleanEmployeeKey].isActive === false) {
+                            showToast("Employee account deactivated by Root Management.", "error");
                             return;
                         }
-                        if(p.dob === dobVerify) { foundMatch = p; break; }
+                        activeEmployeeUser = cleanEmployeeKey;
+                        showToast(`Welcome staff member: ${cleanEmployeeKey}. Access authorized.`);
+                        document.getElementById('manager-only-panel').style.display = 'none';
+                        pushStaffLog("Staff identity parameter clearance logged.");
+                        enterDashboard();
+                    } else {
+                        showToast("Authentication Failed. Invalid system configuration keys.", "error");
                     }
                 }
-            }
+            }, 3000); 
+        }
 
-            if(foundMatch) {
-                document.getElementById('pFirstName').value = foundMatch.firstName;
-                document.getElementById('pLastName').value = foundMatch.lastName;
-                document.getElementById('pDob').value = foundMatch.dob;
-                document.getElementById('pInsurance').value = foundMatch.insurance;
-                document.getElementById('pSymptoms').value = foundMatch.symptoms;
-                calculateFormAge();
-                alert(`Success: Retrived record file [${foundMatch.id}] into current workspace.`);
-            } else {
-                alert("No archival records match the provided verification properties.");
+        function enterDashboard() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('customer-atm-portal').style.display = 'none';
+            document.getElementById('main-dashboard').style.display = 'block';
+            document.getElementById('active-user-lbl').innerText = activeEmployeeUser;
+            
+            document.getElementById('sys-username').value = '';
+            document.getElementById('sys-passcode').value = '';
+            
+            calculateRibbonMetrics();
+            updateFeeDisplayLabels();
+            if(activeEmployeeUser === MGR_USER) {
+                renderManagerLists();
+                populateOverrideInputFields();
             }
         }
 
-        // INTAKE SUBMISSION LOGIC
-        document.getElementById('admissionForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const roomTarget = document.getElementById('pRoom').value;
-            if(!roomTarget || state.rooms[roomTarget]) {
-                alert("Target bed allocation conflict. Select an alternate open room.");
-                return;
+        function handleSystemLogout() {
+            pushStaffLog("Session safety locks applied to dashboard viewport.");
+            activeEmployeeUser = null;
+            lockAccount();
+            document.getElementById('main-dashboard').style.display = 'none';
+            document.getElementById('customer-atm-portal').style.display = 'block';
+            resetAtmWorkflow();
+        }
+
+        function registerNewEmployee() {
+            const empUser = document.getElementById('new-emp-user').value.trim();
+            const empPass = document.getElementById('new-emp-pass').value.trim();
+
+            if (!empUser || !empPass) { showToast("Provide a valid username and passcode.", "error"); return; }
+            if (empUser.toLowerCase() === MGR_USER.toLowerCase()) { showToast("Protected manager profile designation error.", "error"); return; }
+
+            employeeDB[empUser] = { password: empPass, isActive: true };
+            pushStaffLog(`Provisioned new active credentials for staff member: ${empUser}`);
+            saveAllData();
+            showToast(`Employee profile '${empUser}' registered safely.`, "manager");
+            document.getElementById('new-emp-user').value = '';
+            document.getElementById('new-emp-pass').value = '';
+        }
+
+        function toggleEmployeeStatus(empKey) {
+            if(employeeDB[empKey]) {
+                employeeDB[empKey].isActive = !employeeDB[empKey].isActive;
+                pushStaffLog(`Altered staff state metric: ${empKey} (Status set to: ${employeeDB[empKey].isActive})`);
+                saveAllData();
+                showToast(`Employee state tracking adjusted.`);
+            }
+        }
+
+        function toggleCustomerStatus(accId) {
+            if(bankDB[accId]) {
+                bankDB[accId].isSuspended = !bankDB[accId].isSuspended;
+                pushStaffLog(`Altered customer processing status flag: ${accId} (Suspended: ${bankDB[accId].isSuspended})`);
+                saveAllData();
+                showToast(`Customer processing gateway status updated.`);
+                if(activeAccountID === accId) loadWorkstation();
+            }
+        }
+
+        // --- MGR OVERRIDE PIN CODE CHANGE ---
+        function executeManagerPinOverride() {
+            if (activeEmployeeUser !== MGR_USER) return;
+
+            const digits = document.getElementById('mgr-pin-acc-id').value.trim();
+            const newPin = document.getElementById('mgr-pin-new-value').value.trim();
+
+            if (!digits || !newPin) { showToast("Account metrics and new PIN keys required.", "error"); return; }
+            if (newPin.length < 4) { showToast("PIN combination must be at least 4 digits.", "error"); return; }
+
+            const fullAccId = `ACC-${digits}`;
+            if (!bankDB[fullAccId]) { showToast("Targeted customer registry does not exist.", "error"); return; }
+
+            bankDB[fullAccId].passcode = newPin;
+            bankDB[fullAccId].logs.push(`[${new Date().toLocaleString()}] Security Notice: Customer login PIN passcode overwritten by Root Bank Manager.`);
+            
+            pushStaffLog(`Overwrote customer passcode credentials for portfolio node: ${fullAccId}`);
+            saveAllData();
+            
+            showToast(`PIN passcode updated successfully for ${fullAccId}`, "manager");
+            document.getElementById('mgr-pin-acc-id').value = '';
+            document.getElementById('mgr-pin-new-value').value = '';
+            if (activeAccountID === fullAccId) loadWorkstation();
+        }
+
+        // --- SECTION 2: METRICS AND RIBBON CALCULATIONS ---
+        function calculateRibbonMetrics() {
+            let accountsCount = Object.keys(bankDB).length;
+            let totalOwedAllAccounts = 0;
+
+            Object.keys(bankDB).forEach(id => {
+                totalOwedAllAccounts += bankDB[id].balance;
+                totalOwedAllAccounts += bankDB[id].savingsBalance;
+            });
+
+            document.getElementById('ribbon-accounts').innerText = accountsCount;
+            document.getElementById('ribbon-vault').innerText = `${financialMatrix.vaultCash.toFixed(2)} JD`;
+            document.getElementById('ribbon-total-owed').innerText = `${totalOwedAllAccounts.toFixed(2)} JD`;
+            document.getElementById('ribbon-fees').innerText = `${financialMatrix.totalFeesCollected.toFixed(2)} JD`;
+            
+            let netProfit = financialMatrix.totalFeesCollected - financialMatrix.totalSavingsProfitGiven;
+            const profitLbl = document.getElementById('ribbon-profit');
+            profitLbl.innerText = `${netProfit.toFixed(2)} JD`;
+            profitLbl.style.color = netProfit >= 0 ? '#4ade80' : '#ef4444';
+        }
+
+        function updateFeeDisplayLabels() {
+            document.getElementById('fee-tracker-txt').innerText = 
+                `Open: ${feeStructure.open} JD | Deposit: ${feeStructure.deposit} JD | Withdraw: ${feeStructure.withdraw} JD | Lock: Free | Break: ${feeStructure.break} JD | Transfer: ${feeStructure.transfer} JD`;
+            document.getElementById('fee-open-cfg').value = feeStructure.open;
+            document.getElementById('fee-deposit-cfg').value = feeStructure.deposit;
+            document.getElementById('fee-withdraw-cfg').value = feeStructure.withdraw;
+            document.getElementById('fee-break-cfg').value = feeStructure.break;
+        }
+
+        function populateOverrideInputFields() {
+            document.getElementById('override-vault-cash').value = financialMatrix.vaultCash.toFixed(2);
+            document.getElementById('override-fees-collected').value = financialMatrix.totalFeesCollected.toFixed(2);
+            document.getElementById('override-savings-profit').value = financialMatrix.totalSavingsProfitGiven.toFixed(2);
+        }
+
+        function saveManualFinancialOverride() {
+            if (activeEmployeeUser !== MGR_USER) return;
+            
+            const vCash = parseFloat(document.getElementById('override-vault-cash').value);
+            const tFees = parseFloat(document.getElementById('override-fees-collected').value);
+            const tProfits = parseFloat(document.getElementById('override-savings-profit').value);
+
+            if (isNaN(vCash) || isNaN(tFees) || isNaN(tProfits)) { showToast("Ensure fields are valid.", "error"); return; }
+
+            financialMatrix.vaultCash = vCash;
+            financialMatrix.totalFeesCollected = tFees;
+            financialMatrix.totalSavingsProfitGiven = tProfits;
+
+            pushStaffLog(`Executed manual financial calculation adjustments override.`);
+            saveAllData();
+            showToast("Calculations updated manually.", "manager");
+        }
+
+        function executeFullSystemWipe() {
+            if (activeEmployeeUser !== MGR_USER) return;
+            const pinConfirm = prompt("MASTER SYSTEM RESET SEQUENCE REQUIREMENT\nEnter Manager Passcode to wipe entries:");
+            if (pinConfirm !== MGR_PASSCODE) { alert("Reset sequence aborted."); return; }
+
+            bankDB = {}; employeeDB = {};
+            feeStructure = { open: 0, deposit: 1, withdraw: 1, break: 3, transfer: 1 };
+            financialMatrix = { vaultCash: 500.00, totalFeesCollected: 0.00, totalSavingsProfitGiven: 0.00 };
+            staffSystemLogs = [`[${new Date().toLocaleString()}] Database factory wipe initiated.`];
+            globalConfig = { dividendRate: 1.0 };
+
+            localStorage.clear();
+            alert("All structural components reset.");
+            handleSystemLogout();
+        }
+
+        // --- PROMPT CONFIRMATION VIEW ROUTER ---
+        function openTxModal(title, textAmount, feeAmount, callback) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-amount-val').innerText = `${textAmount.toFixed(2)} JD`;
+            document.getElementById('modal-fee-val').innerText = `${feeAmount.toFixed(2)} JD`;
+            
+            const bypassArea = document.getElementById('manager-bypass-checkbox-area');
+            const bypassCheckbox = document.getElementById('bypass-fee-toggle');
+            bypassCheckbox.checked = false; 
+            
+            if (activeEmployeeUser === MGR_USER && feeAmount > 0) {
+                bypassArea.style.display = 'block';
+            } else {
+                bypassArea.style.display = 'none';
             }
 
-            const newPatient = {
-                id: generatePatientID(),
-                firstName: document.getElementById('pFirstName').value.trim(),
-                lastName: document.getElementById('pLastName').value.trim(),
-                dob: document.getElementById('pDob').value,
-                insurance: document.getElementById('pInsurance').value.trim() || "N/A",
-                symptoms: document.getElementById('pSymptoms').value.trim(),
-                urgency: parseInt(document.getElementById('pUrgency').value),
-                status: "Admitted",
-                diagnosis: "",
-                labsSummary: "",
-                rx: "",
-                dischargeNotes: "",
-                referralSpecialty: "",
-                codeBlue: false
-            };
+            pendingTxCallback = callback;
+            document.getElementById('tx-modal').style.display = 'flex';
+        }
 
-            state.rooms[roomTarget] = newPatient;
-            state.patientsLog.push(newPatient);
-            saveState();
+        function closeTxModal() {
+            document.getElementById('tx-modal').style.display = 'none';
+            pendingTxCallback = null;
+        }
 
-            document.getElementById('admissionForm').reset();
-            document.getElementById('calculatedAgeForm').textContent = "";
-            
-            updateRoomDropdown();
-            renderRoomsGrid();
-            renderHistoryTable();
+        document.getElementById('modal-confirm-btn').addEventListener('click', function() {
+            if (pendingTxCallback) {
+                const isBypassed = document.getElementById('bypass-fee-toggle').checked;
+                pendingTxCallback(isBypassed);
+            }
+            closeTxModal();
         });
 
-        // RENDER LIVE ROOM TRACKING CELLS
-        function renderRoomsGrid() {
-            const grid = document.getElementById('roomsGrid');
-            grid.innerHTML = '';
-
-            for(let rName in state.rooms) {
-                const p = state.rooms[rName];
-                const card = document.createElement('div');
-                card.className = `room-card ${p ? 'urgency-' + p.urgency : ''} ${p && p.codeBlue ? 'code-blue-active' : ''}`;
-                
-                if(!p) {
-                    card.innerHTML = `
-                        <div class="room-header"><span>${rName}</span><span style="color:#94a3b8; font-size:11px;">VACANT</span></div>
-                        <p style="text-align:center; color:#94a3b8; font-size:12px; margin:15px 0;">Available for Intake Routing</p>
-                    `;
-                } else {
-                    card.innerHTML = `
-                        <div class="room-header">
-                            <span>${rName}</span>
-                            <span class="badge b-${p.urgency}">${urgencyLabels[p.urgency]}</span>
-                        </div>
-                        <div class="patient-clickable" onclick="launchSecureGate('${rName}')">
-                            🔓 VIEW ENCRYPTED CHART<br>
-                            <span style="font-size:11px; font-weight:normal; color:#475569;">ID: ${p.id}</span>
-                        </div>
-                        <div style="font-size:12px; line-height: 1.4;">
-                            <p style="margin:2px 0;"><strong>Patient:</strong> ${p.lastName}, ${p.firstName} (${calculateAge(p.dob)})</p>
-                            <p style="margin:2px 0;"><strong>Status:</strong> <span style="color:var(--primary); font-weight:bold;">${p.status}</span></p>
-                        </div>
-                    `;
-                }
-                grid.appendChild(card);
-            }
-        }
-
-        // ACCESS CONTROL SYSTEM GATEWAYS
-        function launchSecureGate(roomName) {
-            activeSelectedRoomName = roomName;
-            const p = state.rooms[roomName];
-            if(!p) return;
-
-            document.getElementById('modalPatientTitle').textContent = `Secure Chart View: ${roomName}`;
+        // --- IDENTITY MANAGEMENT RESTRICTION MODIFIER ENGINE ---
+        function persistIdentityEdits(fieldKey) {
+            if (!activeAccountID) return;
             
-            // Clean interface slate 
-            document.getElementById('gatePasscodeInput').value = "";
-            document.getElementById('verifyDocInputDob').value = "";
-            document.getElementById('modalAuthGate').style.display = "block";
-            document.getElementById('modalDocVerificationGate').style.display = "none";
-            document.getElementById('modalSecureBody').style.display = "none";
+            let domElementId = '';
+            if (fieldKey === 'nationalId') domElementId = 'workstation-input-id';
+            else if (fieldKey === 'dob') domElementId = 'workstation-input-dob';
+            else if (fieldKey === 'address') domElementId = 'workstation-input-address';
 
-            document.getElementById('secureModal').classList.add('active');
-        }
+            const targetInput = document.getElementById(domElementId);
+            const newValue = targetInput.value.trim();
 
-        function verifyGatePasscode() {
-            const input = document.getElementById('gatePasscodeInput').value;
-            if(input === state.masterPasscode) {
-                // If the user is operating within the Doctor console space, enforce the mandatory secondary DOB checkpoint
-                if(currentPortal === 'doctor') {
-                    document.getElementById('modalAuthGate').style.display = "none";
-                    document.getElementById('modalDocVerificationGate').style.display = "block";
-                } else {
-                    displaySecureChart();
-                }
-            } else {
-                alert("Security handshake violation: Invalid Passcode.");
-            }
-        }
-
-        function verifyPatientDobForDoctor() {
-            const p = state.rooms[activeSelectedRoomName];
-            const inputDob = document.getElementById('verifyDocInputDob').value;
-            if(p && inputDob === p.dob) {
-                displaySecureChart();
-            } else {
-                alert("Verification Failure: Inputted Date of Birth does not align with core record file.");
-            }
-        }
-
-        function bypassVerificationEmergency() {
-            alert("EMERGENCY BYPASS TRIGGERED: Logging override authentication event.");
-            displaySecureChart();
-        }
-
-        // CORE RECOVERY & IN-MODAL RENDERING PACKET
-        function displaySecureChart() {
-            document.getElementById('modalAuthGate').style.display = "none";
-            document.getElementById('modalDocVerificationGate').style.display = "none";
-            document.getElementById('modalSecureBody').style.display = "block";
-
-            const p = state.rooms[activeSelectedRoomName];
-            if(!p) return;
-
-            // Populate Metadata block
-            document.getElementById('patientMetaProfile').innerHTML = `
-                <strong>Patient ID:</strong> ${p.id} <br>
-                <strong>Full Legal Name:</strong> ${p.lastName}, ${p.firstName} <br>
-                <strong>Date of Birth:</strong> ${p.dob} (${calculateAge(p.dob)}) <br>
-                <strong>Insurance File:</strong> ${p.insurance} <br>
-                <strong>Intake Symptoms logged:</strong> <span style="color:#ef4444;">${p.symptoms}</span>
-            `;
-
-            // Display current dynamic values inside fields
-            document.getElementById('chartDisplayData').innerHTML = `
-                <p><strong>Tracking Status:</strong> ${p.status}</p>
-                <p><strong>Diagnosis (Dx):</strong> ${p.diagnosis || 'None entered'}</p>
-                <p><strong>Therapeutics (Rx):</strong> ${p.rx || 'None prescribed'}</p>
-                <p><strong>Lab Results Summary:</strong> ${p.labsSummary || 'Awaiting lab pipeline execution'}</p>
-                <p><strong>Discharge Officer Context:</strong> ${p.dischargeNotes || 'None'}</p>
-                <p><strong>Assigned Specialty Referral:</strong> ${p.referralSpecialty || 'None'}</p>
-            `;
-
-            // Show/Hide contextual portal tools matching identity profile active
-            document.getElementById('modalDoctorActions').style.display = (currentPortal === 'doctor') ? 'block' : 'none';
-            document.getElementById('modalLabActions').style.display = (currentPortal === 'labs') ? 'block' : 'none';
-
-            // Populate clinical input default targets for editing
-            if(currentPortal === 'doctor') {
-                document.getElementById('mdStatusSelect').value = p.status === "Awaiting Labs" ? "Awaiting Labs" : (["Getting checked","In Diagnostics","Stable"].includes(p.status) ? p.status : "Getting checked");
-                document.getElementById('mdUrgencySelect').value = p.urgency;
-                document.getElementById('mdDxText').value = p.diagnosis;
-                document.getElementById('mdRxText').value = p.rx;
-                document.getElementById('mdDischargeNotesText').value = p.dischargeNotes;
-                document.getElementById('mdReferralSelect').value = p.referralSpecialty;
-
-                // Rule Enforcer: Enable Discharge options ONLY if Rx fields are fully written out
-                if(p.rx.trim() !== "") {
-                    document.getElementById('btnDischargeExecution').style.display = "block";
-                } else {
-                    document.getElementById('btnDischargeExecution').style.display = "none";
-                }
-            }
-
-            if(currentPortal === 'labs') {
-                document.getElementById('labSummaryText').value = p.labsSummary;
-            }
-
-            document.getElementById('modalCodeBlueBtn').textContent = p.codeBlue ? "STAND DOWN CODE BLUE" : "ACTIVATE ROOM CODE BLUE ALERT";
-        }
-
-        // CLINICAL STATE TRANSITIONS (DOCTOR UPDATES)
-        function submitDoctorUpdates() {
-            const p = state.rooms[activeSelectedRoomName];
-            if(!p) return;
-
-            p.status = document.getElementById('mdStatusSelect').value;
-            p.urgency = parseInt(document.getElementById('mdUrgencySelect').value);
-            p.diagnosis = document.getElementById('mdDxText').value.trim();
-            p.rx = document.getElementById('mdRxText').value.trim();
-            p.dischargeNotes = document.getElementById('mdDischargeNotesText').value.trim();
-            p.referralSpecialty = document.getElementById('mdReferralSelect').value;
-
-            syncGlobalArchiveLog(p.id, p);
-            saveState();
-            displaySecureChart();
-            renderRoomsGrid();
-            renderHistoryTable();
-            alert("Clinical updates committed to active registry safely.");
-        }
-
-        // LAB WORKFLOW PIECE
-        function submitLabResults() {
-            const p = state.rooms[activeSelectedRoomName];
-            if(!p) return;
-
-            const text = document.getElementById('labSummaryText').value.trim();
-            if(!text) {
-                alert("Please add diagnostic finding writeups prior to submission.");
+            if (activeEmployeeUser !== MGR_USER) {
+                alert("ACCESS REJECTED: Only the Root Bank Manager holds credentials to update ID, DOB, or Address tracking vectors.");
+                targetInput.value = bankDB[activeAccountID][fieldKey];
                 return;
             }
 
-            p.labsSummary = text;
-            p.status = "Labs Complete"; // Auto state routing forced constraint rule
+            if (!newValue) { alert("Fields cannot be saved with empty parameters."); targetInput.value = bankDB[activeAccountID][fieldKey]; return; }
 
-            syncGlobalArchiveLog(p.id, p);
-            saveState();
-            displaySecureChart();
-            renderRoomsGrid();
-            renderHistoryTable();
-            alert("Diagnostics dispatched: Patient tracking updated to 'Labs Complete'.");
+            bankDB[activeAccountID][fieldKey] = newValue;
+            bankDB[activeAccountID].logs.push(`[${new Date().toLocaleString()}] Identity Tracking Parameter [${fieldKey}] revised by Root Manager to: ${newValue}`);
+            pushStaffLog(`Altered core biometric identity fields [${fieldKey}] on profile: ${activeAccountID}`);
+            saveAllData();
+            showToast("Identity metric recorded successfully.", "manager");
         }
 
-        // FULL TERMINATION DISCHARGE PIPELINE
-        function executeDischarge() {
-            const p = state.rooms[activeSelectedRoomName];
-            if(!p) return;
 
-            // Structural string mutation formatting rule constraint handling
-            let finalDisposition = "Discharged Formally";
-            if(p.referralSpecialty) {
-                finalDisposition += ` (Urged to follow up with ${p.referralSpecialty})`;
-            }
+        // --- SECTION 3: BANK CUSTOMER CORE LOGIC ---
+        document.getElementById('create-account-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const accountId = 'ACC-' + Math.floor(100000 + Math.random() * 900000);
+            const passcode = Math.floor(1000 + Math.random() * 9000).toString();
+            const initialDeposit = parseFloat(document.getElementById('cust-initial').value) || 0;
+            const openFee = feeStructure.open;
 
-            p.status = finalDisposition;
-            syncGlobalArchiveLog(p.id, p);
+            openTxModal("Confirm Profile Creation Setup", initialDeposit, openFee, function(feeBypassed) {
+                const finalFee = feeBypassed ? 0 : openFee;
+                const timestamp = new Date().toLocaleString();
 
-            // Clean active hospital room matrix slot entirely 
-            state.rooms[activeSelectedRoomName] = null;
-            saveState();
+                const newAccount = {
+                    id: accountId, passcode: passcode,
+                    firstName: document.getElementById('cust-first').value.trim(),
+                    lastName: document.getElementById('cust-last').value.trim(),
+                    nationalId: document.getElementById('cust-id').value,
+                    address: document.getElementById('cust-address').value,
+                    dob: document.getElementById('cust-dob').value,
+                    balance: initialDeposit, savingsBalance: 0, notes: '', isSuspended: false,
+                    logs: [`[${timestamp}] Registration built. Opening deposit: ${initialDeposit} JD. Fee: ${finalFee} JD paid.`]
+                };
 
-            closeModal();
-            updateRoomDropdown();
-            renderRoomsGrid();
-            renderHistoryTable();
-            alert(`Bed released. Records for patient ${p.id} archived successfully.`);
-        }
+                financialMatrix.vaultCash += initialDeposit + finalFee;
+                financialMatrix.totalFeesCollected += finalFee;
 
-        // GLOBAL ALERTS (CODE BLUE EMERGENCY MODULATORS)
-        function toggleRoomCodeBlueFromModal() {
-            const p = state.rooms[activeSelectedRoomName];
-            if(!p) return;
-            p.codeBlue = !p.codeBlue;
-            saveState();
-            displaySecureChart();
-            renderRoomsGrid();
-        }
+                bankDB[accountId] = newAccount;
+                pushStaffLog(`Created new user registration index element: ${accountId}`);
+                saveAllData();
 
-        function triggerGlobalCodeBlue() {
-            // Admission or Doctor fallback instant override toggle tool
-            let count = 0;
-            for(let r in state.rooms) {
-                if(state.rooms[r]) {
-                    state.rooms[r].codeBlue = true;
-                    count++;
+                alert(`CUSTOMER REGISTRY SAVED\n\nAccount ID: ${accountId}\nPIN Passcode: ${passcode}`);
+                document.getElementById('create-account-form').reset();
+                if(activeAccountID) loadWorkstation();
+            });
+        });
+
+        function triggerManualProfitPayout() {
+            const currentRateField = parseFloat(document.getElementById('cfg-dividend-percent').value);
+            if (isNaN(currentRateField) || currentRateField < 0) { alert("Define clear dividend percentages."); return; }
+            
+            globalConfig.dividendRate = currentRateField;
+            let totalDistributedThisCycle = 0;
+            let totalAccountsAffected = 0;
+            const timestamp = new Date().toLocaleString();
+
+            Object.keys(bankDB).forEach(id => {
+                let acc = bankDB[id];
+                if (acc.savingsBalance > 0) {
+                    let calculatedProfit = acc.savingsBalance * (globalConfig.dividendRate / 100);
+                    let finalProfitPayout = Math.ceil(calculatedProfit);
+
+                    acc.balance += finalProfitPayout;
+                    acc.logs.push(`[${timestamp}] Profit dividend payout added: ${finalProfitPayout} JD based on adjusted ${globalConfig.dividendRate}% parameters.`);
+                    
+                    totalDistributedThisCycle += finalProfitPayout;
+                    totalAccountsAffected++;
                 }
-            }
-            if(count === 0) {
-                alert("No patients currently occupy ER beds to register a crisis alert.");
-                return;
-            }
-            saveState();
-            renderRoomsGrid();
-            alert(`CRITICAL ALERT: Code Blue engaged across active resuscitation vectors.`);
+            });
+
+            financialMatrix.totalSavingsProfitGiven += totalDistributedThisCycle;
+            pushStaffLog(`Distributed manual custom ${globalConfig.dividendRate}% dividends across ${totalAccountsAffected} matrix profiles.`);
+            saveAllData();
+            showToast(`Processed global dividends successfully!`, "manager");
+            if(activeAccountID) loadWorkstation();
         }
 
-        // PERSISTENCE SYNC MANAGEMENT HELPERS
-        function syncGlobalArchiveLog(id, updatedPatientObject) {
-            let idx = state.patientsLog.findIndex(item => item.id === id);
-            if(idx !== -1) {
-                state.patientsLog[idx] = { ...state.patientsLog[idx], ...updatedPatientObject };
-            }
-        }
-
-        function renderHistoryTable() {
-            const tbody = document.getElementById('historyTableBody');
-            tbody.innerHTML = '';
-
-            state.patientsLog.forEach(p => {
-                let row = document.createElement('tr');
-                row.innerHTML = `
-                    <td><strong>${p.id}</strong></td>
-                    <td>${p.lastName}, ${p.firstName}</td>
-                    <td>${calculateAge(p.dob)}<br><span style="color:#64748b; font-size:10px;">${p.dob}</span></td>
-                    <td style="max-width:140px; word-wrap:break-word;">${p.symptoms}</td>
-                    <td style="max-width:140px; word-wrap:break-word;">${p.diagnosis || '-'}</td>
-                    <td style="max-width:140px; word-wrap:break-word; color:#b45309;">${p.labsSummary || '-'}</td>
-                    <td style="max-width:140px; word-wrap:break-word; color:#16a34a;">${p.rx || '-'}</td>
-                    <td>
-                        <span style="font-weight:bold;">${p.status}</span>
-                        ${p.referralSpecialty ? `<br><span style="color:var(--primary); font-size:11px;">Ref: ${p.referralSpecialty}</span>` : ''}
-                        ${p.dischargeNotes ? `<br><small style="color:#64748b;">"${p.dischargeNotes}"</small>` : ''}
-                    </td>
-                `;
-                tbody.appendChild(row);
+        // --- SECTION 4: MANAGER REGISTRY SEARCH INDEX RE-RENDER ---
+        function handleStaffRegistrySearch() {
+            const term = document.getElementById('staff-search-input').value.toLowerCase().trim();
+            const entries = document.querySelectorAll('#staff-registry-box .staff-list-row-item');
+            entries.forEach(item => {
+                const textContent = item.innerText.toLowerCase();
+                item.style.display = textContent.includes(term) ? 'flex' : 'none';
             });
         }
 
-        function closeModal() {
-            document.getElementById('secureModal').classList.remove('active');
-            activeSelectedRoomName = null;
+        function handleCustomerRegistrySearch() {
+            const term = document.getElementById('customer-search-input').value.toLowerCase().trim();
+            const entries = document.querySelectorAll('#account-registry-box .data-list-item');
+            entries.forEach(item => {
+                const textContent = item.innerText.toLowerCase();
+                item.style.display = textContent.includes(term) ? 'flex' : 'none';
+            });
         }
 
-        // Fire
-        init();
+        function renderManagerLists() {
+            const staffBox = document.getElementById('staff-registry-box');
+            staffBox.innerHTML = `
+                <div class="staff-list-row-item" style="font-size:0.85rem; padding:4px 0;"><strong>Manager Profile:</strong> ${MGR_USER} (System master account status locked)</div>
+                ${Object.keys(employeeDB).map(u => {
+                    let emp = employeeDB[u];
+                    return `
+                        <div class="staff-list-row-item" style="font-size:0.85rem; padding:6px 0; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
+                            <div><strong>Staff Key:</strong> ${u} | <strong>PIN:</strong> ${emp.password} | <span style="font-weight:bold; color:${emp.isActive ? 'var(--success)' : 'var(--danger)'};">${emp.isActive ? 'Active' : 'Deactivated'}</span></div>
+                            <button class="manager-btn action-toggle-btn" onclick="toggleEmployeeStatus('${u}')">${emp.isActive ? 'Deactivate' : 'Activate'}</button>
+                        </div>
+                    `;
+                }).join('')}
+            `;
+            handleStaffRegistrySearch();
+
+            const staffLogsBox = document.getElementById('staff-global-logs-box');
+            staffLogsBox.innerHTML = staffSystemLogs.map(l => `<div class="log-entry">${l}</div>`).reverse().join('');
+
+            const accRegistryBox = document.getElementById('account-registry-box');
+            accRegistryBox.innerHTML = Object.keys(bankDB).map(id => {
+                let acc = bankDB[id];
+                return `
+                    <div class="data-list-item" style="display:flex; justify-content:space-between; align-items:center;">
+                        <div onclick="promptManagerAccessGate('${id}')" style="flex-grow:1;">
+                            <strong>${acc.firstName} ${acc.lastName}</strong> (${acc.id}) <br>
+                            <span style="font-size:0.85rem; color:#64748b;">Combined Portfolio Value Balance: <strong>${(acc.balance + acc.savingsBalance).toFixed(2)} JD</strong></span>
+                        </div>
+                        <div>
+                            <span class="status-badge ${acc.isSuspended ? 'suspended' : 'active'}" style="position:static; display:inline-block;">${acc.isSuspended ? 'Suspended' : 'Active'}</span><br>
+                            <button class="manager-btn action-toggle-btn" style="background:#475569;" onclick="toggleCustomerStatus('${id}')">${acc.isSuspended ? 'Activate' : 'Suspend'}</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            handleCustomerRegistrySearch();
+        }
+
+        function promptManagerAccessGate(accountId) {
+            const acc = bankDB[accountId];
+            if (!acc) return;
+            let authOption = prompt(`MANAGER VIEW AUTHENTICATION\nInput Customer Password PIN or DOB (YYYY-MM-DD format):`);
+            if (authOption && (authOption.toLowerCase() === acc.passcode.toLowerCase() || authOption.toLowerCase() === acc.dob.toLowerCase())) {
+                activeAccountID = accountId; loadWorkstation();
+            } else { alert("ACCESS DENIED."); }
+        }
+
+        // --- SECTION 5: CUSTOMER AUTHENTICATION & WORKSTATION PARSING ---
+        function accessAccount() {
+            const digitsInput = document.getElementById('auth-acc-id').value.trim();
+            const passInput = document.getElementById('auth-passcode').value.trim();
+
+            if (!digitsInput) { showToast("Account numerical string required.", "error"); return; }
+            const fullIdString = `ACC-${digitsInput}`;
+
+            let actualMatchedId = Object.keys(bankDB).find(k => k.toLowerCase() === fullIdString.toLowerCase());
+            if (!actualMatchedId || bankDB[actualMatchedId].passcode !== passInput) { showToast("Invalid structural password signature validation codes.", "error"); return; }
+
+            activeAccountID = actualMatchedId;
+            loadWorkstation();
+        }
+
+        function managerBypassAccess() {
+            const fName = document.getElementById('bypass-first').value.trim().toLowerCase();
+            const lName = document.getElementById('bypass-last').value.trim().toLowerCase();
+            const dobIn = document.getElementById('bypass-dob').value.trim();
+            const mgrPass = document.getElementById('bypass-code').value.trim();
+
+            if (mgrPass !== MGR_PASSCODE) { showToast("Bypass Refused.", "error"); return; }
+            
+            let targetId = Object.keys(bankDB).find(id => bankDB[id].firstName.toLowerCase() === fName && bankDB[id].lastName.toLowerCase() === lName && bankDB[id].dob === dobIn);
+            if(!targetId) { showToast("No ledger profile corresponds to those coordinates.", "error"); return; }
+
+            activeAccountID = targetId; loadWorkstation();
+        }
+
+        function lockAccount() {
+            activeAccountID = null;
+            document.getElementById('no-account-selected').style.display = 'block';
+            document.getElementById('account-view').style.display = 'none';
+            document.getElementById('log-box').innerHTML = `<div class="log-entry">[SYSTEM] Workspace cleared.</div>`;
+        }
+
+        function loadWorkstation() {
+            const acc = bankDB[activeAccountID];
+            if (!acc) return;
+
+            document.getElementById('no-account-selected').style.display = 'none';
+            document.getElementById('account-view').style.display = 'block';
+
+            document.getElementById('view-name').innerText = `${acc.firstName} ${acc.lastName}`;
+            document.getElementById('view-id').innerText = acc.id;
+            document.getElementById('view-balance').innerText = `${acc.balance.toFixed(2)} JD`;
+            document.getElementById('view-savings').innerText = `${acc.savingsBalance.toFixed(2)} JD`;
+            
+            // Populate Identity management system matrix inputs
+            document.getElementById('workstation-input-id').value = acc.nationalId || '';
+            document.getElementById('workstation-input-dob').value = acc.dob || '';
+            document.getElementById('workstation-input-address').value = acc.address || '';
+            document.getElementById('view-notes').value = acc.notes || '';
+
+            const noticeLbl = document.getElementById('editing-restriction-notice');
+            noticeLbl.style.display = (activeEmployeeUser === MGR_USER) ? 'none' : 'block';
+
+            if(acc.isSuspended) {
+                document.getElementById('view-balance').innerText += " [SUSPENDED]";
+                document.getElementById('view-balance').style.color = "var(--danger)";
+            } else {
+                document.getElementById('view-balance').style.color = "var(--primary)";
+            }
+            renderLogs(acc.logs);
+        }
+
+        function renderLogs(logs) {
+            const container = document.getElementById('log-box');
+            container.innerHTML = logs.map(l => `<div class="log-entry">${l}</div>`).reverse().join('');
+        }
+
+        function updateNotes() {
+            if (!activeAccountID) return;
+            bankDB[activeAccountID].notes = document.getElementById('view-notes').value;
+            localStorage.setItem('bankDB_v6', JSON.stringify(bankDB));
+        }
+
+        function updateFeeStructure() {
+            feeStructure.open = parseFloat(document.getElementById('fee-open-cfg').value) || 0;
+            feeStructure.deposit = parseFloat(document.getElementById('fee-deposit-cfg').value) || 0;
+            feeStructure.withdraw = parseFloat(document.getElementById('fee-withdraw-cfg').value) || 0;
+            feeStructure.break = parseFloat(document.getElementById('fee-break-cfg').value) || 0;
+            
+            pushStaffLog(`Modified global cash transaction penalty matrix formulas.`);
+            saveAllData(); updateFeeDisplayLabels();
+            showToast("Global operational cost policies modified.", "manager");
+        }
+
+        function verifySuspensionGate(acc) {
+            if(acc && acc.isSuspended) {
+                alert("Account suspended, manager required to activate from portal");
+                return true;
+            }
+            return false;
+        }
+
+        // --- SECTION 6: COMPULSORY CASH CASH-ONLY BALANCING ENGINE ---
+        function prepareStandardTx(type) {
+            const acc = bankDB[activeAccountID];
+            if (verifySuspensionGate(acc)) return;
+
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            if (isNaN(amount) || amount <= 0) { showToast("Please submit valid monetary units.", "error"); return; }
+
+            const structuralFee = (type === 'withdraw') ? feeStructure.withdraw : feeStructure.deposit;
+            const titleLabel = (type === 'withdraw') ? "Confirm Cash Withdrawal Vault Action" : "Confirm Cash Deposit Vault Action";
+
+            openTxModal(titleLabel, amount, structuralFee, function(feeBypassed) {
+                const finalFee = feeBypassed ? 0 : structuralFee;
+                const timestamp = new Date().toLocaleString();
+
+                if (type === 'withdraw') {
+                    if (acc.balance < amount) { showToast("Insufficient ledger assets within primary balance structure.", "error"); return; }
+                    financialMatrix.vaultCash += finalFee - amount;
+                    financialMatrix.totalFeesCollected += finalFee;
+                    acc.balance -= amount;
+                    acc.logs.push(`[${timestamp}] Withdrawal: Dispensed ${amount} JD from account ledger. Collected ${finalFee} JD fee strictly in cash.`);
+                } else {
+                    financialMatrix.vaultCash += amount + finalFee;
+                    financialMatrix.totalFeesCollected += finalFee;
+                    acc.balance += amount;
+                    acc.logs.push(`[${timestamp}] Deposit: Credited ${amount} JD directly to core ledger. Collected ${finalFee} JD fee strictly in cash.`);
+                }
+                finalizeTx();
+            });
+        }
+
+        function prepareSavingsTx(type) {
+            const acc = bankDB[activeAccountID];
+            if (verifySuspensionGate(acc)) return;
+
+            const amount = parseFloat(document.getElementById('savings-amount').value);
+            if (isNaN(amount) || amount <= 0) { showToast("Define valid positive numerical metrics parameters.", "error"); return; }
+
+            if (type === 'deposit') {
+                if (acc.balance < amount) { showToast("Primary core balance values lack required coverage assets.", "error"); return; }
+                const timestamp = new Date().toLocaleString();
+                acc.balance -= amount; acc.savingsBalance += amount;
+                acc.logs.push(`[${timestamp}] Asset Lock: Transferred ${amount} JD into fixed savings terms. Fee: FREE.`);
+                finalizeTx();
+            } else if (type === 'break') {
+                if (acc.savingsBalance < amount) { showToast("Extraction boundaries break bounds of active locked portfolio.", "error"); return; }
+                const structuralFee = feeStructure.break;
+
+                openTxModal("Confirm Savings Break Request", amount, structuralFee, function(feeBypassed) {
+                    const finalFee = feeBypassed ? 0 : structuralFee;
+                    const timestamp = new Date().toLocaleString();
+
+                    financialMatrix.vaultCash += finalFee;
+                    financialMatrix.totalFeesCollected += finalFee;
+                    acc.savingsBalance -= amount; acc.balance += amount; 
+                    acc.logs.push(`[${timestamp}] Term Break: Unlocked ${amount} JD back to core balance ledger. Collected ${finalFee} JD breaking fee cash-in-hand.`);
+                    finalizeTx();
+                });
+            }
+        }
+
+        function prepareTransferTx() {
+            const sourceAcc = bankDB[activeAccountID];
+            if (verifySuspensionGate(sourceAcc)) return;
+
+            const targetDigitsInput = document.getElementById('transfer-target').value.trim();
+            const amount = parseFloat(document.getElementById('tx-amount').value);
+            const structuralFee = feeStructure.transfer;
+
+            if (!targetDigitsInput) { showToast("Target destination missing.", "error"); return; }
+            const constructedTargetId = `ACC-${targetDigitsInput}`;
+
+            let targetedIdKey = Object.keys(bankDB).find(k => k.toLowerCase() === constructedTargetId.toLowerCase());
+            if (!targetedIdKey || targetedIdKey.toLowerCase() === activeAccountID.toLowerCase() || isNaN(amount) || amount <= 0 || sourceAcc.balance < amount) {
+                showToast("Invalid Transfer parameters or parameters error.", "error"); return;
+            }
+
+            const recipientAcc = bankDB[targetedIdKey];
+            if (recipientAcc.isSuspended) { showToast("Transfer Aborted: Recipient account channel is suspended.", "error"); return; }
+
+            openTxModal("Confirm Inter-Account Transfer", amount, structuralFee, function(feeBypassed) {
+                const finalFee = feeBypassed ? 0 : structuralFee;
+                const timestamp = new Date().toLocaleString();
+
+                financialMatrix.vaultCash += finalFee;
+                financialMatrix.totalFeesCollected += finalFee;
+
+                sourceAcc.balance -= amount;
+                sourceAcc.logs.push(`[${timestamp}] Transfer Outbound: Settled ${amount} JD towards target ${recipientAcc.id}. Paid ${finalFee} JD cash fee.`);
+                recipientAcc.balance += amount;
+                recipientAcc.logs.push(`[${timestamp}] Transfer Inbound: Accepted clearing payload of ${amount} JD from source entity ${sourceAcc.id}.`);
+
+                finalizeTx();
+            });
+        }
+
+        function finalizeTx() {
+            saveAllData(); loadWorkstation();
+            if (activeEmployeeUser === MGR_USER) populateOverrideInputFields();
+            document.getElementById('tx-amount').value = '';
+            document.getElementById('savings-amount').value = '';
+            document.getElementById('transfer-target').value = '';
+            showToast("Transaction logged and variables compiled safely.");
+        }
     </script>
 </body>
 </html>
