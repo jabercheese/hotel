@@ -1,403 +1,491 @@
+HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global Intelligence Database (GRID)</title>
-    <!-- Tailwind CSS for modern, clean UI layout -->
+    <title>Global Intelligence Database (GRID) - Advanced Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #0b0f19; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        .scanline {
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 6px 100%;
+        }
     </style>
 </head>
-<body class="bg-gray-950 text-gray-100 font-sans h-screen overflow-hidden">
+<body class="bg-gray-950 text-gray-100 font-sans h-screen overflow-hidden scanline">
 
-    <!-- ================= LOGIN PAGE ================= -->
     <div id="login-page" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(30,41,59,0.5)_0%,rgba(2,6,23,1)_100%)]"></div>
-        <div class="relative w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-xl p-8 shadow-2xl backdrop-blur-md">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(15,23,42,0.8)_0%,rgba(2,6,23,1)_100%)]"></div>
+        <div class="relative w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-xl p-8 shadow-2xl backdrop-blur-md">
             <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 mb-4 text-2xl animate-pulse">
-                    <i class="fa-solid fa-shield-halved"></i>
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 mb-4 text-2xl animate-pulse">
+                    <i class="fa-solid fa-terminal"></i>
                 </div>
-                <h1 class="text-2xl font-bold tracking-wider text-slate-200">G.R.I.D. SYSTEM</h1>
-                <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">Global Intelligence Database</p>
+                <h1 class="text-2xl font-mono tracking-widest text-slate-200">GRID // SYSTEM ACCESS</h1>
+                <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">Operator Authorization Required</p>
             </div>
-            
             <form id="login-form" class="space-y-5">
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Operator Username</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user-secret"></i></span>
-                        <input type="text" id="username" required class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors" placeholder="Enter credential ID">
-                    </div>
+                    <label class="block text-xs font-mono uppercase text-slate-400 mb-1.5">Operator ID</label>
+                    <input type="text" id="username" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500 transition-colors" placeholder="jaber">
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Access Passphrase</label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-lock"></i></span>
-                        <input type="password" id="password" required class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors" placeholder="••••••••">
-                    </div>
+                    <label class="block text-xs font-mono uppercase text-slate-400 mb-1.5">Access Passphrase</label>
+                    <input type="password" id="password" required class="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-sm text-slate-200 font-mono focus:outline-none focus:border-amber-500 transition-colors" placeholder="••••••••">
                 </div>
-                <div id="login-error" class="hidden text-xs text-rose-500 font-medium bg-rose-500/10 border border-rose-500/20 rounded px-3 py-2">
-                    <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Invalid Operator Credentials. Access Denied.
+                <div id="login-error" class="hidden text-xs text-rose-500 font-mono bg-rose-500/10 border border-rose-500/20 rounded px-3 py-2">
+                    CRITICAL ERROR: Access Credentials Rejected.
                 </div>
-                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold uppercase tracking-wider text-xs py-3 rounded-lg shadow-lg shadow-amber-950/20 transition-all duration-200">
-                    Authorize Access
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold uppercase tracking-wider text-xs py-3 rounded-lg shadow-lg transition-all">
+                    Initialize Core Decryption
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- ================= MAIN APP CONTAINER ================= -->
-    <div id="app-container" class="hidden h-full flex flex-col">
-        <!-- Top Navigation Header -->
-        <header class="bg-slate-900 border-b border-slate-800 h-16 flex items-center justify-between px-6 shrink-0">
+    <div id="app-container" class="hidden h-full flex flex-col relative">
+        
+        <div id="terminal-loader" class="hidden absolute inset-0 bg-slate-950/90 z-40 flex flex-col items-center justify-center backdrop-blur-sm">
+            <div class="w-16 h-16 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4"></div>
+            <p class="text-xs font-mono text-amber-500 tracking-widest uppercase animate-pulse">Querying decentralized database logs... Please hold.</p>
+            <p id="loader-uid" class="text-[10px] font-mono text-slate-600 mt-1"></p>
+        </div>
+
+        <header class="bg-slate-900 border-b border-slate-800 h-16 flex items-center justify-between px-6 shrink-0 z-10 shadow-md">
             <div class="flex items-center space-x-3">
-                <i class="fa-solid fa-shield-halved text-amber-500 text-xl"></i>
-                <span class="font-bold tracking-wider text-sm uppercase text-slate-200">GRID // Mainframe Terminal</span>
-                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[10px] uppercase font-bold tracking-wider">Secure Connection</span>
+                <i class="fa-solid fa-circle-nodes text-amber-500 text-xl animate-pulse"></i>
+                <span class="font-mono font-bold text-sm text-slate-200 tracking-wide">GRID.v4.8 // CORE TIER DETECTOR</span>
             </div>
-            <div class="flex items-center space-x-6">
-                <div class="text-right">
-                    <p class="text-xs font-semibold text-slate-300">Operator: <span class="text-amber-500">jaber</span></p>
-                    <p class="text-[10px] text-slate-500 uppercase tracking-wider">Clearance: Level 4 (Internal Security)</p>
-                </div>
-                <button id="logout-btn" class="text-xs font-semibold uppercase bg-slate-800 hover:bg-rose-950/40 hover:text-rose-400 border border-slate-700 hover:border-rose-900/50 px-3 py-1.5 rounded transition-all">
-                    <i class="fa-solid fa-right-from-bracket mr-1.5"></i>Disconnect
+            <div class="flex items-center space-x-4">
+                <button onclick="openRecordModal('Standard Registration')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded text-xs font-mono transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus text-emerald-400"></i> New Entry
                 </button>
+                <button onclick="openRecordModal('Secret Arrest File')" class="bg-rose-950/40 hover:bg-rose-900/40 text-rose-300 border border-rose-900/50 px-3 py-1.5 rounded text-xs font-mono transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-user-lock text-rose-400"></i> Secret Arrest
+                </button>
+                <button id="vault-access-btn" onclick="promptVaultAccess()" class="bg-amber-600/20 hover:bg-amber-600 text-amber-400 hover:text-slate-950 border border-amber-500/30 px-3 py-1.5 rounded text-xs font-mono font-bold transition-all flex items-center gap-1.5">
+                    <i class="fa-solid fa-vault"></i> Top Secret Vault
+                </button>
+                <div class="h-6 w-[1px] bg-slate-800 mx-2"></div>
+                <button id="logout-btn" class="text-xs font-mono text-slate-400 hover:text-rose-400 transition-colors"><i class="fa-solid fa-power-off"></i></button>
             </div>
         </header>
 
-        <!-- Main Workspace -->
         <div class="flex flex-1 overflow-hidden">
-            <!-- Sidebar: Navigation & Metrics -->
-            <aside class="w-80 bg-slate-900/50 border-r border-slate-800 p-6 flex flex-col space-y-6 shrink-0 overflow-y-auto custom-scrollbar">
+            
+            <aside class="w-80 bg-slate-900/40 border-r border-slate-800 p-4 flex flex-col space-y-4 shrink-0">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Search Registry</label>
+                    <label class="block text-[10px] font-mono text-slate-500 uppercase mb-1">Target Engine Filters</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs"><i class="fa-solid fa-magnifying-glass"></i></span>
-                        <input type="text" id="search-input" class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500" placeholder="Filter by name, ID, flag...">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-600 text-xs"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="search-input" class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-amber-500" placeholder="Type to search database...">
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">System Status Flags</label>
-                    <div class="space-y-1" id="filter-container">
-                        <button data-filter="all" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between bg-slate-800 border border-slate-700 text-amber-500 filter-btn">
-                            <span>All Records</span><span id="count-all" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px]">0</span>
-                        </button>
-                        <button data-filter="High Risk" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between hover:bg-slate-800 border border-transparent text-rose-400 filter-btn">
-                            <span>High Risk (Flagged)</span><span id="count-high" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px] text-rose-400">0</span>
-                        </button>
-                        <button data-filter="Moderate Risk" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between hover:bg-slate-800 border border-transparent text-amber-400 filter-btn">
-                            <span>Moderate Flags</span><span id="count-mod" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px] text-amber-400">0</span>
-                        </button>
-                        <button data-filter="Clear / Nominal" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between hover:bg-slate-800 border border-transparent text-emerald-400 filter-btn">
-                            <span>Nominal / Clear</span><span id="count-clear" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px] text-emerald-400">0</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="border-t border-slate-800/80 pt-4 flex-1 flex flex-col justify-end">
-                    <div class="bg-slate-950 border border-slate-800/60 rounded-lg p-4 text-[11px] font-mono text-slate-400 space-y-2">
-                        <div class="flex justify-between"><span class="text-slate-600">SYS_CORE:</span><span class="text-emerald-500">ACTIVE</span></div>
-                        <div class="flex justify-between"><span class="text-slate-600">DB_INTEGRITY:</span><span>100% OK</span></div>
-                        <div class="flex justify-between"><span class="text-slate-600">ENC_ALGO:</span><span>AES-256-GCM</span></div>
-                    </div>
+                <div class="space-y-1 overflow-y-auto custom-scrollbar flex-1" id="filter-container">
+                    <button data-filter="all" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between bg-slate-800 text-amber-500 filter-btn border border-slate-700">
+                        <span>[ALL ARCHIVES]</span><span id="count-all" class="font-sans">0</span>
+                    </button>
+                    <button data-filter="High Risk" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between text-rose-400 hover:bg-slate-900/60 filter-btn border border-transparent">
+                        <span>[HIGH RISK ASSETS]</span><span id="count-high" class="font-sans">0</span>
+                    </button>
+                    <button data-filter="Moderate Risk" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between text-amber-400 hover:bg-slate-900/60 filter-btn border border-transparent">
+                        <span>[MODERATE ANOMALIES]</span><span id="count-mod" class="font-sans">0</span>
+                    </button>
+                    <button data-filter="Clear / Nominal" class="w-full text-left text-xs px-3 py-2 rounded font-mono flex justify-between text-emerald-400 hover:bg-slate-900/60 filter-btn border border-transparent">
+                        <span>[NOMINAL DIRECTORY]</span><span id="count-clear" class="font-sans">0</span>
+                    </button>
                 </div>
             </aside>
 
-            <!-- Middle Panel: Directory Master List -->
             <section class="w-96 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
-                <div class="p-4 border-b border-slate-800 bg-slate-900/30 flex justify-between items-center">
-                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Subject Registry Directory</h2>
-                    <span id="visible-count" class="text-[10px] text-slate-500 font-mono">Showing 0 profiles</span>
+                <div class="p-3 border-b border-slate-800 bg-slate-900/20 flex justify-between items-center">
+                    <span class="text-[11px] font-mono text-slate-500 uppercase tracking-widest">Active Manifest Indexes</span>
+                    <span id="visible-count" class="text-[10px] font-mono text-slate-400 bg-slate-900 px-2 py-0.5 rounded">0 Records</span>
                 </div>
-                <div id="profile-list" class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-900">
-                    <!-- Dynamic profiles insert here -->
-                </div>
+                <div id="profile-list" class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-900/60">
+                    </div>
             </section>
 
-            <!-- Right Panel: Profile Detail Presentation -->
-            <main id="profile-detail" class="flex-1 bg-slate-950 overflow-y-auto custom-scrollbar p-8 relative">
-                <!-- Initial default state -->
+            <main class="flex-1 bg-slate-950 overflow-y-auto custom-scrollbar p-6 relative">
                 <div id="detail-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
-                    <i class="fa-solid fa-id-card text-5xl text-slate-800 mb-4 animate-pulse"></i>
-                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">No Profile Selected</h3>
-                    <p class="text-xs text-slate-600 mt-1 max-w-xs">Select an intelligence target profile from the left registry directory to inspect detailed telemetry, anomalies, and logs.</p>
+                    <i class="fa-solid fa-shield-cat text-4xl text-slate-800 mb-3 animate-bounce"></i>
+                    <h3 class="text-xs font-mono text-slate-500 uppercase tracking-widest">Awaiting Manifest Command Input</h3>
                 </div>
 
-                <!-- Profile Data Presentation (Hidden by default) -->
-                <div id="detail-content" class="hidden space-y-8 max-w-4xl">
-                    <!-- Summary Top Block -->
+                <div id="detail-content" class="hidden space-y-6 max-w-4xl">
                     <div class="flex items-start justify-between border-b border-slate-800 pb-6">
-                        <div class="flex items-center space-x-5">
-                            <img id="det-photo" src="" alt="Subject Portrait" class="w-24 h-24 rounded-lg object-cover border-2 border-slate-700 bg-slate-900">
+                        <div class="flex items-center space-x-4">
+                            <img id="det-photo" src="" alt="Dossier Mugshot" class="w-24 h-24 rounded-lg object-cover border-2 border-slate-800 bg-slate-900">
                             <div>
-                                <h2 id="det-name" class="text-2xl font-bold tracking-wide text-slate-100">---</h2>
-                                <p class="text-xs text-slate-400 font-mono mt-0.5">UID: <span id="det-uid" class="text-amber-500">---</span></p>
+                                <h2 id="det-name" class="text-xl font-bold tracking-tight text-slate-100 font-mono">---</h2>
+                                <p class="text-xs font-mono text-slate-500 mt-0.5">REGISTRY ID: <span id="det-uid" class="text-amber-500">---</span></p>
                                 <div class="flex items-center gap-2 mt-3">
-                                    <span id="det-badge-risk" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">---</span>
-                                    <span id="det-badge-clearance" class="px-2 py-0.5 bg-slate-800 text-slate-300 border border-slate-700 rounded text-[10px] font-mono">---</span>
+                                    <span id="det-badge-risk" class="px-2 py-0.5 text-[9px] font-mono font-bold rounded">---</span>
+                                    <span id="det-badge-clearance" class="px-2 py-0.5 bg-slate-900 text-slate-400 border border-slate-800 font-mono rounded text-[9px]">---</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Core Grid Layout -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Left Block: Demographic Context -->
-                        <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 space-y-4">
-                            <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider border-b border-slate-800 pb-2 flex items-center">
-                                <i class="fa-solid fa-circle-user mr-2 text-slate-500"></i>Demographic & Civil Status
-                            </h3>
-                            <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
-                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Gender</span><span id="det-gender" class="text-slate-200 font-medium">---</span></div>
-                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Age / DOB</span><span id="det-dob" class="text-slate-200 font-medium">---</span></div>
-                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Primary Nationality</span><span id="det-nationality" class="text-slate-200 font-medium">---</span></div>
-                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Current Location</span><span id="det-location" class="text-slate-200 font-medium">---</span></div>
-                                <div class="col-span-2"><span class="block text-[10px] text-slate-500 uppercase font-mono">Registered Occupation</span><span id="det-occupation" class="text-slate-200 font-medium">---</span></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="bg-slate-900/30 border border-slate-800/80 rounded-lg p-4 space-y-3">
+                            <h3 class="text-[11px] font-mono uppercase text-slate-400 tracking-wider border-b border-slate-800/80 pb-1.5"><i class="fa-solid fa-address-card text-slate-500 mr-2"></i>Demographics</h3>
+                            <div class="grid grid-cols-2 gap-y-2 text-xs font-mono">
+                                <div><span class="text-slate-600 block text-[9px]">SEX</span><span id="det-gender" class="text-slate-300">---</span></div>
+                                <div><span class="text-slate-600 block text-[9px]">DOB / LIFESPAN</span><span id="det-dob" class="text-slate-300">---</span></div>
+                                <div><span class="text-slate-600 block text-[9px]">NATIONALITY</span><span id="det-nationality" class="text-slate-300">---</span></div>
+                                <div><span class="text-slate-600 block text-[9px]">LAST GPS LOCATION</span><span id="det-location" class="text-slate-300">---</span></div>
                             </div>
                         </div>
 
-                        <!-- Right Block: Operational Overview -->
-                        <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 space-y-4">
-                            <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider border-b border-slate-800 pb-2 flex items-center">
-                                <i class="fa-solid fa-fingerprint mr-2 text-slate-500"></i>Operational Overview
-                            </h3>
-                            <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
-                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Estimated Worth</span><span id="det-networth" class="text-slate-200 font-mono">---</span></div>
-                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Passport Index</span><span id="det-passport" class="text-slate-200 font-mono">---</span></div>
-                                <div class="col-span-2"><span class="block text-[10px] text-slate-500 uppercase font-mono">Observed Primary Affiliation</span><span id="det-affiliation" class="text-slate-200 font-medium">---</span></div>
+                        <div class="bg-slate-900/30 border border-slate-800/80 rounded-lg p-4 space-y-3">
+                            <h3 class="text-[11px] font-mono uppercase text-slate-400 tracking-wider border-b border-slate-800/80 pb-1.5"><i class="fa-solid fa-chart-line text-slate-500 mr-2"></i>Operational Financial Ledger</h3>
+                            <div class="grid grid-cols-2 gap-y-2 text-xs font-mono">
+                                <div><span class="text-slate-600 block text-[9px]">ESTIMATED CAPITAL</span><span id="det-networth" class="text-slate-300">---</span></div>
+                                <div><span class="text-slate-600 block text-[9px]">PASSPORT HASH</span><span id="det-passport" class="text-slate-300">---</span></div>
+                                <div class="col-span-2"><span class="text-slate-600 block text-[9px]">EMPLOYMENT INTERACTION</span><span id="det-occupation" class="text-slate-300">---</span></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- System Discovered Anomaly Alerts (Automatic Flags) -->
-                    <div class="bg-slate-900/30 border border-amber-900/30 rounded-xl p-5 space-y-3">
-                        <h3 class="text-xs font-bold uppercase text-amber-500 tracking-wider flex items-center">
-                            <i class="fa-solid fa-triangle-exclamation mr-2"></i>System-Engineered Flag Discrepancies
-                        </h3>
-                        <div id="det-flags" class="space-y-2">
-                            <!-- Injected by JS code -->
-                        </div>
+                    <div class="bg-slate-900/40 border border-slate-800 rounded-lg p-4 space-y-3">
+                        <h4 class="text-[11px] font-mono uppercase text-amber-500 tracking-widest flex items-center"><i class="fa-solid fa-microchip mr-2"></i>Heuristic Flag Inconsistencies</h4>
+                        <div id="det-flags" class="space-y-1.5"></div>
                     </div>
 
-                    <!-- Background dossier narration summaries -->
-                    <div class="space-y-3">
-                        <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center">
-                            <i class="fa-solid fa-file-invoice mr-2 text-slate-500"></i>Intelligence Assessment Narrative
-                        </h3>
-                        <p id="det-narrative" class="text-xs text-slate-400 leading-relaxed bg-slate-900/20 border border-slate-800/50 rounded-xl p-5 font-sans">
-                            ---
-                        </p>
+                    <div class="space-y-2">
+                        <h4 class="text-[11px] font-mono uppercase text-slate-400 tracking-widest"><i class="fa-solid fa-quote-right mr-2 text-slate-600"></i>Field Narrative Logs</h4>
+                        <div id="det-narrative" class="text-xs font-mono text-slate-400 leading-relaxed bg-slate-900/10 border border-slate-800 rounded-lg p-4"></div>
                     </div>
                 </div>
             </main>
         </div>
     </div>
 
-    <!-- ================= SYSTEM APPLICATION SCRIPT (DATA & LOGIC) ================= -->
+    <div id="record-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-xl w-full max-w-lg p-6 font-mono text-xs shadow-2xl">
+            <h3 id="modal-title" class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-4 border-b border-slate-800 pb-2">Create Record Entry</h3>
+            <form id="record-form" class="space-y-4">
+                <input type="hidden" id="modal-type">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Full Legal Name</label>
+                        <input type="text" id="form-name" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Gender Identification</label>
+                        <select id="form-gender" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
+                            <option>Male</option><option>Female</option><option>Non-Binary</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Primary Jurisdiction</label>
+                        <input type="text" id="form-nationality" placeholder="e.g. Iceland" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-500 uppercase mb-1">Risk Allocation Tier</label>
+                        <select id="form-risk" class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200">
+                            <option>Clear / Nominal</option><option>Moderate Risk</option><option>High Risk</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-[10px] text-slate-500 uppercase mb-1">Dossier Chronology Details</label>
+                    <textarea id="form-narrative" rows="3" required class="w-full bg-slate-950 border border-slate-800 rounded p-2 text-slate-200" placeholder="Type random raw observation entries..."></textarea>
+                </div>
+                <div class="flex justify-end space-x-2 pt-2 border-t border-slate-800">
+                    <button type="button" onclick="closeRecordModal()" class="px-4 py-2 bg-slate-800 rounded text-slate-400 hover:bg-slate-700">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold rounded">Commit System Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="vault-modal" class="hidden fixed inset-0 z-50 bg-black/95 flex flex-col p-8 font-mono">
+        <div class="flex justify-between items-center border-b border-rose-900 pb-4 mb-6">
+            <h2 class="text-rose-500 font-bold tracking-widest text-sm animate-pulse"><i class="fa-solid fa-triangle-exclamation mr-2"></i>RESTRICTED DECRYPTED STORAGE CORE // LEVEL 5</h2>
+            <button onclick="closeVault()" class="text-xs text-slate-500 hover:text-slate-200">[EXIT DECRYPTION]</button>
+        </div>
+        <div class="flex-1 overflow-y-auto custom-scrollbar space-y-4 text-xs text-rose-300/80">
+            <p class="text-slate-500">// INITIALIZING COUNTER-INTELLIGENCE RAW FEED LOGS...</p>
+            <div class="p-4 bg-rose-950/20 border border-rose-900/50 rounded-lg space-y-2">
+                <p class="font-bold text-rose-400">[intercept #8841-A] SUB-ORBITAL COMMUNICATIONS INTERCEPT</p>
+                <p>"Target relocation array scheduled for standard node transit window. All primary civil data scrubbed completely across federal local archives."</p>
+            </div>
+            <div class="p-4 bg-rose-950/20 border border-rose-900/50 rounded-lg space-y-2">
+                <p class="font-bold text-rose-400">[intercept #0092-F] LIQUID QUANTUM CRYPTO ASSET TRANSFERS</p>
+                <p>"Unlinked wallet validation nodes detected routing approximately 4,200 BTC assets from sovereign infrastructure reserves straight to blind escrow endpoints."</p>
+            </div>
+            <div class="p-4 bg-rose-950/20 border border-rose-900/50 rounded-lg space-y-2">
+                <p class="font-bold text-rose-400">[protocol #BLACKOUT-7] SANCTIONED OPERATIONAL EXCLUSION SHEETS</p>
+                <p>"All automated background identification telemetry for targets under intercept protocols are actively generating falsified clear indicators to blind perimeter monitors."</p>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // Authentication Configuration Constraints
-        const CREDS = { user: "jaber", pass: "jaber123" };
+        const AUTH_CREDS = { user: "jaber", pass: "jaber123" };
+        const SECRET_PASSCODE = "250606";
+        let internalManifestDatabase = [];
+        let activeFilter = "all";
+        let searchFilterString = "";
 
-        // Lists used to structurally construct diverse database assets cleanly
-        const firstNamesMale = ["Liam", "Alexander", "Marcus", "Viktor", "Elena", "Mateo", "Kenji", "Tariq", "Dmitry", "Ethan", "Gabriel", "Omar", "Carlos", "Siddharth", "Hans"];
-        const firstNamesFemale = ["Sophia", "Anya", "Natasha", "Amara", "Yuki", "Chloe", "Fatima", "Isabella", "Mei", "Zara", "Olivia", "Sonia", "Katarina", "Ingrid", "Layla"];
-        const lastNames = ["Vance", "Kovacs", "Chen", "Volkov", "Rodriguez", "Al-Saeed", "Tanaka", "Gomez", "Mercer", "Petrov", "Sterling", "Bakir", "Zimmer", "Nakamura", "Morozov"];
-        const nationalities = ["United States", "Russian Federation", "United Kingdom", "Germany", "Japan", "United Arab Emirates", "Canada", "Brazil", "France", "Australia", "Singapore"];
-        const urbanCenters = ["New York, USA", "Moscow, Russia", "London, UK", "Berlin, Germany", "Tokyo, Japan", "Dubai, UAE", "Paris, France", "Sydney, Australia", "Sao Paulo, Brazil"];
-        const occupations = ["Logistics Contractor", "Financial Asset Consultant", "Software Infrastructure Architect", "Maritime Broker", "Non-Governmental Coordinator", "Research Lead", "Risk Underwriter", "Independent Journalist"];
-        const affiliations = ["Global Logistics Group", "Independent Syndicate Cluster", "Continental Development Corp", "Frontier Resource Consortium", "Unclassified Civil Actor", "Aegis Threat Matrix Watchlist"];
-
-        const narrativeProfiles = [
-            "Subject routinely interacts with various high-value cross-border financial sectors. Shows unusual patterns of asset relocation to off-shore entities.",
-            "Subject's travel data reveals inconsistent intervals across international industrial transit nodes. Maintained zero static residency over the past fiscal quarter.",
-            "Civil and employment background flags indicate persistent encrypted communications using decentralized infrastructure networks.",
-            "Subject shows an entirely unblemished public file matching high-profile civil records, but anomalous discrepancies exist within domestic transactional records.",
-            "Monitored accounts show immediate spikes in off-hours encrypted data volume matching global digital market shift cycles.",
-            "Subject is currently flagged due to deep ties to defunct infrastructural enterprises whose physical assets are entirely unaccounted for.",
-            "Maintains normal public profile, though historical custom tracking alerts indicate multiple passport registries assigned to overlapping regional travel entries.",
-            "Subject acts as an intermediary node for private capital holding organizations. Marked by sharp asset liquidations prior to local market structural transformations."
+        // Raw Array Assets for True Deep Randomization
+        const namesPoolMale = ["Klaus", "Zayn", "Hiroshi", "Santiago", "Dante", "Gideon", "Nikolai", "Xavier", "Arjun", "Malik", "Chen", "Silas", "Finnian", "Tariq", "Viktor", "Sven", "Otto", "Enzo", "Luka", "Omar"];
+        const namesPoolFemale = ["Saskia", "Aiko", "Freja", "Ines", "Soraya", "Katja", "Zari", "Nadia", "Lin", "Amara", "Yael", "Elena", "Talia", "Chie", "Astrid", "Paloma", "Kira", "Meera", "Sonia", "Oksana"];
+        const familyNamesPool = ["Vogel", "Kazama", "Mendoza", "Kovalev", "Blackwood", "Al-Jamil", "Tan", "Groot", "Sinclair", "Petrou", "Ribeiro", "Hwang", "Hussain", "Moretti", "Lindstrom", "Baumann", "Dimitrov", "Park"];
+        
+        const regionsPool = ["Reykjavik, Iceland", "Kyoto, Japan", "Cape Town, South Africa", "Geneva, Switzerland", "Bangkok, Thailand", "Casablanca, Morocco", "Vladivostok, Russia", "Bogota, Colombia", "Anchorage, USA", "Mumbai, India", "Rotterdam, Netherlands", "Oman, UAE"];
+        const activitiesPool = ["Quantum Crypto Miner", "Sub-Maritime Surveyor", "High-Altitude Cargo Pilot", "AI Infrastructure Auditor", "Biometric Integrity Architect", "Rare-Earth Metal Broker", "Deep-Web Network Relay Tech", "Off-Shore Trust Underwriter", "Unvouched Military Liaison", "Diplomatic Courier Proxy"];
+        
+        const genericNarrativeSnippets = [
+            "Monitored communications display localized military-grade encryption cycles without registered civil licensing validation parameters.",
+            "Subject demonstrates atypical short-term pattern of switching global currency holdings into physical asset commodities within secondary banking sectors.",
+            "Biometric signature records possess minor architectural anomalies indicating subtle surgical adjustments to peripheral sensory points.",
+            "Subject routinely transitions through primary logistical transportation boundaries during highly localized communication infrastructure blind windows.",
+            "Maintains an immaculate, state-verified standard background register data layout, completely devoid of standard civic tracking footprints.",
+            "Subject is identified as a fluid transaction node router for dark pool venture capital groups spanning multiple sovereign island territories.",
+            "Historical customs log analysis isolates target's systematic presence within industrial development centers immediately preceding system failures.",
+            "Maintains 14 alternative proxy identification entities linked across variable continental registries, currently active within commercial data channels."
         ];
 
-        // Seed data initialization array
-        let internalDatabaseRegistry = [];
+        const flagDescriptions = [
+            { type: "CRITICAL", text: "Localized cellular device tracking isolates proximity patterns to deep restricted sector installations." },
+            { type: "ANOMALY", text: "Encrypted micro-packet transmission surges identified during atypical nocturnal rest cycles." },
+            { type: "WARNING", text: "Subject identity utilizes verification tokens matching archived civil files from historical records." },
+            { type: "SECURITY", text: "Active identification queries originating from foreign intelligence intelligence terminals." },
+            { type: "FINANCIAL", text: "Sub-surface asset liquidations routing directly to untrackable cold hardware addresses." },
+            { type: "BIOMETRIC", text: "Iris scan identification metrics register a minor structural mismatch against original digital registry files." }
+        ];
 
-        function generateMockDatabase() {
+        function generateMassiveRandomDatabase() {
+            internalManifestDatabase = [];
             for (let i = 1; i <= 75; i++) {
-                const gender = Math.random() > 0.45 ? "Male" : "Female";
-                const firstName = gender === "Male" ? firstNamesMale[Math.floor(Math.random() * firstNamesMale.length)] : firstNamesFemale[Math.floor(Math.random() * firstNamesFemale.length)];
-                const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
-                const name = `${firstName} ${lastName}`;
+                const determineSex = Math.random() > 0.5 ? "Male" : "Female";
+                const selectedFirst = determineSex === "Male" ? namesPoolMale[Math.floor(Math.random() * namesPoolMale.length)] : namesPoolFemale[Math.floor(Math.random() * namesPoolFemale.length)];
+                const selectedLast = familyNamesPool[Math.floor(Math.random() * familyNamesPool.length)];
+                const calculatedAge = Math.floor(Math.random() * 45) + 22;
                 
-                const age = Math.floor(Math.random() * 38) + 24;
-                const year = 2026 - age;
-                const dob = `${year}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`;
-                
-                // Deterministic stock profile image configuration assignment
-                const imageSeed = (gender === "Male" ? 10 + i : 50 + i);
-                const photoUrl = `https://picsum.photos/id/${imageSeed}/300/300`;
+                // Pure random image configurations using highly descriptive gender/age profile sets
+                const faceIndex = Math.floor(Math.random() * 70);
+                const genderKeyword = determineSex === "Male" ? "men" : "women";
+                const randomPhoto = `https://randomuser.me/api/portraits/${genderKeyword}/${faceIndex}.jpg`;
 
-                // Risk Allocation tier logic definitions
-                const randTier = Math.random();
-                let riskAssessment = "Clear / Nominal";
-                if (randTier > 0.75) riskAssessment = "High Risk";
-                else if (randTier > 0.35) riskAssessment = "Moderate Risk";
+                // Assign random threat tier metrics
+                const generatorSeed = Math.random();
+                let chosenRisk = "Clear / Nominal";
+                if (generatorSeed > 0.70) chosenRisk = "High Risk";
+                else if (generatorSeed > 0.30) chosenRisk = "Moderate Risk";
 
-                // Formulate logical realistic system anomalies for flagging UI engine
-                let systemFlags = [];
-                if (riskAssessment === "High Risk") {
-                    systemFlags.push({ typ: "CRITICAL", msg: "Unexplained off-shore shell structural wealth influx ($2.4M USD equivalent)." });
-                    systemFlags.push({ typ: "ANOMALY", msg: "Simultaneous customs entry check logs recorded in separate municipal sectors within 48 hours." });
-                    systemFlags.push({ typ: "SECURITY", msg: "Active operational correlation indexes match unvouched satellite network relays." });
-                } else if (riskAssessment === "Moderate Risk") {
-                    if (Math.random() > 0.5) {
-                        systemFlags.push({ typ: "WARNING", msg: "Persistent modifications to verified primary identification documents reported." });
-                    } else {
-                        systemFlags.push({ typ: "ANOMALY", msg: "Sudden closure of standard domestic commercial financial accounts." });
-                        systemFlags.push({ typ: "STABILITY", msg: "Frequent travel anomalies mapping to volatile sovereign logistics lanes." });
-                    }
+                // Map highly specific programmatic flag sets based entirely on subject risk thresholds
+                let customGeneratedFlags = [];
+                if (chosenRisk === "High Risk") {
+                    customGeneratedFlags.push(flagDescriptions[Math.floor(Math.random() * 2)]);
+                    customGeneratedFlags.push(flagDescriptions[Math.floor(Math.random() * 2) + 2]);
+                } else if (chosenRisk === "Moderate Risk") {
+                    customGeneratedFlags.push(flagDescriptions[Math.floor(Math.random() * 2) + 4]);
                 } else {
-                    systemFlags.push({ typ: "NOMINAL", msg: "No structural anomalies detected. Behavioral indicators within base normal thresholds." });
+                    customGeneratedFlags.push({ type: "NOMINAL", text: "Standard telemetry profile metrics remain within baseline standard variances." });
                 }
 
-                internalDatabaseRegistry.push({
-                    uid: `GRID-NX-${8100 + i}`,
-                    name: name,
-                    gender: gender,
-                    dob: `${dob} (Age ${age})`,
-                    photo: photoUrl,
-                    nationality: nationalities[Math.floor(Math.random() * nationalities.length)],
-                    location: urbanCenters[Math.floor(Math.random() * urbanCenters.length)],
-                    occupation: occupations[Math.floor(Math.random() * occupations.length)],
-                    networth: `$${(Math.random() * 8 + 0.2).toFixed(1)}M USD`,
-                    passport: `PP-${Math.floor(Math.random() * 899999 + 100000)}`,
-                    affiliation: affiliations[Math.floor(Math.random() * affiliations.length)],
-                    risk: riskAssessment,
-                    clearance: riskAssessment === "High Risk" ? "Restricted / Intercept" : riskAssessment === "Moderate Risk" ? "Monitored Access" : "General Access",
-                    flags: systemFlags,
-                    narrative: narrativeProfiles[Math.floor(Math.random() * narrativeProfiles.length)] + " Detailed investigative verification protocols are currently managed by local sector operations command nodes under standard oversight guidelines."
+                internalManifestDatabase.push({
+                    uid: `GRID-ID-${Math.floor(Math.random() * 89999 + 10000)}`,
+                    name: `${selectedFirst} ${selectedLast}`,
+                    gender: determineSex,
+                    dob: `19${98 - calculatedAge}-${String(Math.floor(Math.random() * 11) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')} (Age ${calculatedAge})`,
+                    photo: randomPhoto,
+                    nationality: familyNamesPool[Math.floor(Math.random() * familyNamesPool.length)] + " Legacy Jurisdiction", 
+                    location: regionsPool[Math.floor(Math.random() * regionsPool.length)],
+                    occupation: activitiesPool[Math.floor(Math.random() * activitiesPool.length)],
+                    networth: `$${(Math.random() * 14 + 0.1).toFixed(2)}M USD`,
+                    passport: `HASH-${Math.floor(Math.random() * 8999 + 1000)}-${Math.floor(Math.random() * 8999 + 1000)}`,
+                    risk: chosenRisk,
+                    clearance: chosenRisk === "High Risk" ? "LEVEL 4 RESTRICTED" : chosenRisk === "Moderate Risk" ? "INTERNAL MONITORING" : "PUBLIC REGISTRY CLEAR",
+                    flags: customGeneratedFlags,
+                    narrative: genericNarrativeSnippets[Math.floor(Math.random() * genericNarrativeSnippets.length)] + " " + genericNarrativeSnippets[Math.floor(Math.random() * genericNarrativeSnippets.length)]
                 });
             }
         }
 
-        // --- Core View Control Routines ---
-        let selectedFilter = "all";
-        let searchQuery = "";
-
-        function applySystemFilters() {
-            const filtered = internalDatabaseRegistry.filter(p => {
-                const matchesFilter = selectedFilter === "all" || p.risk === selectedFilter;
-                const matchesSearch = p.name.toLowerCase().includes(searchQuery) || 
-                                      p.uid.toLowerCase().includes(searchQuery) ||
-                                      p.location.toLowerCase().includes(searchQuery) ||
-                                      p.risk.toLowerCase().includes(searchQuery);
-                return matchesFilter && matchesSearch;
+        // --- Core UI Presentation Filters ---
+        function executeSystemFilterPipeline() {
+            const compiledMatches = internalManifestDatabase.filter(dataItem => {
+                const filterMatch = activeFilter === "all" || dataItem.risk === activeFilter;
+                const structuralStringSearch = dataItem.name.toLowerCase().includes(searchFilterString) || 
+                                              dataItem.uid.toLowerCase().includes(searchFilterString) || 
+                                              dataItem.location.toLowerCase().includes(searchFilterString);
+                return filterMatch && structuralStringSearch;
             });
 
-            renderDirectoryList(filtered);
-            updateMetricCounters();
+            renderLeftPaneList(compiledMatches);
+            calculateSidebarMetrics();
         }
 
-        function updateMetricCounters() {
-            document.getElementById("count-all").innerText = internalDatabaseRegistry.length;
-            document.getElementById("count-high").innerText = internalDatabaseRegistry.filter(p => p.risk === "High Risk").length;
-            document.getElementById("count-mod").innerText = internalDatabaseRegistry.filter(p => p.risk === "Moderate Risk").length;
-            document.getElementById("count-clear").innerText = internalDatabaseRegistry.filter(p => p.risk === "Clear / Nominal").length;
+        function calculateSidebarMetrics() {
+            document.getElementById("count-all").innerText = internalManifestDatabase.length;
+            document.getElementById("count-high").innerText = internalManifestDatabase.filter(d => d.risk === "High Risk").length;
+            document.getElementById("count-mod").innerText = internalManifestDatabase.filter(d => d.risk === "Moderate Risk").length;
+            document.getElementById("count-clear").innerText = internalManifestDatabase.filter(d => d.risk === "Clear / Nominal").length;
         }
 
-        function renderDirectoryList(dataset) {
-            const container = document.getElementById("profile-list");
-            document.getElementById("visible-count").innerText = `Showing ${dataset.length} profiles`;
-            container.innerHTML = "";
+        function renderLeftPaneList(targetDataset) {
+            const listTargetContainer = document.getElementById("profile-list");
+            document.getElementById("visible-count").innerText = `${targetDataset.length} Profiles Listed`;
+            listTargetContainer.innerHTML = "";
 
-            if (dataset.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-600 font-medium">No system assets match configuration search terms.</div>`;
+            if (targetDataset.length === 0) {
+                listTargetContainer.innerHTML = `<div class="p-4 text-center font-mono text-slate-600 text-[11px]">No asset match structures found in core records.</div>`;
                 return;
             }
 
-            dataset.forEach(profile => {
-                let badgeColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
-                if (profile.risk === "High Risk") badgeColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
-                else if (profile.risk === "Moderate Risk") badgeColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+            targetDataset.forEach(profileObject => {
+                let textBorderClass = "border-emerald-500/30 text-emerald-400";
+                if (profileObject.risk === "High Risk") textBorderClass = "border-rose-500/30 text-rose-400";
+                else if (profileObject.risk === "Moderate Risk") textBorderClass = "border-amber-500/30 text-amber-400";
 
-                const element = document.createElement("div");
-                element.className = "p-4 hover:bg-slate-900/60 cursor-pointer border-l-2 border-transparent transition-all duration-150 flex justify-between items-center bg-slate-900/10";
-                element.innerHTML = `
+                const wrapperNode = document.createElement("div");
+                wrapperNode.className = "p-3 hover:bg-slate-900/50 cursor-pointer flex justify-between items-center transition-all duration-100 bg-slate-900/10";
+                wrapperNode.innerHTML = `
                     <div class="flex items-center space-x-3 truncate">
-                        <img src="${profile.photo}" class="w-9 h-9 rounded object-cover bg-slate-800 shrink-0 border border-slate-700" onerror="this.src='https://via.placeholder.com/150'">
-                        <div class="truncate">
-                            <h4 class="text-xs font-bold text-slate-200 truncate">${profile.name}</h4>
-                            <p class="text-[10px] font-mono text-slate-500 truncate">${profile.uid} • ${profile.location}</p>
+                        <img src="${profileObject.photo}" class="w-8 h-8 rounded-full object-cover shrink-0 bg-slate-800 border border-slate-700">
+                        <div class="truncate font-mono">
+                            <h4 class="text-xs font-bold text-slate-300 truncate">${profileObject.name}</h4>
+                            <p class="text-[9px] text-slate-600 truncate">${profileObject.uid} // ${profileObject.location.split(',')[0]}</p>
                         </div>
                     </div>
-                    <span class="text-[9px] font-bold tracking-wider uppercase border px-2 py-0.5 rounded shrink-0 ml-2 ${badgeColor}">${profile.risk.split(' ')[0]}</span>
+                    <span class="text-[8px] font-mono border px-1.5 py-0.5 rounded shrink-0 ml-2 uppercase font-bold tracking-tight ${textBorderClass}">${profileObject.risk.split(' ')[0]}</span>
                 `;
-                element.addEventListener("click", () => showProfileDetail(profile));
-                container.appendChild(element);
+                wrapperNode.addEventListener("click", () => triggerDossierLoadSequence(profileObject));
+                listTargetContainer.appendChild(wrapperNode);
             });
         }
 
-        function showProfileDetail(profile) {
+        // DELAY TIMING EXECUTION SYSTEM
+        function triggerDossierLoadSequence(targetProfilePayload) {
+            const loaderElement = document.getElementById("terminal-loader");
+            document.getElementById("loader-uid").innerText = `TARGET LOG: ${targetProfilePayload.uid} // INTEGRITY CHECK`;
+            loaderElement.classList.remove("hidden");
+
+            setTimeout(() => {
+                loaderElement.classList.add("hidden");
+                displayFullDossierDetails(targetProfilePayload);
+            }, 3000);
+        }
+
+        function displayFullDossierDetails(targetData) {
             document.getElementById("detail-placeholder").classList.add("hidden");
             document.getElementById("detail-content").classList.remove("hidden");
 
-            document.getElementById("det-photo").src = profile.photo;
-            document.getElementById("det-name").innerText = profile.name;
-            document.getElementById("det-uid").innerText = profile.uid;
-            document.getElementById("det-gender").innerText = profile.gender;
-            document.getElementById("det-dob").innerText = profile.dob;
-            document.getElementById("det-nationality").innerText = profile.nationality;
-            document.getElementById("det-location").innerText = profile.location;
-            document.getElementById("det-occupation").innerText = profile.occupation;
-            document.getElementById("det-networth").innerText = profile.networth;
-            document.getElementById("det-passport").innerText = profile.passport;
-            document.getElementById("det-affiliation").innerText = profile.affiliation;
-            document.getElementById("det-badge-clearance").innerText = `ACCESS: ${profile.clearance}`;
-            document.getElementById("det-narrative").innerText = profile.narrative;
+            document.getElementById("det-photo").src = targetData.photo;
+            document.getElementById("det-name").innerText = targetData.name;
+            document.getElementById("det-uid").innerText = targetData.uid;
+            document.getElementById("det-gender").innerText = targetData.gender;
+            document.getElementById("det-dob").innerText = targetData.dob;
+            document.getElementById("det-nationality").innerText = targetData.nationality;
+            document.getElementById("det-location").innerText = targetData.location;
+            document.getElementById("det-occupation").innerText = targetData.occupation;
+            document.getElementById("det-networth").innerText = targetData.networth;
+            document.getElementById("det-passport").innerText = targetData.passport;
+            document.getElementById("det-badge-clearance").innerText = targetData.clearance;
+            document.getElementById("det-narrative").innerText = targetData.narrative;
 
-            const riskBadge = document.getElementById("det-badge-risk");
-            riskBadge.innerText = profile.risk;
-            riskBadge.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider";
-            if (profile.risk === "High Risk") riskBadge.classList.add("bg-rose-500/10", "text-rose-400", "border", "border-rose-500/20");
-            else if (profile.risk === "Moderate Risk") riskBadge.classList.add("bg-amber-500/10", "text-amber-400", "border", "border-amber-500/20");
-            else riskBadge.classList.add("bg-emerald-500/10", "text-emerald-400", "border", "border-emerald-500/20");
+            const badgeElement = document.getElementById("det-badge-risk");
+            badgeElement.innerText = targetData.risk;
+            badgeElement.className = "px-2 py-0.5 text-[9px] font-mono font-bold rounded";
+            if (targetData.risk === "High Risk") badgeElement.classList.add("bg-rose-500/10", "text-rose-400", "border", "border-rose-500/30");
+            else if (targetData.risk === "Moderate Risk") badgeElement.classList.add("bg-amber-500/10", "text-amber-400", "border", "border-amber-500/30");
+            else badgeElement.classList.add("bg-emerald-500/10", "text-emerald-400", "border", "border-emerald-500/30");
 
-            const flagsContainer = document.getElementById("det-flags");
-            flagsContainer.innerHTML = "";
-            profile.flags.forEach(f => {
-                let colorClass = "bg-emerald-500/5 text-emerald-400 border-emerald-500/10";
-                if (f.typ === "CRITICAL") colorClass = "bg-rose-500/10 text-rose-400 border-rose-500/20";
-                else if (["WARNING", "ANOMALY"].includes(f.typ)) colorClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+            const listFlagsContainer = document.getElementById("det-flags");
+            listFlagsContainer.innerHTML = "";
+            targetData.flags.forEach(f => {
+                let labelStyle = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+                if (f.type === "CRITICAL") labelStyle = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+                else if (f.type !== "NOMINAL") labelStyle = "bg-amber-500/10 text-amber-400 border-amber-500/20";
 
-                const flEl = document.createElement("div");
-                flEl.className = `p-2.5 rounded-lg border text-xs flex items-start space-x-2 ${colorClass}`;
-                flEl.innerHTML = `<span class="font-mono text-[9px] font-bold uppercase px-1 py-0.5 bg-black/20 rounded mt-0.5">${f.typ}</span><span class="leading-tight">${f.msg}</span>`;
-                flagsContainer.appendChild(flEl);
+                const nodeItem = document.createElement("div");
+                nodeItem.className = `p-2 rounded border text-[11px] flex font-mono items-start space-x-2 ${labelStyle}`;
+                nodeItem.innerHTML = `<span class="text-[8px] font-bold tracking-tighter px-1 bg-black/30 rounded mt-0.5">${f.type}</span><span>${f.text}</span>`;
+                listFlagsContainer.appendChild(nodeItem);
             });
         }
 
-        // --- Event Listeners and Interface Wireup ---
+        // --- Action Modals & Security Passcode Verifications ---
+        function openRecordModal(creationMode) {
+            document.getElementById("modal-title").innerText = `INITIATE NEW RECORD // DATA BASELINE: ${creationMode.toUpperCase()}`;
+            document.getElementById("modal-type").value = creationMode;
+            document.getElementById("record-modal").classList.remove("hidden");
+        }
+
+        function closeRecordModal() {
+            document.getElementById("record-modal").classList.add("hidden");
+            document.getElementById("record-form").reset();
+        }
+
+        function promptVaultAccess() {
+            const systemPasscodeSubmission = prompt("CRITICAL CORE DECRYPTION: Enter Security Override Level 5 Passcode:");
+            if (systemPasscodeSubmission === SECRET_PASSCODE) {
+                document.getElementById("vault-modal").classList.remove("hidden");
+            } else if (systemPasscodeSubmission !== null) {
+                alert("ACCESS SYSTEM DENIED: Invalid Passcode Cryptographic Hash.");
+            }
+        }
+
+        function closeVault() { document.getElementById("vault-modal").classList.add("hidden"); }
+
+        // Form Submission Processor Logic
+        document.getElementById("record-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const inputName = document.getElementById("form-name").value;
+            const inputGender = document.getElementById("form-gender").value;
+            const inputRisk = document.getElementById("form-risk").value;
+            const inputNarrative = document.getElementById("form-narrative").value;
+            const inputType = document.getElementById("modal-type").value;
+            const mockIndex = Math.floor(Math.random() * 65);
+
+            const freshlyInjectedObject = {
+                uid: `GRID-MAN-${Math.floor(Math.random() * 89999 + 10000)}`,
+                name: inputName,
+                gender: inputGender,
+                dob: `1986-11-04 (Age 39 - System Commit)`,
+                photo: `https://randomuser.me/api/portraits/${inputGender === "Male" ? "men" : "women"}/${mockIndex}.jpg`,
+                nationality: document.getElementById("form-nationality").value,
+                location: "Unverified Local Coordinates",
+                occupation: inputType === "Secret Arrest File" ? "Detained State Proxy Asset" : "Registered Field Consultant",
+                networth: "$0.00 FREEZE ORDER",
+                passport: "REVOKED / EXPIRED",
+                risk: inputRisk,
+                clearance: inputType === "Secret Arrest File" ? "SPECIAL DETENTION LOG" : "STANDARD DATA CLEARANCE",
+                flags: [{ type: inputRisk === "High Risk" ? "CRITICAL" : "MANUAL", text: `Manual operator log adjustment tracking committed via terminal access authority.` }],
+                narrative: `[OPERATOR MANUAL AMENDMENT]: ${inputNarrative}`
+            };
+
+            internalManifestDatabase.unshift(freshlyInjectedObject);
+            closeRecordModal();
+            executeSystemFilterPipeline();
+            displayFullDossierDetails(freshlyInjectedObject);
+        });
+
+        // --- Core Interface Bootup Listeners ---
         document.getElementById("login-form").addEventListener("submit", function(e) {
             e.preventDefault();
-            const u = document.getElementById("username").value;
-            const p = document.getElementById("password").value;
-
-            if (u === CREDS.user && p === CREDS.pass) {
+            if (document.getElementById("username").value === AUTH_CREDS.user && document.getElementById("password").value === AUTH_CREDS.pass) {
                 document.getElementById("login-page").classList.add("hidden");
                 document.getElementById("app-container").classList.remove("hidden");
-                generateMockDatabase();
-                applySystemFilters();
+                generateMassiveRandomDatabase();
+                executeSystemFilterPipeline();
             } else {
-                const err = document.getElementById("login-error");
-                err.classList.remove("hidden");
-                setTimeout(() => err.classList.add("hidden"), 5000);
+                const systemErrorNode = document.getElementById("login-error");
+                systemErrorNode.classList.remove("hidden");
+                setTimeout(() => systemErrorNode.classList.add("hidden"), 4000);
             }
         });
 
@@ -408,22 +496,21 @@
         });
 
         document.getElementById("search-input").addEventListener("input", (e) => {
-            searchQuery = e.target.value.toLowerCase();
-            applySystemFilters();
+            searchFilterString = e.target.value.toLowerCase();
+            executeSystemFilterPipeline();
         });
 
-        document.querySelectorAll(".filter-btn").forEach(btn => {
-            btn.addEventListener("click", (e) => {
+        document.querySelectorAll(".filter-btn").forEach(buttonNode => {
+            buttonNode.addEventListener("click", (e) => {
                 document.querySelectorAll(".filter-btn").forEach(b => {
                     b.classList.remove("bg-slate-800", "border-slate-700", "text-amber-500");
                     b.classList.add("border-transparent");
                 });
-                const target = e.currentTarget;
-                target.classList.remove("border-transparent");
-                target.classList.add("bg-slate-800", "border-slate-700", "text-amber-500");
-                
-                selectedFilter = target.getAttribute("data-filter");
-                applySystemFilters();
+                const selectedTarget = e.currentTarget;
+                selectedTarget.classList.remove("border-transparent");
+                selectedTarget.classList.add("bg-slate-800", "border-slate-700", "text-amber-500");
+                activeFilter = selectedTarget.getAttribute("data-filter");
+                executeSystemFilterPipeline();
             });
         });
     </script>
