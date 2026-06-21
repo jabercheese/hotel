@@ -51,6 +51,11 @@
         input, textarea, select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.95rem; }
         input:focus, textarea:focus, select:focus { outline: none; border-color: var(--primary-light); }
         
+        /* Unified Static Prefix Wrapper Layout */
+        .prefix-input-container { display: flex; align-items: center; background: #ffffff; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+        .prefix-input-container span { background: #e2e8f0; color: #475569; padding: 8px 12px; font-weight: bold; font-size: 0.95rem; border-right: 1px solid var(--border); user-select: none; }
+        .prefix-input-container input { border: none; border-radius: 0; }
+
         button { background: var(--primary); color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; transition: background 0.2s; }
         button:hover { background: var(--primary-light); }
         button.secondary { background: #64748b; }
@@ -106,6 +111,12 @@
         .atm-opt-btn { background: #1e293b; border: 2px solid #38bdf8; color: #38bdf8; padding: 12px; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; font-size: 1rem; }
         .atm-opt-btn:hover { background: #38bdf8; color: #0f172a; }
         .search-box-modifier { width: 100%; padding: 6px 10px; margin-bottom: 10px; border: 1px solid var(--manager); border-radius: 4px; font-size: 0.85rem; }
+        
+        /* Specific ATM Prefix Formatting Rules */
+        .atm-prefix-wrapper { display: inline-flex; align-items: center; background: #1e293b; border: 1px solid #475569; border-radius: 4px; margin: 0 auto; max-width: 260px; overflow: hidden; }
+        .atm-prefix-wrapper span { background: #334155; color: #38bdf8; padding: 8px 12px; font-weight: bold; }
+        .atm-prefix-wrapper input { border: none; background: transparent; color: white; text-align: left; padding: 8px 10px; width: 100%; font-family: monospace; font-size: 1rem; }
+        .atm-prefix-wrapper input:focus { outline: none; }
     </style>
 </head>
 <body>
@@ -221,7 +232,13 @@
                     
                     <div class="auth-box">
                         <h3>Standard Customer Authentication</h3>
-                        <div class="form-group"><label>Account ID</label><input type="text" id="auth-acc-id" placeholder="ACC-XXXXXX"></div>
+                        <div class="form-group">
+                            <label>Account ID</label>
+                            <div class="prefix-input-container">
+                                <span>ACC-</span>
+                                <input type="text" id="auth-acc-id" placeholder="XXXXXX" maxlength="6">
+                            </div>
+                        </div>
                         <div class="form-group"><label>Customer Passcode PIN</label><input type="password" id="auth-passcode" placeholder="4-digit PIN"></div>
                         <button onclick="accessAccount()">Verify Customer Credentials</button>
                     </div>
@@ -232,6 +249,22 @@
                 <div id="manager-only-panel" class="card" style="border: 2px solid var(--manager); display:none;">
                     <h2 style="color: var(--manager); border-bottom-color: var(--manager);">3. Manager Operations Vault</h2>
                     
+                    <div class="manager-box" style="background: #faf5ff; border: 1px dashed var(--manager); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
+                        <h3 style="color: var(--manager);">Modify Customer PIN Passcode</h3>
+                        <div class="form-group">
+                            <label>Target Account ID</label>
+                            <div class="prefix-input-container">
+                                <span>ACC-</span>
+                                <input type="text" id="mgr-pin-acc-id" placeholder="XXXXXX" maxlength="6">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>New 4-Digit Passcode PIN</label>
+                            <input type="password" id="mgr-pin-new-value" placeholder="XXXX" maxlength="6">
+                        </div>
+                        <button class="manager-btn" onclick="executeManagerPinOverride()">Overwrite Customer Passcode</button>
+                    </div>
+
                     <div class="manager-box" style="margin-bottom: 15px;">
                         <h3>Manager Name-Bypass Gateway</h3>
                         <div class="form-row">
@@ -371,9 +404,15 @@
 
                                 <div style="background: #f8fafc; border: 1px solid var(--border); padding: 10px; border-radius: 4px;">
                                     <h4 style="font-size:0.85rem; margin-bottom:5px;">Internal Account Transfer</h4>
-                                    <div class="form-group"><label style="font-size:0.8rem;">Target Account ID</label><input type="text" id="transfer-target" placeholder="ACC-XXXXXX"></div>
+                                    <div class="form-group">
+                                        <label style="font-size:0.8rem;">Target Account ID</label>
+                                        <div class="prefix-input-container">
+                                            <span>ACC-</span>
+                                            <input type="text" id="transfer-target" placeholder="XXXXXX" maxlength="6">
+                                        </div>
+                                    </div>
                                     <button onclick="prepareTransferTx()" class="secondary" style="font-size:0.85rem; background: var(--primary-light);">Execute Transfer</button>
-                                </div>
+                                end</div>
                             </div>
 
                             <div>
@@ -432,9 +471,9 @@
         let atmState = {
             currentScreen: 'WELCOME', // WELCOME, PIN_ENTRY, MAIN_MENU, AMOUNT_SELECT, TRANS_CONFIRM
             accountContext: null,
-            inputAccountId: '',
+            inputAccountIdRawDigits: '',
             inputPasscodeString: '',
-            selectedActionType: null // 'deposit' or 'withdraw'
+            selectedActionType: null 
         };
 
         window.onload = function() {
@@ -489,10 +528,13 @@
                 scr.innerHTML = `
                     <div style="text-align:center; padding-top:40px;">
                         <h2 style="color:#38bdf8; border:none; margin-bottom:10px;">WELCOME TO AEB ATM</h2>
-                        <p style="color:#64748b; font-size:0.85rem; margin-bottom:30px;">Insert account key string identifier to begin transaction processing</p>
-                        <div class="form-group" style="max-width:320px; margin:0 auto;">
-                            <label style="color:#38bdf8; text-align:left;">Account Registration Number</label>
-                            <input type="text" id="atm-acc-id-field" placeholder="ACC-XXXXXX" value="${atmState.inputAccountId}" style="background:#1e293b; color:white; border-color:#475569; text-align:center;">
+                        <p style="color:#64748b; font-size:0.85rem; margin-bottom:30px;">Insert account numeric identity to begin processing</p>
+                        <div class="form-group" style="text-align:center;">
+                            <label style="color:#38bdf8; text-align:center; margin-bottom:8px;">Account Registration Number</label>
+                            <div class="atm-prefix-wrapper">
+                                <span>ACC-</span>
+                                <input type="text" id="atm-acc-digits-field" placeholder="XXXXXX" maxlength="6" value="${atmState.inputAccountIdRawDigits}">
+                            </div>
                         </div>
                         <button onclick="processAtmAccountSubmission()" style="max-width:200px; margin-top:20px; background:#1e3a8a; border:1px solid #38bdf8;">Next Step</button>
                     </div>
@@ -502,7 +544,7 @@
                 scr.innerHTML = `
                     <div style="text-align:center;">
                         <h3 style="color:#38bdf8; margin-bottom:5px;">SECURE PIN IDENTIFICATION</h3>
-                        <p style="color:#64748b; font-size:0.75rem; margin-bottom:15px;">Account: ${atmState.inputAccountId.toUpperCase()}</p>
+                        <p style="color:#64748b; font-size:0.75rem; margin-bottom:15px;">Account: ACC-${atmState.inputAccountIdRawDigits}</p>
                         <div style="margin:10px 0;">
                             <input type="password" id="atm-masked-pin-display" readonly style="background:#0f172a; color:#10b981; border:2px solid #475569; font-size:1.6rem; text-align:center; letter-spacing:6px; max-width:220px;" value="${'*'.repeat(atmState.inputPasscodeString.length)}">
                         </div>
@@ -522,7 +564,7 @@
                     <div>
                         <div style="display:flex; justify-content:between; border-bottom:1px solid #1e293b; padding-bottom:10px; margin-bottom:15px;">
                             <div><span style="color:#64748b;">Holder:</span> <strong style="color:white;">${acc.firstName} ${acc.lastName}</strong></div>
-                            <div style="margin-left:auto;"><span style="color:#64748b;">ID:</span> <strong style="color:white;">${acc.id}</strong></div>
+                            <div style="margin-left:auto;"><span style="color:#64748b;">ID:</span> <strong style="color:white;">ACC-${atmState.inputAccountIdRawDigits}</strong></div>
                         </div>
                         <div style="background:#1e293b; padding:15px; border-radius:6px; margin-bottom:20px;">
                             <div style="margin-bottom:8px;">Balance: <strong style="color:#10b981; font-size:1.2rem;">${acc.balance.toFixed(2)} JD</strong></div>
@@ -609,13 +651,14 @@
         }
 
         function processAtmAccountSubmission() {
-            const rawId = document.getElementById('atm-acc-id-field').value.trim();
-            if (!rawId) { alert("Please provide a valid account tracker value."); return; }
+            const rawDigits = document.getElementById('atm-acc-digits-field').value.trim();
+            if (!rawDigits) { alert("Please provide a valid account numeric parameter."); return; }
             
-            let matchedId = Object.keys(bankDB).find(k => k.toLowerCase() === rawId.toLowerCase());
-            if (!matchedId) { alert("Account ID sequence could not be matched inside current records."); return; }
+            const constructedFullId = `ACC-${rawDigits}`;
+            let matchedId = Object.keys(bankDB).find(k => k.toLowerCase() === constructedFullId.toLowerCase());
+            if (!matchedId) { alert("Account ID numbers could not be found within database profiles."); return; }
 
-            atmState.inputAccountId = matchedId;
+            atmState.inputAccountIdRawDigits = rawDigits;
             setAtmLoadingState("Verifying Account Key", function() {
                 atmState.currentScreen = 'PIN_ENTRY';
                 renderAtmTerminalEngine();
@@ -637,7 +680,8 @@
         function processAtmPinSubmission() {
             if (atmState.inputPasscodeString.length < 4) { alert("Please input complete four digit validation keys."); return; }
             
-            const targetAcc = bankDB[atmState.inputAccountId];
+            const constructedFullId = `ACC-${atmState.inputAccountIdRawDigits}`;
+            const targetAcc = bankDB[constructedFullId];
             if (targetAcc.passcode !== atmState.inputPasscodeString) {
                 alert("Passcode combination error. Connection terminated.");
                 pressAtmPinClear();
@@ -651,7 +695,7 @@
             }
 
             setAtmLoadingState("Checking Security Parameters", function() {
-                atmState.accountContext = atmState.inputAccountId;
+                atmState.accountContext = constructedFullId;
                 atmState.currentScreen = 'MAIN_MENU';
                 renderAtmTerminalEngine();
             }, 1500);
@@ -719,7 +763,7 @@
                 }
 
                 saveAllData();
-                alert("Processing Action Sequence Successful. Vault registries updated.");
+                // Real-time structural vault message popup is fully bypassed per specifications
                 
                 atmState.currentScreen = 'MAIN_MENU';
                 renderAtmTerminalEngine();
@@ -732,7 +776,7 @@
         }
 
         function resetAtmWorkflow() {
-            atmState = { currentScreen: 'WELCOME', accountContext: null, inputAccountId: '', inputPasscodeString: '', selectedActionType: null };
+            atmState = { currentScreen: 'WELCOME', accountContext: null, inputAccountIdRawDigits: '', inputPasscodeString: '', selectedActionType: null };
             renderAtmTerminalEngine();
         }
 
@@ -784,7 +828,7 @@
                         showToast("Authentication Failed. Invalid system configuration keys.", "error");
                     }
                 }
-            }, 3000); // 3 Second Deliberate Load Wait Timestamps
+            }, 3000); 
         }
 
         function enterDashboard() {
@@ -845,6 +889,31 @@
                 showToast(`Customer processing gateway status updated.`);
                 if(activeAccountID === accId) loadWorkstation();
             }
+        }
+
+        // --- NEW FEATURE: MANAGER CUSTOMER PIN RESET INTERFACE LOGIC ---
+        function executeManagerPinOverride() {
+            if (activeEmployeeUser !== MGR_USER) return;
+
+            const digits = document.getElementById('mgr-pin-acc-id').value.trim();
+            const newPin = document.getElementById('mgr-pin-new-value').value.trim();
+
+            if (!digits || !newPin) { showToast("Account metrics and new PIN keys required.", "error"); return; }
+            if (newPin.length < 4) { showToast("PIN combination must be at least 4 digits.", "error"); return; }
+
+            const fullAccId = `ACC-${digits}`;
+            if (!bankDB[fullAccId]) { showToast("Targeted customer registry does not exist.", "error"); return; }
+
+            bankDB[fullAccId].passcode = newPin;
+            bankDB[fullAccId].logs.push(`[${new Date().toLocaleString()}] Security Notice: Customer login PIN passcode overwritten by Root Bank Manager.`);
+            
+            pushStaffLog(`Overwrote customer passcode credentials for portfolio node: ${fullAccId}`);
+            saveAllData();
+            
+            showToast(`PIN passcode updated successfully for ${fullAccId}`, "manager");
+            document.getElementById('mgr-pin-acc-id').value = '';
+            document.getElementById('mgr-pin-new-value').value = '';
+            if (activeAccountID === fullAccId) loadWorkstation();
         }
 
         // --- SECTION 2: METRICS AND RIBBON CALCULATIONS ---
@@ -1121,10 +1190,13 @@
 
         // --- SECTION 5: CUSTOMER AUTHENTICATION & WORKSTATION PARSING ---
         function accessAccount() {
-            const idInput = document.getElementById('auth-acc-id').value.trim().toLowerCase();
+            const digitsInput = document.getElementById('auth-acc-id').value.trim();
             const passInput = document.getElementById('auth-passcode').value.trim();
 
-            let actualMatchedId = Object.keys(bankDB).find(k => k.toLowerCase() === idInput);
+            if (!digitsInput) { showToast("Account numerical string required.", "error"); return; }
+            const fullIdString = `ACC-${digitsInput}`;
+
+            let actualMatchedId = Object.keys(bankDB).find(k => k.toLowerCase() === fullIdString.toLowerCase());
             if (!actualMatchedId || bankDB[actualMatchedId].passcode !== passInput) { showToast("Invalid structural password signature validation codes.", "error"); return; }
 
             activeAccountID = actualMatchedId;
@@ -1278,11 +1350,14 @@
             const sourceAcc = bankDB[activeAccountID];
             if (verifySuspensionGate(sourceAcc)) return;
 
-            const targetIdInput = document.getElementById('transfer-target').value.trim().toLowerCase();
+            const targetDigitsInput = document.getElementById('transfer-target').value.trim();
             const amount = parseFloat(document.getElementById('tx-amount').value);
             const structuralFee = feeStructure.transfer;
 
-            let targetedIdKey = Object.keys(bankDB).find(k => k.toLowerCase() === targetIdInput);
+            if (!targetDigitsInput) { showToast("Target destination missing.", "error"); return; }
+            const constructedTargetId = `ACC-${targetDigitsInput}`;
+
+            let targetedIdKey = Object.keys(bankDB).find(k => k.toLowerCase() === constructedTargetId.toLowerCase());
             if (!targetedIdKey || targetedIdKey.toLowerCase() === activeAccountID.toLowerCase() || isNaN(amount) || amount <= 0 || sourceAcc.balance < amount) {
                 showToast("Invalid Transfer parameters or parameters error.", "error"); return;
             }
