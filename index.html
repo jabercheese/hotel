@@ -117,10 +117,18 @@
         .atm-prefix-wrapper span { background: #334155; color: #38bdf8; padding: 8px 12px; font-weight: bold; }
         .atm-prefix-wrapper input { border: none; background: transparent; color: white; text-align: left; padding: 8px 10px; width: 100%; font-family: monospace; font-size: 1rem; }
         .atm-prefix-wrapper input:focus { outline: none; }
+
+        /* Manager Tabs Styles */
+        .mgr-tab-bar { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid var(--manager); padding-bottom: 8px; }
+        .mgr-tab-btn { background: #f1f5f9; color: #475569; padding: 6px 12px; font-size: 0.8rem; border: 1px solid var(--border); border-radius: 4px; font-weight: bold; width: auto; cursor: pointer; transition: all 0.2s; }
+        .mgr-tab-btn.active { background: var(--manager); color: white; border-color: var(--manager); }
+        .mgr-tab-content { display: none; }
+        .mgr-tab-content.active { display: block; }
     </style>
 </head>
 <body>
 
+    <!-- TRANSACTION CONFIRMATION SCREEN MODAL -->
     <div id="tx-modal" class="modal-overlay">
         <div class="modal-card">
             <h3 style="margin-top:0; border-bottom: 2px solid var(--border); padding-bottom: 8px;" id="modal-title">Confirm Transaction</h3>
@@ -128,6 +136,7 @@
                 <p id="modal-amount-line">Amount: <span id="modal-amount-val" class="text-green-bold">0.00 JD</span></p>
                 <p id="modal-fee-line">Dynamic Processing Fee: <span id="modal-fee-val" class="text-red-bold">0.00 JD</span></p>
                 
+                <!-- Fee Bypass Checkbox for Manager Only -->
                 <div id="manager-bypass-checkbox-area" style="display:none; margin-top:12px; padding:10px; background:#faf5ff; border:1px dashed var(--manager); border-radius:4px;">
                     <label style="display:flex; align-items:center; gap:8px; cursor:pointer; margin-bottom:0;">
                         <input type="checkbox" id="bypass-fee-toggle" style="width:auto; cursor:pointer;">
@@ -142,6 +151,7 @@
         </div>
     </div>
 
+    <!-- MAIN INTERACTIVE LANDING PAGE: CUSTOMER ATM PORTAL -->
     <div id="customer-atm-portal">
         <div style="text-align:center; margin-bottom:15px;">
             <h1 style="color:var(--primary); font-size:1.8rem;">Amman English Bank ATM</h1>
@@ -149,13 +159,15 @@
         </div>
         <div class="atm-housing">
             <div id="atm-screen-wrapper" class="atm-screen">
-                </div>
+                <!-- Dynamic Content Rendered via Javascript Engine -->
+            </div>
         </div>
         <div style="text-align: center; margin-top: 25px;">
             <button onclick="openStaffGatewayPanel()" class="secondary" style="width:auto; padding:6px 12px; font-size:0.8rem; background:#475569;">LOG IN as staff</button>
         </div>
     </div>
 
+    <!-- MANDATORY STAFF SECURITY ACCESS GATEWAY PANEL -->
     <div id="login-screen">
         <div class="login-card">
             <div style="text-align: center; margin-bottom: 15px;">
@@ -179,12 +191,14 @@
                     <button onclick="closeStaffGatewayPanel()" class="secondary">Back to ATM</button>
                 </div>
             </div>
+            <!-- Loading message display zone -->
             <div id="staff-login-loading-zone" style="display:none; text-align:center; padding:20px 0;">
                 <p style="color:var(--warning); font-weight:bold; font-size:1.1rem;" id="staff-loading-txt">Logging in...</p>
             </div>
         </div>
     </div>
 
+    <!-- MAIN ADMINISTRATIVE ACCOUNT MANAGEMENT DASHBOARD -->
     <div id="main-dashboard">
         <header>
             <div class="header-top">
@@ -200,6 +214,7 @@
                 <button onclick="handleSystemLogout()" class="secondary" style="width:auto; padding: 6px 15px; font-size:0.85rem;">Lock Terminal Session</button>
             </div>
             
+            <!-- Metrics Display Ribbon Box -->
             <div class="ribbon-metrics">
                 <div class="metric-item">Accounts Created: <span id="ribbon-accounts">0</span></div>
                 <div class="metric-item">Total Money in Vault: <span id="ribbon-vault">0.00 JD</span></div>
@@ -210,7 +225,9 @@
         </header>
 
         <div class="container">
+            <!-- LEFT COLUMN -->
             <div>
+                <!-- Open Account -->
                 <div class="card">
                     <h2>1. Open Customer Account</h2>
                     <form id="create-account-form">
@@ -227,9 +244,11 @@
                     </form>
                 </div>
 
+                <!-- Access Customer Portals -->
                 <div class="card">
                     <h2>2. Access Customer Account</h2>
                     
+                    <!-- Standard Auth -->
                     <div class="auth-box">
                         <h3>Standard Customer Authentication</h3>
                         <div class="form-group">
@@ -246,111 +265,135 @@
                     <button class="secondary" onclick="lockAccount()">Clear Active Workstation</button>
                 </div>
 
+                <!-- Organized Manager Tabbed Framework panel -->
                 <div id="manager-only-panel" class="card" style="border: 2px solid var(--manager); display:none;">
                     <h2 style="color: var(--manager); border-bottom-color: var(--manager);">3. Manager Operations Vault</h2>
                     
-                    <div class="manager-box" style="background: #faf5ff; border: 1px dashed var(--manager); padding: 15px; border-radius: 6px; margin-bottom: 15px;">
-                        <h3 style="color: var(--manager);">Modify Customer PIN Passcode</h3>
-                        <div class="form-group">
-                            <label>Target Account ID</label>
-                            <div class="prefix-input-container">
-                                <span>ACC-</span>
-                                <input type="text" id="mgr-pin-acc-id" placeholder="XXXXXX" maxlength="6">
+                    <!-- Manager Navigation Tab Bar Container -->
+                    <div class="mgr-tab-bar">
+                        <button class="mgr-tab-btn active" onclick="switchManagerPanelTab('mgr-tab-security', this)">Security Controls</button>
+                        <button class="mgr-tab-btn" onclick="switchManagerPanelTab('mgr-tab-financial', this)">Financial Overrides</button>
+                        <button class="mgr-tab-btn" onclick="switchManagerPanelTab('mgr-tab-staff', this)">Staff Directory</button>
+                        <button class="mgr-tab-btn" onclick="switchManagerPanelTab('mgr-tab-customers', this)">Customer Bank Registers</button>
+                    </div>
+
+                    <!-- TAB 1: SECURITY CREDENTIAL CONTROLS SECTION -->
+                    <div id="mgr-tab-security" class="mgr-tab-content active">
+                        <!-- Manager PIN Modification Portal -->
+                        <div class="manager-box" style="margin-bottom: 15px;">
+                            <h3 style="color: var(--manager);">Modify Customer PIN Passcode</h3>
+                            <div class="form-group">
+                                <label>Target Account ID</label>
+                                <div class="prefix-input-container">
+                                    <span>ACC-</span>
+                                    <input type="text" id="mgr-pin-acc-id" placeholder="XXXXXX" maxlength="6">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>New 4-Digit Passcode PIN</label>
+                                <input type="password" id="mgr-pin-new-value" placeholder="XXXX" maxlength="6">
+                            </div>
+                            <button class="manager-btn" onclick="executeManagerPinOverride()">Overwrite Customer Passcode</button>
+                        </div>
+
+                        <!-- Manager Name-Bypass Gateway -->
+                        <div class="manager-box" style="margin-bottom: 15px;">
+                            <h3>Manager Name-Bypass Gateway</h3>
+                            <div class="form-row">
+                                <div class="form-group"><label>First Name</label><input type="text" id="bypass-first" placeholder="John"></div>
+                                <div class="form-group"><label>Last Name</label><input type="text" id="bypass-last" placeholder="Doe"></div>
+                            </div>
+                            <div class="form-group">
+                                <label>Customer Date of Birth (DOB)</label>
+                                <input type="date" id="bypass-dob">
+                            </div>
+                            <div class="form-group"><label>Manager Passcode</label><input type="password" id="bypass-code" placeholder="******"></div>
+                            <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: FINANCIAL OPERATIONS CORRECTIONS OVERRIDES SECTION -->
+                    <div id="mgr-tab-financial" class="mgr-tab-content">
+                        <!-- Manual Financial Corrections Framework Override -->
+                        <div style="background:#fef2f2; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #fee2e2;">
+                            <h4 style="color:var(--danger); font-size:0.95rem; margin-bottom:5px;">Manual Financial Matrix Override</h4>
+                            <div class="form-group">
+                                <label style="font-size:0.8rem;">Physical Cash in Vault (JD)</label>
+                                <input type="number" step="0.01" id="override-vault-cash">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:0.8rem;">Fees Collected Archive (JD)</label>
+                                <input type="number" step="0.01" id="override-fees-collected">
+                            </div>
+                            <div class="form-group">
+                                <label style="font-size:0.8rem;">Total Savings Profits Given Out (JD)</label>
+                                <input type="number" step="0.01" id="override-savings-profit">
+                            </div>
+                            <button class="danger-btn" style="padding: 6px 10px; font-size:0.85rem;" onclick="saveManualFinancialOverride()">Commit Matrix Corrections</button>
+                        </div>
+
+                        <!-- Manual Profit Tool Trigger -->
+                        <div style="background:#fae8ff; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #d8b4fe;">
+                            <h4 style="color:var(--manager); font-size:0.95rem; margin-bottom:5px;">Savings Dividend Payout Settings Matrix</h4>
+                            <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Triggers global dividend yields rounding up to the nearest full integer instantly into core balances.</p>
+                            
+                            <div class="form-group">
+                                <label style="font-size:0.85rem; font-weight:bold; color:var(--manager);">Dividend Yield Rate (%)</label>
+                                <input type="number" id="cfg-dividend-percent" value="1" min="0" step="0.1" style="border-color:var(--manager);">
+                            </div>
+                            <button class="manager-btn" onclick="triggerManualProfitPayout()">Distribute Dividends Globally</button>
+                        </div>
+
+                        <!-- Fee Configuration Matrix Forms -->
+                        <div style="margin-bottom:15px;">
+                            <h4 style="color:var(--manager); font-size:0.9rem; margin-bottom:5px;">Global Cash Fee Matrix Modifier</h4>
+                            <div class="form-group"><label>Account Opening Fee (JD)</label><input type="number" id="fee-open-cfg" value="0"></div>
+                            <div class="form-group"><label>Deposit Fee (JD)</label><input type="number" id="fee-deposit-cfg" value="1"></div>
+                            <div class="form-group"><label>Withdraw Fee (JD)</label><input type="number" id="fee-withdraw-cfg" value="1"></div>
+                            <div class="form-group"><label>Breaking Deposit Fee (JD)</label><input type="number" id="fee-break-cfg" value="3"></div>
+                            <button class="manager-btn" onclick="updateFeeStructure()">Save Structural Settings</button>
+                        </div>
+                        
+                        <!-- Global Purge Reset Sequence Box -->
+                        <div style="margin-top:25px; padding-top:15px; border-top:2px dashed var(--border);">
+                            <h4 style="color:var(--danger); font-size:0.9rem; margin-bottom:5px;">Master Database Reset Sequence</h4>
+                            <button class="danger-btn" onclick="executeFullSystemWipe()">Purge and Reset Everything</button>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: STAFF PROVISIONS MANAGEMENT DIRECTORY SECTION -->
+                    <div id="mgr-tab-staff" class="mgr-tab-content">
+                        <div style="background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
+                            <h4>Staff Database Index Profiles</h4>
+                            <input type="text" id="staff-search-input" class="search-box-modifier" placeholder="Search staff members by name..." oninput="handleStaffRegistrySearch()">
+                            <div id="staff-registry-box" style="margin-top:10px; max-height:200px; overflow-y:auto;"></div>
+                            <h4 style="margin-top:15px; color:var(--manager); font-size:0.85rem;">Global Internal Employee Audit Logs</h4>
+                            <div id="staff-global-logs-box" class="log-container" style="max-height:150px; font-size:0.75rem; background:#020617; margin-top:5px;"></div>
+                            
+                            <div style="background:#fff; border:1px solid var(--border); padding:10px; border-radius:4px; margin-top:10px;">
+                                <label>Register Staff Member</label>
+                                <div class="form-group"><input type="text" id="new-emp-user" placeholder="Username" style="padding:4px; font-size:0.85rem;"></div>
+                                <div class="form-group"><input type="password" id="new-emp-pass" placeholder="Passcode" style="padding:4px; font-size:0.85rem;"></div>
+                                <button class="manager-btn" style="font-size:0.8rem; padding:4px;" onclick="registerNewEmployee()">Provision Staff Credentials</button>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>New 4-Digit Passcode PIN</label>
-                            <input type="password" id="mgr-pin-new-value" placeholder="XXXX" maxlength="6">
-                        </div>
-                        <button class="manager-btn" onclick="executeManagerPinOverride()">Overwrite Customer Passcode</button>
                     </div>
 
-                    <div class="manager-box" style="margin-bottom: 15px;">
-                        <h3>Manager Name-Bypass Gateway</h3>
-                        <div class="form-row">
-                            <div class="form-group"><label>First Name</label><input type="text" id="bypass-first" placeholder="John"></div>
-                            <div class="form-group"><label>Last Name</label><input type="text" id="bypass-last" placeholder="Doe"></div>
+                    <!-- TAB 4: CUSTOMER BANK REGISTERS LIST SEARCH INDEX SECTION -->
+                    <div id="mgr-tab-customers" class="mgr-tab-content">
+                        <div style="background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
+                            <h4>All Active Bank Accounts</h4>
+                            <input type="text" id="customer-search-input" class="search-box-modifier" placeholder="Search customers by name or ID..." oninput="handleCustomerRegistrySearch()">
+                            <div id="account-registry-box" style="max-height:350px; overflow-y:auto;"></div>
                         </div>
-                        <div class="form-group">
-                            <label>Customer Date of Birth (DOB)</label>
-                            <input type="date" id="bypass-dob">
-                        </div>
-                        <div class="form-group"><label>Manager Passcode</label><input type="password" id="bypass-code" placeholder="******"></div>
-                        <button class="manager-btn" onclick="managerBypassAccess()">Bypass &amp; Load Account</button>
-                    </div>
-
-                    <div style="background:#fef2f2; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #fee2e2;">
-                        <h4 style="color:var(--danger); font-size:0.95rem; margin-bottom:5px;">Manual Financial Matrix Override</h4>
-                        <div class="form-group">
-                            <label style="font-size:0.8rem;">Physical Cash in Vault (JD)</label>
-                            <input type="number" step="0.01" id="override-vault-cash">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.8rem;">Fees Collected Archive (JD)</label>
-                            <input type="number" step="0.01" id="override-fees-collected">
-                        </div>
-                        <div class="form-group">
-                            <label style="font-size:0.8rem;">Total Savings Profits Given Out (JD)</label>
-                            <input type="number" step="0.01" id="override-savings-profit">
-                        </div>
-                        <button class="danger-btn" style="padding: 6px 10px; font-size:0.85rem;" onclick="saveManualFinancialOverride()">Commit Matrix Corrections</button>
-                    </div>
-
-                    <div style="background:#fae8ff; padding:12px; border-radius:6px; margin-bottom:15px; border:1px solid #d8b4fe;">
-                        <h4 style="color:var(--manager); font-size:0.95rem; margin-bottom:5px;">Savings Dividend Payout Settings Matrix</h4>
-                        <p style="font-size:0.8rem; margin-bottom:8px; color:#64748b;">Triggers global dividend yields rounding up to the nearest full integer instantly into core balances.</p>
-                        
-                        <div class="form-group">
-                            <label style="font-size:0.85rem; font-weight:bold; color:var(--manager);">Dividend Yield Rate (%)</label>
-                            <input type="number" id="cfg-dividend-percent" value="1" min="0" step="0.1" style="border-color:var(--manager);">
-                        </div>
-                        <button class="manager-btn" onclick="triggerManualProfitPayout()">Distribute Dividends Globally</button>
-                    </div>
-
-                    <div style="margin-bottom:15px;">
-                        <h4 style="color:var(--manager); font-size:0.9rem; margin-bottom:5px;">Global Cash Fee Matrix Modifier</h4>
-                        <div class="form-group"><label>Account Opening Fee (JD)</label><input type="number" id="fee-open-cfg" value="0"></div>
-                        <div class="form-group"><label>Deposit Fee (JD)</label><input type="number" id="fee-deposit-cfg" value="1"></div>
-                        <div class="form-group"><label>Withdraw Fee (JD)</label><input type="number" id="fee-withdraw-cfg" value="1"></div>
-                        <div class="form-group"><label>Breaking Deposit Fee (JD)</label><input type="number" id="fee-break-cfg" value="3"></div>
-                        <button class="manager-btn" onclick="updateFeeStructure()">Save Structural Settings</button>
-                    </div>
-
-                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
-                        <button class="secondary" style="background:#475569;" onclick="toggleDataSection('employees')">View Staff Registers</button>
-                        <button class="secondary" style="background:#475569;" onclick="toggleDataSection('accounts')">View Bank Registers</button>
-                    </div>
-
-                    <div id="manager-employee-list-sec" style="display:none; margin-top:15px; background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
-                        <h4>Staff Database Index Profiles</h4>
-                        <input type="text" id="staff-search-input" class="search-box-modifier" placeholder="Search staff members by name..." oninput="handleStaffRegistrySearch()">
-                        <div id="staff-registry-box" style="margin-top:10px; max-height:200px; overflow-y:auto;"></div>
-                        <h4 style="margin-top:15px; color:var(--manager); font-size:0.85rem;">Global Internal Employee Audit Logs</h4>
-                        <div id="staff-global-logs-box" class="log-container" style="max-height:150px; font-size:0.75rem; background:#020617; margin-top:5px;"></div>
-                        
-                        <div style="background:#fff; border:1px solid var(--border); padding:10px; border-radius:4px; margin-top:10px;">
-                            <label>Register Staff Member</label>
-                            <div class="form-group"><input type="text" id="new-emp-user" placeholder="Username" style="padding:4px; font-size:0.85rem;"></div>
-                            <div class="form-group"><input type="password" id="new-emp-pass" placeholder="Passcode" style="padding:4px; font-size:0.85rem;"></div>
-                            <button class="manager-btn" style="font-size:0.8rem; padding:4px;" onclick="registerNewEmployee()">Provision Staff Credentials</button>
-                        </div>
-                    </div>
-
-                    <div id="manager-account-list-sec" style="display:none; margin-top:15px; background:#f8fafc; padding:10px; border-radius:4px; border:1px dashed var(--manager);">
-                        <h4>All Active Bank Accounts</h4>
-                        <input type="text" id="customer-search-input" class="search-box-modifier" placeholder="Search customers by name or ID..." oninput="handleCustomerRegistrySearch()">
-                        <div id="account-registry-box" style="max-height:250px; overflow-y:auto;"></div>
-                    </div>
-
-                    <div style="margin-top:25px; padding-top:15px; border-top:2px dashed var(--border);">
-                        <h4 style="color:var(--danger); font-size:0.9rem; margin-bottom:5px;">Master Database Reset Sequence</h4>
-                        <button class="danger-btn" onclick="executeFullSystemWipe()">Purge and Reset Everything</button>
                     </div>
 
                 </div>
             </div>
 
+            <!-- RIGHT COLUMN -->
             <div>
+                <!-- Main Terminal Workstation -->
                 <div class="card">
                     <h2>4. Active Customer Workstation</h2>
                     <div id="no-account-selected" style="text-align: center; padding: 40px; color: #64748b;">
@@ -365,6 +408,7 @@
                             <div class="stat-box"><span>Tied Savings Deposit</span><strong id="view-savings" style="color: var(--warning);">0.00 JD</strong></div>
                         </div>
 
+                        <!-- Editable Fields Component Matrix -->
                         <div style="font-size: 0.9rem; margin-bottom: 15px; background: #f1f5f9; padding: 12px; border-radius: 6px; border: 1px solid var(--border);">
                             <h4 style="font-size:0.9rem; margin-bottom:8px; color:var(--primary);">Identity Management Tracking Data</h4>
                             <div class="form-group">
@@ -391,8 +435,10 @@
 
                         <hr style="margin: 15px 0; border: 0; border-top: 1px solid var(--border);">
 
+                        <!-- Transactions Split Window Grid Layout -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                             
+                            <!-- Cash Flow Movements and Inter-account Transfers -->
                             <div style="border-right: 1px solid var(--border); padding-right: 15px;">
                                 <h3>Standard Cash Vault Handling</h3>
                                 <p style="font-size:0.75rem; color:var(--danger); margin-bottom:8px;">* Fees strictly paid out-of-pocket via cash-in-hand.</p>
@@ -412,9 +458,10 @@
                                         </div>
                                     </div>
                                     <button onclick="prepareTransferTx()" class="secondary" style="font-size:0.85rem; background: var(--primary-light);">Execute Transfer</button>
-                                end</div>
+                                </div>
                             </div>
 
+                            <!-- Savings Vault Systems -->
                             <div>
                                 <h3>Tied Savings Vault</h3>
                                 <div class="form-group"><label>Amount (JD)</label><input type="number" id="savings-amount" min="1" placeholder="0.00"></div>
@@ -432,6 +479,7 @@
                     </div>
                 </div>
 
+                <!-- Ledger Audit Trail logs -->
                 <div class="card">
                     <h2>5. Live Account Audit Ledger</h2>
                     <div id="log-box" class="log-container">
@@ -507,6 +555,18 @@
         function pushStaffLog(message) {
             const timestamp = new Date().toLocaleString();
             staffSystemLogs.push(`[${timestamp}] [Staff: ${activeEmployeeUser}] ${message}`);
+        }
+
+        // --- NEW TAB SWITCHING IMPLEMENTATION SYSTEM ---
+        function switchManagerPanelTab(targetTabId, triggerBtn) {
+            const tabs = document.querySelectorAll('.mgr-tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            const tabButtons = document.querySelectorAll('.mgr-tab-btn');
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(targetTabId).classList.add('active');
+            triggerBtn.classList.add('active');
         }
 
         // --- CUSTOMER ATM SYSTEM ENGINE LOGIC ---
@@ -763,7 +823,6 @@
                 }
 
                 saveAllData();
-                // Real-time structural vault message popup is fully bypassed per specifications
                 
                 atmState.currentScreen = 'MAIN_MENU';
                 renderAtmTerminalEngine();
@@ -891,7 +950,7 @@
             }
         }
 
-        // --- NEW FEATURE: MANAGER CUSTOMER PIN RESET INTERFACE LOGIC ---
+        // --- MGR OVERRIDE PIN CODE CHANGE ---
         function executeManagerPinOverride() {
             if (activeEmployeeUser !== MGR_USER) return;
 
@@ -1032,7 +1091,6 @@
             const newValue = targetInput.value.trim();
 
             if (activeEmployeeUser !== MGR_USER) {
-                // Block operation and reset layout value to base configuration
                 alert("ACCESS REJECTED: Only the Root Bank Manager holds credentials to update ID, DOB, or Address tracking vectors.");
                 targetInput.value = bankDB[activeAccountID][fieldKey];
                 return;
@@ -1115,14 +1173,7 @@
             if(activeAccountID) loadWorkstation();
         }
 
-        // --- SECTION 4: MANAGER REGISTRY LIST FILTERS SEARCH SYSTEM ---
-        function toggleDataSection(section) {
-            const empSec = document.getElementById('manager-employee-list-sec');
-            const accSec = document.getElementById('manager-account-list-sec');
-            if (section === 'employees') empSec.style.display = empSec.style.display === 'none' ? 'block' : 'none';
-            else if (section === 'accounts') accSec.style.display = accSec.style.display === 'none' ? 'block' : 'none';
-        }
-
+        // --- SECTION 4: MANAGER REGISTRY SEARCH INDEX RE-RENDER ---
         function handleStaffRegistrySearch() {
             const term = document.getElementById('staff-search-input').value.toLowerCase().trim();
             const entries = document.querySelectorAll('#staff-registry-box .staff-list-row-item');
@@ -1242,7 +1293,6 @@
             document.getElementById('workstation-input-address').value = acc.address || '';
             document.getElementById('view-notes').value = acc.notes || '';
 
-            // Handle informational message flags visibility status
             const noticeLbl = document.getElementById('editing-restriction-notice');
             noticeLbl.style.display = (activeEmployeeUser === MGR_USER) ? 'none' : 'block';
 
