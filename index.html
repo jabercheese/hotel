@@ -3,981 +3,512 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grand Horizon Pro PMS - Suite, Spa & Payment Terminal Desk</title>
+    <title>Emergency Command Center - CAD v4.2</title>
     <style>
         :root {
-            --primary: #1e293b;
-            --secondary: #334155;
-            --accent: #0284c7;
-            --spa-color: #0d9488;
-            --success: #16a34a;
-            --danger: #dc2626;
-            --warning: #ca8a04;
-            --light: #f8fafc;
-            --border: #cbd5e1;
-            --sea: #06b6d4;
-            --mountain: #8b5cf6;
+            --bg-main: #0a0f1d;
+            --bg-card: #131a30;
+            --bg-input: #1b2440;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --primary: #3b82f6;
+            --emergency: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --border: #24335c;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; margin: 0; padding: 0; }
-        body { background-color: #f1f5f9; color: var(--primary); padding: 20px; display: flex; flex-direction: column; gap: 20px; }
-        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Courier New', Courier, monospace, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HEADER --- */
         header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background-color: #05070f;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--emergency);
         }
 
-        .layout { display: grid; grid-template-columns: 1fr; gap: 20px; }
-        @media(min-width: 1200px) { .layout { grid-template-columns: 7fr 5fr; } }
-
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        h2 { margin-bottom: 15px; padding-bottom: 5px; border-bottom: 2px solid #e2e8f0; font-size: 1.3rem; }
-        h3 { margin: 15px 0 8px; font-size: 1.1rem; color: var(--secondary); }
-
-        /* Room Grid Styling */
-        .room-cluster { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 8px; margin-bottom: 15px; }
-        .room-block {
-            background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px;
-            font-size: 0.85em; cursor: pointer; transition: all 0.2s; position: relative;
+        .system-status {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
         }
-        .room-block:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .room-block.sea { border-top: 4px solid var(--sea); }
-        .room-block.mountain { border-top: 4px solid var(--mountain); }
-        .room-block.occupied { background: #fee2e2; border-color: #fca5a5; }
-        .vip-tag { position: absolute; top: 2px; right: 2px; background: #db2777; color: white; font-size: 0.65em; padding: 1px 4px; border-radius: 3px; font-weight: bold; }
 
-        /* Badges */
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: bold; display: inline-block; margin-top: 3px; }
-        .badge-clean { background: #dcfce7; color: #16a34a; }
-        .badge-dirty { background: #ffeeee; color: #dc2626; }
-        .badge-avail { background: #e0f2fe; color: #0369a1; }
-        .badge-occ { background: #f87171; color: white; }
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
 
-        /* Forms & Fields */
-        .form-group { margin-bottom: 12px; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 5px; }
-        label { display: block; margin-bottom: 4px; font-weight: 600; font-size: 0.85em; }
-        input, select, textarea { width: 100%; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.9em; }
-        textarea { resize: vertical; height: 50px; }
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            box-shadow: 0 0 8px var(--success);
+        }
+
+        .dot.blink {
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            50% { opacity: 0.3; }
+        }
+
+        /* --- MAIN LAYOUT --- */
+        .wrapper {
+            display: grid;
+            grid-template-columns: 320px 1fr 380px;
+            flex: 1;
+            overflow: hidden;
+            gap: 10px;
+            padding: 10px;
+        }
+
+        /* --- PANELS --- */
+        .panel {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background-color: #0e1424;
+            padding: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            letter-spacing: 1px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-body {
+            padding: 15px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* --- FORMS & INPUTS --- */
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-danger {
+            background-color: var(--emergency);
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        /* --- CALL QUEUE & TABLES --- */
+        .call-card {
+            background-color: #1a233d;
+            border-left: 4px solid var(--warning);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+
+        .call-card.priority-high {
+            border-left-color: var(--emergency);
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            50% { border-left-color: #7f1d1d; }
+        }
+
+        .cad-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .cad-table th {
+            background-color: #0e1424;
+            color: var(--text-muted);
+            padding: 8px;
+            text-transform: uppercase;
+        }
+
+        .cad-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .cad-table tr:hover {
+            background-color: #17203a;
+        }
+
+        /* --- UNIT BADGES --- */
+        .badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        .badge-pd { background-color: #1e3a8a; color: #93c5fd; }
+        .badge-fd { background-color: #7f1d1d; color: #fca5a5; }
+        .badge-ems { background-color: #064e3b; color: #6ee7b7; }
         
-        /* Checkbox items */
-        .check-item { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 0.9em; background: #fff; padding: 8px; border: 1px solid var(--border); border-radius: 4px;}
-        .check-item input[type="checkbox"] { width: auto; cursor: pointer; }
+        .status-avail { color: var(--success); }
+        .status-disp { color: var(--warning); }
+        .status-or { color: var(--emergency); }
 
-        /* Buttons */
-        .btn { background: var(--accent); color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-top: 5px; }
-        .btn:hover { opacity: 0.9; }
-        .btn-spa { background: var(--spa-color); }
-        .btn-danger { background: var(--danger); }
-        .btn-warn { background: var(--warning); }
-        .btn-success { background: var(--success); }
-
-        .verification-box { background: #fffbeb; border: 1px solid #fef3c7; padding: 8px; border-radius: 4px; margin-top: 5px; display: none; }
-        .billing-summary { background: #f8fafc; border: 1px dashed var(--border); padding: 12px; border-radius: 6px; margin-top: 10px; font-size: 0.9em; line-height: 1.5; }
-        
-        .sys-log { background: #0f172a; color: #94a3b8; padding: 10px; border-radius: 6px; max-height: 160px; overflow-y: auto; font-family: monospace; font-size: 0.8em; margin-top: 10px; }
-        .log-success { color: #4ade80; }
-        .log-danger { color: #f87171; }
-        .log-spa { color: #2dd4bf; }
-
-        /* Modal Overlay Window */
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; display: none; }
-        .modal-content { background: white; padding: 25px; border-radius: 8px; max-width: 450px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-
-        /* Loading Spinner */
-        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--success); animation: spin 1s ease-in-out infinite; margin-right: 10px; vertical-align: middle; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        /* --- UTILITIES --- */
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+        .flex-row > * {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Grand Horizon Pro - Premium Property Operations Portal</h1>
-        <p>Core Rooms Inventory: Room: 200 JD | Suite: 290 JD | Family: 340 JD (+35 JD Sea View Supplement) | Spa Menu Base Rates: 60M (50 JD) / 120M (90 JD)</p>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <h1 style="font-size: 20px; color: var(--emergency);">METRO CAD</h1>
+            <span style="color: var(--text-muted);">|</span>
+            <span style="font-weight: bold;">OPERATOR TERMINAL #14</span>
+        </div>
+        <div class="system-status">
+            <div class="status-indicator">
+                <span class="dot blink"></span>
+                <span>NCIC DATABASE: CONNECTED</span>
+            </div>
+            <div class="status-indicator">
+                <span class="dot" style="background-color: var(--success); box-shadow: 0 0 8px var(--success);"></span>
+                <span>GPS LINK: ACTIVE</span>
+            </div>
+            <div id="clock" style="font-weight: bold; color: var(--warning);">00:00:00</div>
+        </div>
     </header>
 
-    <div class="layout">
+    <div class="wrapper">
         
-        <!-- LEFT: Dynamic Visual Matrix Board & Spa Desk -->
-        <div class="left-panel">
-            <div class="card">
-                <h2>Interactive Front Desk Map Grid (40 Rooms Total)</h2>
-                <p style="font-size: 0.85em; color:#64748b; margin-bottom:15px;">💡 Click any room block directly to calculate lodging cost variables, post dynamic spa treatments, track housekeeping states, or initiate checkout checklist safety guards.</p>
-                
-                <h3>Suites (10)</h3>
-                <div class="room-cluster" id="suiteGrid"></div>
-
-                <h3>Standard Rooms (20)</h3>
-                <div class="room-cluster" id="roomGrid"></div>
-
-                <h3>Family Rooms (10)</h3>
-                <div class="room-cluster" id="familyGrid"></div>
+        <div class="panel">
+            <div class="panel-header">
+                <span>911 Live Call Intake</span>
+                <span style="color: var(--emergency); font-size: 12px;">● LIVE VOICE</span>
             </div>
-
-            <!-- SPA BOOKING CONSOLE ENGINE -->
-            <div class="card" style="border-top: 4px solid var(--spa-color);">
-                <h2>Oasis Spa Booking Desk</h2>
-                <form id="spaForm" onsubmit="processSpaBooking(event)">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="spaRoomId">Target Room Number</label>
-                            <input type="number" id="spaRoomId" placeholder="e.g. 101" oninput="validateSpaRoom()">
-                        </div>
-                        <div class="form-group">
-                            <label for="spaAdultsCount">Number of Adults Booking Spa</label>
-                            <input type="number" id="spaAdultsCount" min="1" max="6" value="1" disabled oninput="generateSpaAttendeesFields()">
-                        </div>
+            <div class="panel-body">
+                <div class="call-card priority-high" onclick="populateCall('911-8831', '455 NW 8th Ave', 'Domestic Dispute / Weapon Present', 'Caller states verbal fight escalated. Husband has a handgun in waistband.')">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-weight: bold; color: var(--emergency);">[PRIORITY 1] 911-8831</span>
+                        <span>02:14m</span>
                     </div>
+                    <div style="font-size: 12px; color: var(--text-main);">455 NW 8th Ave</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Assault / Weapon Present</div>
+                </div>
 
+                <div class="call-card" onclick="populateCall('911-9012', 'I-95 Southbound MM 12', 'MVA - Multi-Vehicle Accident', '3 car collision. No severe injuries reported yet, fluid leaking on roadway.')">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="font-weight: bold; color: var(--warning);">[PRIORITY 2] 911-9012</span>
+                        <span>00:45m</span>
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-main);">I-95 Southbound MM 12</div>
+                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">MVA / Traffic Blockage</div>
+                </div>
+
+                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
+                
+                <form id="incident-form" onsubmit="createNewIncident(event)">
+                    <h3 style="font-size: 13px; text-transform: uppercase; margin-bottom: 10px; color: var(--primary);">Incident Generation</h3>
                     <div class="form-group">
-                        <label for="spaDiscount">Spa Privilege Promotion Tier</label>
-                        <select id="spaDiscount" onchange="handleSpaDiscountTypeChange()">
-                            <option value="0">Standard Spa Rack Rate (0%)</option>
-                            <option value="5">Loyalty Member Tier Promotion (5%)</option>
-                            <option value="10">Known Corporate Member (10%) - Requires Member ID</option>
-                            <option value="15">Internal Employee Wellness Rate (15%) - Requires Employee ID</option>
-                            <option value="20">VIP Manager Special Rate (20%) - Requires Password Bypass</option>
-                        </select>
+                        <label>Call ID / Phone</label>
+                        <input type="text" id="form-call-id" placeholder="Auto-generated or Manual Entry">
                     </div>
-
-                    <!-- Verification Inputs Layer for Spa -->
-                    <div class="verification-box" id="spaVerificationContainer">
-                        <label id="spaVerificationLabel">Enter Verification Code:</label>
-                        <input type="password" id="spaVerificationInput" oninput="generateSpaAttendeesFields()" placeholder="Verification input field...">
+                    <div class="form-group">
+                        <label>Location / Cross Streets</label>
+                        <input type="text" id="form-location" required placeholder="e.g., 123 Main St / Broad Rd">
                     </div>
-
-                    <!-- Dynamic Verification Warning Boxes -->
-                    <div id="spaValidationError" style="display:none; color:var(--danger); font-size:0.85em; font-weight:bold; margin-bottom:12px;"></div>
-
-                    <!-- Dynamic Attendee Input Field Container -->
-                    <div id="spaAttendeesContainer"></div>
-
-                    <!-- Live Spa Total Cost Box -->
-                    <div id="spaQuoteBox" class="billing-summary" style="display:none; background:#f0fdfa; border-color:#99f6e4;"></div>
-
-                    <button type="submit" id="spaSubmitBtn" class="btn btn-spa" disabled>Post Spa Session to Room Account</button>
+                    <div class="flex-row">
+                        <div class="form-group">
+                            <label>Call Type</label>
+                            <select id="form-type">
+                                <option value="10-10">10-10 Fight in Progress</option>
+                                <option value="10-15">10-15 Disturbance</option>
+                                <option value="10-43">10-43 Medical Emergency</option>
+                                <option value="10-70">10-70 Fire Alarm</option>
+                                <option value="MVA">Motor Vehicle Accident</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="form-priority">
+                                <option value="CRITICAL">1 - Critical</option>
+                                <option value="HIGH">2 - High</option>
+                                <option value="ROUTINE">3 - Routine</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Call Log / Dispatcher Notes</label>
+                        <textarea id="form-notes" rows="4" placeholder="Compiling caller statements..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-danger">Dispatch & Log Incident</button>
                 </form>
             </div>
         </div>
 
-        <!-- RIGHT: Live Active Room Control Center Window -->
-        <div class="right-panel">
-            <div class="card" id="controlPanel" style="position: sticky; top: 20px;">
-                <h2 id="panelTitle">Select a Room to Manage</h2>
-                <div id="panelPlaceholder" style="color: #64748b; font-style: italic; text-align: center; padding: 4px 0;">
-                    No room data selection targeted. Click any room block directly inside the grid view map layout.
-                </div>
-
-                <div id="panelContents" style="display: none;">
-                    <!-- Status Segment Layer -->
-                    <div class="form-row" style="margin-bottom: 15px;">
-                        <div class="form-group">
-                            <label>Housekeeping Status</label>
-                            <select id="hkStatus" onchange="updateRoomHkStatus()">
-                                <option value="Clean">Clean</option>
-                                <option value="Not Clean">Not Clean</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>VIP Designation Status</label>
-                            <select id="vipStatus" onchange="toggleVipStatus()">
-                                <option value="Standard">Standard Booking</option>
-                                <option value="VIP">⭐ VIP Status</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <hr style="margin: 15px 0; border: 0; border-top: 1px dashed var(--border);">
-
-                    <!-- SCREEN A: OCCUPIED (Display Info, Stay Extension, and Checkout Checklist) -->
-                    <div id="screenOccupied" style="display: none;">
-                        <h3>Active Guest Record & Occupancy Bill</h3>
-                        <div class="billing-summary" id="billSummary"></div>
-                        
-                        <div class="form-group" style="margin-top: 15px;">
-                            <label>Add Stay Extension (Nights)</label>
-                            <div style="display:flex; gap: 5px;">
-                                <input type="number" id="extendNights" min="1" value="1" style="width: 80px;">
-                                <button class="btn btn-warn" onclick="processExtension()" style="margin:0;">Commit Extension</button>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Operational Stay Notes</label>
-                            <textarea id="stayNotes" oninput="saveNotes()" placeholder="Enter custom front desk handling notes here..."></textarea>
-                        </div>
-
-                        <!-- MANDATORY CHECKOUT CHECKLIST DESK SECTION -->
-                        <div style="background:#fff1f2; border: 1px solid #fecdd3; padding:15px; border-radius:6px; margin-top:15px; margin-bottom:10px;">
-                            <h4 style="color:var(--danger); font-size:0.95em; margin-bottom:10px;">Mandatory Front Office Checkout Safety Checklist</h4>
-                            
-                            <div class="check-item">
-                                <input type="checkbox" id="chkPayment" disabled>
-                                <label for="chkPayment" style="margin:0; cursor:pointer;">
-                                    💰 <strong>Settlement Check:</strong> Account Fully Cleared <span id="paymentStatusText"></span>
-                                </label>
-                            </div>
-
-                            <div class="check-item">
-                                <input type="checkbox" id="chkUsage" onchange="validateCheckoutRequirements()">
-                                <label for="chkUsage" style="margin:0; cursor:pointer;">⚠️ <strong>Minibar & Extra Usage Items Checked?</strong></label>
-                            </div>
-
-                            <div class="form-group">
-                                <label style="font-weight:bold;">Guest Stays Satisfaction Survey</label>
-                                <select id="chkSatisfied" style="background:#fff; margin-bottom:8px;">
-                                    <option value="Yes">Yes - Guest reported highly satisfied experience</option>
-                                    <option value="No">No - Guest logged unresolved service complaints</option>
-                                </select>
-                                <input type="text" id="checkoutSurveyNotes" placeholder="Append structural guest feedback notes here...">
-                            </div>
-                        </div>
-
-                        <button class="btn btn-danger" id="checkoutSubmitBtn" disabled onclick="processCheckOut()">Process Check-Out Settlement</button>
-                    </div>
-
-                    <!-- SCREEN B: AVAILABLE (Check-In Entry Engine) -->
-                    <div id="screenAvailable" style="display: none;">
-                        <h3>New Registration Check-In Form</h3>
-                        
-                        <div class="form-group">
-                            <label>Guest Name</label>
-                            <input type="text" id="inGuestName" placeholder="Zaid Al-Kamil">
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Adults Count</label>
-                                <input type="number" id="inAdults" min="1" max="6" value="2" onchange="validateOccupancyAndCost()">
-                            </div>
-                            <div class="form-group">
-                                <label>Children Count</label>
-                                <input type="number" id="inChildren" min="0" max="4" value="0" onchange="validateOccupancyAndCost()">
-                            </div>
-                        </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>Meal Board Package Plan</label>
-                                <select id="inMeal" onchange="validateOccupancyAndCost()">
-                                    <option value="None">Room Only</option>
-                                    <option value="Breakfast">Breakfast</option>
-                                    <option value="Half-Board">Half Board</option>
-                                    <option value="Full-Board">Full Board</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Stay Nights</label>
-                                <input type="number" id="inNights" min="1" value="1" onchange="validateOccupancyAndCost()">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label>Target Pricing Promo Scheme</label>
-                            <select id="inDiscount" onchange="handleDiscountTypeChange()">
-                                <option value="0">Standard Rack Rate (0%)</option>
-                                <option value="5">Standard Promotion Discount (5%)</option>
-                                <option value="10">Known Member Scheme (10%)</option>
-                                <option value="15">Internal Employee Rate (15%)</option>
-                                <option value="20">VIP Special Discount Rate (20%)</option>
-                            </select>
-                        </div>
-
-                        <!-- Verification Inputs Layer for Room Check-In -->
-                        <div class="verification-box" id="verificationContainer">
-                            <label id="verificationLabel">Enter Verification Code:</label>
-                            <input type="password" id="verificationInput" oninput="validateOccupancyAndCost()" placeholder="Code verification input...">
-                        </div>
-
-                        <div id="occupancyError" style="display:none; color:var(--danger); font-size:0.85em; font-weight:bold; margin-bottom:10px;"></div>
-
-                        <div class="billing-summary" id="liveQuoteSummary" style="background: #f0fdf4; border-color: #bbf7d0;"></div>
-
-                        <button class="btn" id="checkInBtn" onclick="processCheckIn()">Execute Check-In Allocation</button>
-                    </div>
-
-                </div>
-            </div>
-
-            <!-- Transaction Audit Monitor Logging Layer -->
-            <div class="card">
-                <h2>Real-Time System Database Audit Logs</h2>
-                <div class="sys-log" id="sysAuditLog">
-                    <div>[SYSTEM INITIALIZED] Base pricing structures active in hotel systems database.</div>
-                </div>
+        <div class="panel">
+            <div class="panel-header">Master Incident Database Log (Active Shifts)</div>
+            <div class="panel-body" style="padding: 0;">
+                <table class="cad-table">
+                    <thead>
+                        <tr>
+                            <th>INC #</th>
+                            <th>TIME</th>
+                            <th>PRI</th>
+                            <th>TYPE</th>
+                            <th>LOCATION</th>
+                            <th>STATUS</th>
+                            <th>DISPATCHED</th>
+                        </tr>
+                    </thead>
+                    <tbody id="incident-table-body">
+                        <tr>
+                            <td>#2026-089</td>
+                            <td>18:12</td>
+                            <td style="color: var(--emergency);">CRIT</td>
+                            <td>10-10 Fight</td>
+                            <td>2200 Block Elm St</td>
+                            <td class="status-or">ON SCENE</td>
+                            <td><span class="badge badge-pd">UNIT 1A12</span></td>
+                        </tr>
+                        <tr>
+                            <td>#2026-088</td>
+                            <td>18:05</td>
+                            <td style="color: var(--warning);">HIGH</td>
+                            <td>10-43 Medical</td>
+                            <td>89 Highland Apts</td>
+                            <td class="status-disp">EN ROUTE</td>
+                            <td><span class="badge badge-ems">MEDIC 4</span></td>
+                        </tr>
+                        <tr>
+                            <td>#2026-087</td>
+                            <td>17:44</td>
+                            <td style="color: var(--success);">ROUT</td>
+                            <td>10-70 Fire</td>
+                            <td>104 Industrial Pkwy</td>
+                            <td class="status-avail">CLEAR</td>
+                            <td><span class="badge badge-fd">ENG 9</span></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
 
-    <!-- RE-ENGINEERED SETTLEMENT WINDOW MODAL -->
-    <div class="modal" id="paymentModal">
-        <div class="modal-content">
-            <h2 style="color:var(--success); border-bottom-color:var(--success);">Front Desk Settlement Interface</h2>
-            
-            <div class="billing-summary" style="background:#f8fafc; margin: 12px 0;" id="paymentModalDetails"></div>
-            
-            <div class="form-group">
-                <label for="paymentRouteMethod">Target Payment Method</label>
-                <select id="paymentRouteMethod" onchange="togglePaymentStateUI()">
-                    <option value="Visa">Visa/Mastercard Terminal</option>
-                    <option value="Amex">American Express Corporate</option>
-                    <option value="Cash">Cash Settlement (JOD)</option>
-                </select>
-            </div>
+        <div class="panel">
+            <div class="panel-header">Active Active Units & NCIC Look-up</div>
+            <div class="panel-body">
+                <div style="background-color: #0d1222; padding: 10px; border-radius: 4px; border: 1px dashed var(--border); margin-bottom: 15px;">
+                    <label style="color: var(--primary);">NCIC Plate / Name Queries</label>
+                    <div class="flex-row" style="margin-top: 5px;">
+                        <input type="text" id="ncic-query" placeholder="Enter License Plate or Name...">
+                        <button onclick="searchNCIC()" class="btn" style="width: auto; padding: 0 15px;">Query</button>
+                    </div>
+                    <div id="ncic-results" style="font-size: 11px; margin-top: 8px; color: var(--text-muted);">System ready for remote background check check...</div>
+                </div>
 
-            <div class="form-group">
-                <label for="paymentAmountInput">Amount to Pay (JOD)</label>
-                <input type="number" id="paymentAmountInput" min="1" step="any" placeholder="Enter amount..." onkeydown="handlePaymentKeydown(event)">
-                <small style="color:#64748b; display:block; margin-top:4px;">💡 Type amount and press <strong>Enter</strong> to process.</small>
-            </div>
-
-            <!-- Inline Async Feedback Status Indicator Window -->
-            <div id="terminalStatusContainer" style="margin:12px 0; padding:10px; border-radius:4px; font-weight:bold; font-size:0.9em; display:none;"></div>
-
-            <div style="display:flex; gap:10px; margin-top:15px;">
-                <button class="btn btn-success" id="modalProcessBtn" onclick="initiatePaymentProcessing()" style="margin:0; flex:1;">Authorize Transaction</button>
-                <button class="btn" id="modalCancelBtn" style="background:#94a3b8; margin:0; flex:1;" onclick="closePaymentModal()">Close Terminal</button>
+                <h3 style="font-size: 13px; text-transform: uppercase; margin-bottom: 10px;">Unit Status Matrix</h3>
+                
+                <table class="cad-table" style="font-size: 11px;">
+                    <thead>
+                        <tr>
+                            <th>UNIT</th>
+                            <th>DEPT</th>
+                            <th>ASSIGNMENT / AREA</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><b>1A12</b></td>
+                            <td><span class="badge badge-pd">POLICE</span></td>
+                            <td>Sector 3 East Patrol</td>
+                            <td class="status-or">BUSY/OS</td>
+                        </tr>
+                        <tr>
+                            <td><b>1B20</b></td>
+                            <td><span class="badge badge-pd">POLICE</span></td>
+                            <td>Traffic Enforcement</td>
+                            <td class="status-avail">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td><b>ENG 9</b></td>
+                            <td><span class="badge badge-fd">FIRE</span></td>
+                            <td>Station 9 Hazmat Team</td>
+                            <td class="status-avail">AVAILABLE</td>
+                        </tr>
+                        <tr>
+                            <td><b>MEDIC 4</b></td>
+                            <td><span class="badge badge-ems">EMS</span></td>
+                            <td>Metro West ALS Unit</td>
+                            <td class="status-disp">DISPATCHED</td>
+                        </tr>
+                        <tr>
+                            <td><b>MEDIC 9</b></td>
+                            <td><span class="badge badge-ems">EMS</span></td>
+                            <td>Metro East BLS Unit</td>
+                            <td class="status-avail">AVAILABLE</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
+
     </div>
 
     <script>
-        // Data Schema Models 
-        const roomsDb = [];
-        let activeRoomId = null;
+        // Update live operating system clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toTimeString().split(' ')[0];
+            document.getElementById('clock').textContent = 'ZULU TIME: ' + timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
 
-        const basePrices = { "Room": 200, "Suite": 290, "Family Room": 340 };
-        const viewPremiums = { "Sea": 35, "Mountain": 0 };
-        const mealAdultPrices = { "None": 0, "Breakfast": 20, "Half-Board": 50, "Full-Board": 70 };
-        const spaPrices = { "60": 50, "120": 90 };
-
-        // Generate 40 Room Core Items 
-        for(let i=1; i<=10; i++) roomsDb.push({ id: 201+i-1, type: "Suite", view: i<=5 ? "Sea" : "Mountain", status: "Available", clean: "Clean", guest: null });
-        for(let i=1; i<=20; i++) roomsDb.push({ id: 101+i-1, type: "Room", view: i<=10 ? "Sea" : "Mountain", status: "Available", clean: "Clean", guest: null });
-        for(let i=1; i<=10; i++) roomsDb.push({ id: 301+i-1, type: "Family Room", view: i<=5 ? "Sea" : "Mountain", status: "Available", clean: "Clean", guest: null });
-
-        // Primary Matrix Render UI Component Map 
-        function renderHotelGrid() {
-            const grids = { "Suite": document.getElementById("suiteGrid"), "Room": document.getElementById("roomGrid"), "Family Room": document.getElementById("familyGrid") };
-            Object.values(grids).forEach(g => g.innerHTML = "");
-
-            roomsDb.sort((a,b) => a.id - b.id).forEach(rm => {
-                const block = document.createElement("div");
-                block.className = `room-block ${rm.view.toLowerCase()} ${rm.status === "Occupied" ? 'occupied' : ''}`;
-                
-                let cleanBadge = rm.clean === "Clean" ? "badge-clean" : "badge-dirty";
-                let statusBadge = rm.status === "Occupied" ? "badge-occ" : "badge-avail";
-                
-                let vipBanner = (rm.guest && rm.guest.isVip) ? `<div class="vip-tag">VIP</div>` : '';
-
-                block.innerHTML = `
-                    ${vipBanner}
-                    <strong>Rm ${rm.id}</strong><br>
-                    <span style="font-size:0.75em; color:#475569;">${rm.view} View</span><br>
-                    <span class="badge ${statusBadge}">${rm.status}</span><br>
-                    <span class="badge ${cleanBadge}">${rm.clean}</span>
-                `;
-
-                block.onclick = () => selectRoomTarget(rm.id);
-                grids[rm.type].appendChild(block);
-            });
+        // Feed quick data from calls into the active inputs
+        function populateCall(callId, location, type, notes) {
+            document.getElementById('form-call-id').value = callId;
+            document.getElementById('form-location').value = location;
+            document.getElementById('form-notes').value = notes;
         }
 
-        // Handle Selecting Target Room Core UI updates
-        function selectRoomTarget(id) {
-            activeRoomId = id;
-            const rm = roomsDb.find(r => r.id === id);
-
-            document.getElementById("panelPlaceholder").style.display = "none";
-            document.getElementById("panelContents").style.display = "block";
-            document.getElementById("panelTitle").innerText = `Managing Room ${rm.id} (${rm.type})`;
-            
-            document.getElementById("hkStatus").value = rm.clean;
-            document.getElementById("vipStatus").value = (rm.guest && rm.guest.isVip) ? "VIP" : "Standard";
-
-            if (rm.status === "Occupied") {
-                document.getElementById("screenAvailable").style.display = "none";
-                document.getElementById("screenOccupied").style.display = "block";
-                document.getElementById("stayNotes").value = rm.guest.notes || "";
-                
-                document.getElementById("chkUsage").checked = false;
-                document.getElementById("checkoutSurveyNotes").value = "";
-                document.getElementById("chkSatisfied").value = "Yes";
-
-                renderOccupiedBill(rm);
-                validateCheckoutRequirements();
-            } else {
-                document.getElementById("screenOccupied").style.display = "none";
-                document.getElementById("screenAvailable").style.display = "block";
-                document.getElementById("inGuestName").value = "";
-                document.getElementById("inDiscount").value = "0";
-                document.getElementById("verificationContainer").style.display = "none";
-                validateOccupancyAndCost();
-            }
-        }
-
-        function updateRoomHkStatus() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            rm.clean = document.getElementById("hkStatus").value;
-            logAction(`Room ${rm.id} Housekeeping status updated to [${rm.clean}]`);
-            renderHotelGrid();
-        }
-
-        function toggleVipStatus() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            const statusVal = document.getElementById("vipStatus").value;
-            if (rm.guest) {
-                rm.guest.isVip = (statusVal === "VIP");
-                logAction(`Room ${rm.id} guest dynamic VIP profile set to: ${rm.guest.isVip}`, "log-success");
-                if(activeRoomId) renderOccupiedBill(rm);
-            }
-            renderHotelGrid();
-        }
-
-        function saveNotes() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            if (rm.guest) {
-                rm.guest.notes = document.getElementById("stayNotes").value;
-            }
-        }
-
-        function handleDiscountTypeChange() {
-            const discountType = document.getElementById("inDiscount").value;
-            const container = document.getElementById("verificationContainer");
-            const label = document.getElementById("verificationLabel");
-            const input = document.getElementById("verificationInput");
-
-            input.value = "";
-            if (discountType === "10") { container.style.display = "block"; label.innerText = "Required: Enter Member ID:"; }
-            else if (discountType === "15") { container.style.display = "block"; label.innerText = "Required: Enter Employee Code ID:"; }
-            else if (discountType === "20") { container.style.display = "block"; label.innerText = "Manager Override Password Required:"; }
-            else { container.style.display = "none"; }
-
-            validateOccupancyAndCost();
-        }
-
-        function handleSpaDiscountTypeChange() {
-            const spaDiscountType = document.getElementById("spaDiscount").value;
-            const container = document.getElementById("spaVerificationContainer");
-            const label = document.getElementById("spaVerificationLabel");
-            const input = document.getElementById("spaVerificationInput");
-
-            input.value = "";
-            if (spaDiscountType === "10") { container.style.display = "block"; label.innerText = "Spa Access Code: Enter Member ID:"; }
-            else if (spaDiscountType === "15") { container.style.display = "block"; label.innerText = "Spa Access Code: Enter Employee ID:"; }
-            else if (spaDiscountType === "20") { container.style.display = "block"; label.innerText = "Spa Access Code: Enter Manager Password:"; }
-            else { container.style.display = "none"; }
-
-            validateSpaRoom();
-        }
-
-        // Dynamic Calculations Layer
-        function calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct) {
-            let baseRate = basePrices[rm.type];
-            let viewCost = viewPremiums[rm.view];
-            
-            let roomPerNight = baseRate + viewCost;
-            let discountAmount = roomPerNight * (discountPct / 100);
-            let finalRoomPerNight = roomPerNight - discountAmount;
-            
-            let mealPerNight = mealAdultPrices[mealPlan] * adults;
-            
-            let totalPerNight = finalRoomPerNight + mealPerNight;
-            let finalRoomTotal = totalPerNight * nights;
-
-            let isOccupancyValid = true;
-            let err = "";
-
-            if (rm.type === "Room" || rm.type === "Suite") {
-                if (adults > 2 || children > 1) {
-                    isOccupancyValid = false;
-                    err = `Max Capacity Overload for ${rm.type}! Ceiling limit is 2 Adults and 1 Child (2A1C).`;
-                }
-            } else if (rm.type === "Family Room") {
-                if (adults > 4) { isOccupancyValid = false; err = "Family Rooms have an absolute ceiling cap limit of 4 Adults."; }
-                else if (children > 1) { isOccupancyValid = false; err = "Family Room layouts cannot exceed a maximum capacity of 1 Child."; }
-                else if (adults === 4 && children > 0) { isOccupancyValid = false; err = "Occupancy combination invalid! 4 Adults leaving 0 slots remaining for Children inside a single unit block space."; }
-            }
-
-            return {
-                isOccupancyValid, err, roomPerNight, discountAmount, finalRoomPerNight, mealPerNight, totalPerNight, finalRoomTotal
-            };
-        }
-
-        function validateOccupancyAndCost() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            if (!rm) return;
-
-            const adults = parseInt(document.getElementById("inAdults").value) || 0;
-            const children = parseInt(document.getElementById("inChildren").value) || 0;
-            const mealPlan = document.getElementById("inMeal").value;
-            const nights = parseInt(document.getElementById("inNights").value) || 0;
-            const discountPct = parseInt(document.getElementById("inDiscount").value) || 0;
-            const authInput = document.getElementById("verificationInput").value;
-
-            const calc = calculateBreakdown(rm, adults, children, mealPlan, nights, discountPct);
-            
-            let isVerified = true;
-            if (discountPct === 10 && authInput.trim().length === 0) isVerified = false;
-            if (discountPct === 15 && authInput.trim().length === 0) isVerified = false;
-            if (discountPct === 20 && authInput !== "jab123") isVerified = false;
-
-            const errBox = document.getElementById("occupancyError");
-            const btn = document.getElementById("checkInBtn");
-
-            if (!calc.isOccupancyValid) {
-                errBox.innerText = `⚠️ Occupancy Rule Violation: ${calc.err}`;
-                errBox.style.display = "block";
-                btn.disabled = true; btn.style.background = "#94a3b8";
-                return;
-            } else if (!isVerified && discountPct > 0) {
-                errBox.innerText = discountPct === 20 ? "❌ Invalid/Missing Manager Security Password Override." : "⚠️ Identification credentials/Member references string missing input parameters.";
-                errBox.style.display = "block";
-                btn.disabled = true; btn.style.background = "#94a3b8";
-            } else {
-                errBox.style.display = "none";
-                btn.disabled = false; btn.style.background = "var(--accent)";
-            }
-
-            document.getElementById("liveQuoteSummary").innerHTML = `
-                <strong>Estimated Summary Layout Quote:</strong><br>
-                Base + View Rate: ${calc.roomPerNight} JOD/night<br>
-                Applied Promo Discount: -${calc.discountAmount.toFixed(0)} JOD/night (${discountPct}%)<br>
-                Meal Supplements (${mealPlan}): +${calc.mealPerNight} JOD/night (${adults} Adults, Children free)<br>
-                <strong>Total Lodging Cost: ${calc.finalRoomTotal.toFixed(0)} JOD</strong> (${nights} nights)
-            `;
-        }
-
-        // Detailed live billing output display formatter 
-        function getOverallInvoiceTotal(rm) {
-            const g = rm.guest;
-            if (!g) return 0;
-            const calc = calculateBreakdown(rm, g.adults, g.children, g.mealPlan, g.nights, g.discountPct);
-            let spaSubtotal = 0;
-            if (g.spaOrders) {
-                g.spaOrders.forEach(ord => spaSubtotal += ord.cost);
-            }
-            return calc.finalRoomTotal + spaSubtotal;
-        }
-
-        function renderOccupiedBill(rm) {
-            const g = rm.guest;
-            const calc = calculateBreakdown(rm, g.adults, g.children, g.mealPlan, g.nights, g.discountPct);
-            
-            let spaSubtotal = 0;
-            let spaHtmlList = "";
-            if (g.spaOrders && g.spaOrders.length > 0) {
-                spaHtmlList = "<br><strong>Posted Spa Log Ledger:</strong><br>";
-                g.spaOrders.forEach((ord, index) => {
-                    spaSubtotal += ord.cost;
-                    spaHtmlList += `• Treatment Block #${index+1}: ${ord.partySize} Adult(s) (${ord.details}) = +${ord.cost} JOD <small style="color:var(--spa-color)">(${ord.discText})</small><br>`;
-                });
-            }
-
-            let grossTotal = calc.finalRoomTotal + spaSubtotal;
-            let remainingBalance = grossTotal - g.totalPaid;
-            
-            // Adjust checklist verification metrics automatically
-            g.isSettled = (remainingBalance <= 0.01);
-            document.getElementById("chkPayment").checked = g.isSettled;
-
-            // Handle link text creation injection parameters
-            const linkContainer = document.getElementById("paymentStatusText");
-            if (g.isSettled) {
-                linkContainer.innerHTML = `<span style="color:var(--success); font-weight:bold;">(Cleared & Paid)</span>`;
-            } else {
-                linkContainer.innerHTML = `<a href="#" onclick="openPaymentModal(event)" style="color:var(--danger); font-weight:bold; text-decoration:underline;">(Pending: ${remainingBalance.toFixed(0)} JOD - Click to Pay)</a>`;
-            }
-
-            document.getElementById("billSummary").innerHTML = `
-                <strong>Guest Principal Name:</strong> ${g.name} ${g.isVip ? '<span style="color:#db2777; font-weight:bold;">[VIP]</span>' : ''}<br>
-                <strong>Room Configuration:</strong> ${g.adults} Adults, ${g.children} Children<br>
-                <strong>Meal Package Plan:</strong> ${g.mealPlan}<br>
-                <strong>Stay Duration:</strong> ${g.nights} Nights Total Checked In<br>
-                <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
-                <strong>Billing Breakdown Ledger:</strong><br>
-                Subtotal Room Charges: ${calc.finalRoomTotal.toFixed(0)} JOD
-                ${spaHtmlList}
-                <hr style="margin:8px 0; border:0; border-top:1px dashed var(--border);">
-                Gross Total Invoice Amount: <strong>${grossTotal.toFixed(0)} JOD</strong><br>
-                Total Paid To Date: <span style="color:var(--success); font-weight:bold;">-${g.totalPaid.toFixed(0)} JOD</span><br>
-                <strong>Outstanding Due Balance: <span style="color:${g.isSettled ? 'var(--success)' : 'var(--danger)'}; font-size:1.2em; font-weight:bold;">${remainingBalance.toFixed(0)} JOD</span></strong>
-            `;
-        }
-
-        function processCheckIn() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            const name = document.getElementById("inGuestName").value.trim();
-            const adults = parseInt(document.getElementById("inAdults").value);
-            const children = parseInt(document.getElementById("inChildren").value);
-            const mealPlan = document.getElementById("inMeal").value;
-            const nights = parseInt(document.getElementById("inNights").value);
-            const discountPct = parseInt(document.getElementById("inDiscount").value);
-            const isVip = (document.getElementById("vipStatus").value === "VIP");
-
-            if (!name) { alert("Please input a valid Guest Registration Name."); return; }
-
-            rm.status = "Occupied";
-            rm.clean = "Not Clean"; 
-            rm.guest = { name, adults, children, mealPlan, nights, discountPct, isVip, notes: "", spaOrders: [], totalPaid: 0, isSettled: false };
-
-            logAction(`Check-In Completed: Room ${rm.id} assigned to ${name} for ${nights} nights.`, "log-success");
-            
-            renderHotelGrid();
-            selectRoomTarget(rm.id);
-        }
-
-        function processExtension() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            const ext = parseInt(document.getElementById("extendNights").value) || 0;
-            if (ext <= 0) return;
-
-            rm.guest.nights += ext;
-            logAction(`Stay Extension: Room ${rm.id} extended by +${ext} more nights. Bill metrics structural balance modified.`, "log-success");
-            
-            renderHotelGrid();
-            renderOccupiedBill(rm);
-            validateCheckoutRequirements();
-        }
-
-        /* ================= RE-ENGINEERED PAYMENT PORTAL DESK LOGIC ================= */
-        
-        function openPaymentModal(e) {
-            if(e) e.preventDefault();
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            if (!rm || !rm.guest) return;
-
-            const gross = getOverallInvoiceTotal(rm);
-            const remaining = gross - rm.guest.totalPaid;
-
-            // Reset modal feedback UI states elements
-            const statusContainer = document.getElementById("terminalStatusContainer");
-            statusContainer.style.display = "none";
-            statusContainer.className = "";
-            statusContainer.innerHTML = "";
-
-            document.getElementById("paymentAmountInput").value = remaining.toFixed(0);
-            document.getElementById("paymentRouteMethod").value = "Visa";
-
-            updateModalDisplayLabels(rm, gross, remaining);
-            setModalControlsDisabledState(false);
-            
-            document.getElementById("paymentModal").style.display = "flex";
-        }
-
-        function updateModalDisplayLabels(rm, gross, remaining) {
-            document.getElementById("paymentModalDetails").innerHTML = `
-                <strong>Guest Profile:</strong> ${rm.guest.name} (Rm ${rm.id})<br>
-                Total Gross Stay Statement: ${gross.toFixed(0)} JOD<br>
-                Accumulated Payments: -${rm.guest.totalPaid.toFixed(0)} JOD<br>
-                <strong>Net Remaining Balance Due: <span style="color:var(--danger); font-weight:bold;">${remaining.toFixed(0)} JOD</span></strong>
-            `;
-        }
-
-        function closePaymentModal() {
-            document.getElementById("paymentModal").style.display = "none";
-        }
-
-        function handlePaymentKeydown(event) {
-            // Trigger authorization engine immediately on Enter key press event down capture loop
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                initiatePaymentProcessing();
-            }
-        }
-
-        function togglePaymentStateUI() {
-            // Can be scaled if structural validation needs to separate fields based on selected drop down asset parameters
-            const method = document.getElementById("paymentRouteMethod").value;
-            const statusContainer = document.getElementById("terminalStatusContainer");
-            statusContainer.style.display = "none";
-        }
-
-        function setModalControlsDisabledState(disabled) {
-            document.getElementById("paymentRouteMethod").disabled = disabled;
-            document.getElementById("paymentAmountInput").disabled = disabled;
-            document.getElementById("modalProcessBtn").disabled = disabled;
-            document.getElementById("modalCancelBtn").disabled = disabled;
-        }
-
-        function initiatePaymentProcessing() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            const method = document.getElementById("paymentRouteMethod").value;
-            const amtInput = document.getElementById("paymentAmountInput");
-            const amt = parseFloat(amtInput.value) || 0;
-
-            if (!rm || !rm.guest) return;
-
-            const gross = getOverallInvoiceTotal(rm);
-            const remaining = gross - rm.guest.totalPaid;
-
-            if (amt <= 0) {
-                showTerminalMessage("⚠️ Error: Payment amount parameters must be positive numeric attributes.", "background:#fee2e2; color:var(--danger); border:1px solid #fca5a5;");
-                return;
-            }
-
-            if (amt > (remaining + 0.01)) {
-                showTerminalMessage(`⚠️ Overpayment Lock: Input value exceeds remaining net liability metrics (${remaining.toFixed(0)} JOD max cap).`, "background:#fee2e2; color:var(--danger); border:1px solid #fca5a5;");
-                return;
-            }
-
-            // Route Branch A: Cash Payment Path (Synchronous clearance execution loop)
-            if (method === "Cash") {
-                executeLedgerBalanceCommit(rm, amt, "Cash");
-                return;
-            }
-
-            // Route Branch B: Electronic Card Processing Paths (Asynchronous simulation handling logic loops)
-            setModalControlsDisabledState(true);
-            showTerminalMessage(`<span class="spinner"></span> Contacting External Banking Gateway Terminal... Please Wait.`, "background:#eff6ff; color:var(--accent); border:1px solid #bfdbfe;");
-
-            setTimeout(() => {
-                executeLedgerBalanceCommit(rm, amt, method);
-                setModalControlsDisabledState(false);
-            }, 2500); // Wait exactly 2.5 seconds to simulate external hardware communications handshake networks
-        }
-
-        function showTerminalMessage(htmlContent, styleString) {
-            const container = document.getElementById("terminalStatusContainer");
-            container.style.display = "block";
-            container.style.cssText = `margin:12px 0; padding:10px; border-radius:4px; font-weight:bold; font-size:0.9em; ${styleString}`;
-            container.innerHTML = htmlContent;
-        }
-
-        function executeLedgerBalanceCommit(rm, amount, method) {
-            rm.guest.totalPaid += amount;
-            
-            const gross = getOverallInvoiceTotal(rm);
-            const remaining = gross - rm.guest.totalPaid;
-
-            logAction(`💳 Payment Auth Reference Cleared: +${amount.toFixed(0)} JOD posted via [${method}]. Remaining: ${remaining.toFixed(0)} JOD.`, "log-success");
-
-            showTerminalMessage(`✅ Payment Successful!<br><span style="font-size:0.85em; font-weight:normal;">Authorized collection value: ${amount.toFixed(0)} JOD via pipeline transaction logs.</span>`, "background:#dcfce7; color:var(--success); border:1px solid #bbf7d0;");
-
-            // Instant components dashboard refresh execution metrics map
-            renderOccupiedBill(rm);
-            updateModalDisplayLabels(rm, gross, remaining);
-            validateCheckoutRequirements();
-
-            // If cash transaction completely paid up the ledger balance, close down modal immediately
-            if (method === "Cash" || remaining <= 0.01) {
-                setTimeout(() => { closePaymentModal(); }, 1200);
-            }
-        }
-
-        function validateCheckoutRequirements() {
-            const payChecked = document.getElementById("chkPayment").checked;
-            const usageChecked = document.getElementById("chkUsage").checked;
-            const checkoutBtn = document.getElementById("checkoutSubmitBtn");
-
-            if (payChecked && usageChecked) {
-                checkoutBtn.disabled = false;
-            } else {
-                checkoutBtn.disabled = true;
-            }
-        }
-
-        function processCheckOut() {
-            const rm = roomsDb.find(r => r.id === activeRoomId);
-            const satisfaction = document.getElementById("chkSatisfied").value;
-            const notes = document.getElementById("checkoutSurveyNotes").value.trim();
-            
-            let surveySummary = `[Satisfaction Status: ${satisfaction}]`;
-            if(notes) surveySummary += ` Feedback: "${notes}"`;
-
-            logAction(`Check-Out Complete: Room ${rm.id} vacated by ${rm.guest.name}. ${surveySummary}. Room set to Dirty.`, "log-danger");
-            
-            rm.status = "Available";
-            rm.guest = null;
-
-            renderHotelGrid();
-            selectRoomTarget(rm.id);
-            validateSpaRoom(); 
-        }
-
-
-        /* ================= SPA CORE ENGINE WITH PRIVILEGE DISCOUNTS ================= */
-
-        function validateSpaRoom() {
-            const inputId = parseInt(document.getElementById("spaRoomId").value);
-            const errBox = document.getElementById("spaValidationError");
-            const adultsInput = document.getElementById("spaAdultsCount");
-            const attendeesContainer = document.getElementById("spaAttendeesContainer");
-            const quoteBox = document.getElementById("spaQuoteBox");
-            const submitBtn = document.getElementById("spaSubmitBtn");
-
-            errBox.style.display = "none";
-            attendeesContainer.innerHTML = "";
-            quoteBox.style.display = "none";
-            submitBtn.disabled = true;
-
-            if (isNaN(inputId)) {
-                adultsInput.disabled = true;
-                return;
-            }
-
-            const targetRoom = roomsDb.find(r => r.id === inputId);
-
-            if (!targetRoom || targetRoom.status !== "Occupied") {
-                errBox.innerText = `❌ Spa Booking Error: Room ${inputId} is empty or doesn't exist in the systems directory.`;
-                errBox.style.display = "block";
-                adultsInput.disabled = true;
-                return;
-            }
-
-            adultsInput.disabled = false;
-            adultsInput.max = targetRoom.guest.adults; 
-            
-            if (parseInt(adultsInput.value) > targetRoom.guest.adults) {
-                adultsInput.value = targetRoom.guest.adults;
-            }
-
-            generateSpaAttendeesFields();
-        }
-
-        function generateSpaAttendeesFields() {
-            const inputId = parseInt(document.getElementById("spaRoomId").value);
-            const adultsCount = parseInt(document.getElementById("spaAdultsCount").value) || 0;
-            const targetRoom = roomsDb.find(r => r.id === inputId);
-            const errBox = document.getElementById("spaValidationError");
-            const container = document.getElementById("spaAttendeesContainer");
-            const submitBtn = document.getElementById("spaSubmitBtn");
-            const quoteBox = document.getElementById("spaQuoteBox");
-            const spaDiscountPct = parseInt(document.getElementById("spaDiscount").value) || 0;
-            const authInput = document.getElementById("spaVerificationInput").value;
-
-            container.innerHTML = "";
-            errBox.style.display = "none";
-
-            if (!targetRoom || targetRoom.status !== "Occupied") return;
-
-            if (adultsCount > targetRoom.guest.adults) {
-                errBox.innerText = `⚠️ Count Overflow: Selected spa guest count (${adultsCount}) exceeds total adults checked into Room ${targetRoom.id}.`;
-                errBox.style.display = "block";
-                submitBtn.disabled = true;
-                quoteBox.style.display = "none";
-                return;
-            }
-
-            let isVerified = true;
-            if (spaDiscountPct === 10 && authInput.trim().length === 0) isVerified = false;
-            if (spaDiscountPct === 15 && authInput.trim().length === 0) isVerified = false;
-            if (spaDiscountPct === 20 && authInput !== "jab123") isVerified = false;
-
-            if (!isVerified && spaDiscountPct > 0) {
-                errBox.innerText = spaDiscountPct === 20 ? "❌ Invalid/Missing Spa Manager Security Override Password." : "⚠️ Identification credentials/Member references string missing spa input parameters.";
-                errBox.style.display = "block";
-                submitBtn.disabled = true;
-                quoteBox.style.display = "none";
-                return;
-            }
-
-            if (adultsCount <= 0) {
-                submitBtn.disabled = true;
-                quoteBox.style.display = "none";
-                return;
-            }
-
-            for (let i = 1; i <= adultsCount; i++) {
-                const row = document.createElement("div");
-                row.className = "form-row";
-                row.innerHTML = `
-                    <div class="form-group">
-                        <label>Attendee #${i} Name</label>
-                        <input type="text" class="spa-name-input" required placeholder="Guest Name ${i}" value="${i === 1 ? targetRoom.guest.name : ''}">
-                    </div>
-                    <div class="form-group">
-                        <label>Treatment Type</label>
-                        <select class="spa-type-select" onchange="calculateLiveSpaQuote()">
-                            <option value="60">60 Min Treatment Session - 50 JOD</option>
-                            <option value="120">120 Min Treatment Session - 90 JOD</option>
-                        </select>
-                    </div>
-                `;
-                container.appendChild(row);
-            }
-
-            submitBtn.disabled = false;
-            calculateLiveSpaQuote();
-        }
-
-        function calculateLiveSpaQuote() {
-            const typeSelectors = document.querySelectorAll(".spa-type-select");
-            const quoteBox = document.getElementById("spaQuoteBox");
-            const spaDiscountPct = parseInt(document.getElementById("spaDiscount").value) || 0;
-            
-            let baseSpaTotal = 0;
-            typeSelectors.forEach(sel => {
-                baseSpaTotal += spaPrices[sel.value];
-            });
-
-            let discountAmount = baseSpaTotal * (spaDiscountPct / 100);
-            let finalSpaTotal = baseSpaTotal - discountAmount;
-
-            quoteBox.innerHTML = `
-                <strong>Oasis Spa Session Quote Estimate:</strong><br>
-                Gross Spa Total Base Price: ${baseSpaTotal} JOD<br>
-                Spa Privilege Promotion Discount: -${discountAmount.toFixed(0)} JOD (${spaDiscountPct}%)<br>
-                <strong>Total Net Spa Cost to Post: <span style="color:var(--spa-color);">${finalSpaTotal.toFixed(0)} JOD</span></strong>
-            `;
-            quoteBox.style.display = "block";
-        }
-
-        function processSpaBooking(e) {
+        // Handle Form Submissions to simulate inserting rows dynamically into DB
+        function createNewIncident(e) {
             e.preventDefault();
-            const inputId = parseInt(document.getElementById("spaRoomId").value);
-            const targetRoom = roomsDb.find(r => r.id === inputId);
-            const spaDiscountPct = parseInt(document.getElementById("spaDiscount").value) || 0;
             
-            if (!targetRoom || targetRoom.status !== "Occupied") return;
-
-            const nameInputs = document.querySelectorAll(".spa-name-input");
-            const typeSelectors = document.querySelectorAll(".spa-type-select");
+            const time = new Date().toTimeString().split(' ')[0].substring(0,5);
+            const incNum = '#2026-' + Math.floor(100 + Math.random() * 900);
+            const location = document.getElementById('form-location').value;
+            const type = document.getElementById('form-type').value;
+            const priority = document.getElementById('form-priority').value;
             
-            let baseSpaTotal = 0;
-            let detailsArray = [];
+            let priColor = 'var(--success)';
+            if(priority === 'CRITICAL') priColor = 'var(--emergency)';
+            if(priority === 'HIGH') priColor = 'var(--warning)';
 
-            nameInputs.forEach((inp, idx) => {
-                const duration = typeSelectors[idx].value;
-                baseSpaTotal += spaPrices[duration];
-                detailsArray.push(`${inp.value} [${duration} Mins]`);
-            });
+            const randomUnits = ['1A12', '1B20', 'ENG 9', 'MEDIC 4', 'MEDIC 9'];
+            const assignedUnit = randomUnits[Math.floor(Math.random() * randomUnits.length)];
+            const unitTypeClass = assignedUnit.includes('1') ? 'badge-pd' : (assignedUnit.includes('ENG') ? 'badge-fd' : 'badge-ems');
+            const unitDept = assignedUnit.includes('1') ? 'POLICE' : (assignedUnit.includes('ENG') ? 'FIRE' : 'EMS');
 
-            let discountAmount = baseSpaTotal * (spaDiscountPct / 100);
-            let finalCost = baseSpaTotal - discountAmount;
+            const tableBody = document.getElementById('incident-table-body');
+            const newRow = document.createElement('tr');
+            
+            newRow.innerHTML = `
+                <td>${incNum}</td>
+                <td>${time}</td>
+                <td style="color: ${priColor}; font-weight: bold;">${priority.substring(0,4)}</td>
+                <td>${type}</td>
+                <td>${location}</td>
+                <td class="status-disp" style="animation: blink 1.5s infinite">DISPATCHED</td>
+                <td><span class="badge ${unitTypeClass}">${assignedUnit}</span></td>
+            `;
+            
+            // Insert at the top of active terminal display logs
+            tableBody.insertBefore(newRow, tableBody.firstChild);
+            
+            // Clear inputs after clean dispatch commit
+            document.getElementById('incident-form').reset();
+            alert(`SYSTEM ALERT: Incident ${incNum} logged successfully. ${assignedUnit} routed.`);
+        }
 
-            targetRoom.guest.spaOrders.push({
-                partySize: nameInputs.length,
-                details: detailsArray.join(", "),
-                cost: finalCost,
-                discText: spaDiscountPct > 0 ? `${spaDiscountPct}% Spa Promo Applied` : 'Rack Rate'
-            });
-
-            logAction(`💆 Spa Charge Posted: ${finalCost.toFixed(0)} JOD posted to Room ${targetRoom.id} account ledger. Balance modified.`, "log-spa");
-
-            // Reset Spa input fields safely
-            document.getElementById("spaForm").reset();
-            document.getElementById("spaAttendeesContainer").innerHTML = "";
-            document.getElementById("spaQuoteBox").style.display = "none";
-            document.getElementById("spaSubmitBtn").disabled = true;
-            document.getElementById("spaAdultsCount").disabled = true;
-            document.getElementById("spaVerificationContainer").style.display = "none";
-
-            if (activeRoomId === targetRoom.id) {
-                renderOccupiedBill(targetRoom);
-                validateCheckoutRequirements();
+        // Mock NCIC Database verification function
+        function searchNCIC() {
+            const query = document.getElementById('ncic-query').value.toUpperCase().trim();
+            const resultsDiv = document.getElementById('ncic-results');
+            
+            if(!query) {
+                resultsDiv.innerHTML = "⚠️ ERROR: Empty prompt string.";
+                return;
             }
-        }
 
-        function logAction(msg, cssClass = "") {
-            const logBox = document.getElementById("sysAuditLog");
-            const row = document.createElement("div");
-            row.className = cssClass;
-            row.innerText = `[${new Date().toLocaleTimeString()}] ${msg}`;
-            logBox.insertBefore(row, logBox.firstChild);
+            resultsDiv.innerHTML = "⏳ SCANNING REPOSITORIES...";
+            
+            setTimeout(() => {
+                if(query.match(/[0-9]/) && query.length < 8) {
+                    // Looks like a plate lookup
+                    resultsDiv.innerHTML = `🚨 <b>NCIC HIT [PLATE: ${query}]</b><br>Vehicle: 2018 Black Dodge Charger<br>Owner: Miller, Marcus R.<br>Warrants: ACTIVE FELONY WARRANT (Armed & Dangerous)`;
+                    resultsDiv.style.color = "var(--emergency)";
+                } else {
+                    // Looks like a name or random text
+                    resultsDiv.innerHTML = `✅ <b>NCIC CLEAR [QUERY: ${query}]</b><br>No active alerts, protection orders, or stolen asset records matching parameter.`;
+                    resultsDiv.style.color = "var(--success)";
+                }
+            }, 800);
         }
-
-        renderHotelGrid();
     </script>
 </body>
 </html>
