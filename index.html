@@ -3,512 +3,429 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Emergency Command Center - CAD v4.2</title>
+    <title>Global Intelligence Database (GRID)</title>
+    <!-- Tailwind CSS for modern, clean UI layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root {
-            --bg-main: #0a0f1d;
-            --bg-card: #131a30;
-            --bg-input: #1b2440;
-            --text-main: #e2e8f0;
-            --text-muted: #64748b;
-            --primary: #3b82f6;
-            --emergency: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-            --border: #24335c;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Courier New', Courier, monospace, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-main);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* --- HEADER --- */
-        header {
-            background-color: #05070f;
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--emergency);
-        }
-
-        .system-status {
-            display: flex;
-            gap: 20px;
-            font-size: 14px;
-        }
-
-        .status-indicator {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
-
-        .dot.blink {
-            animation: blink 1s infinite;
-        }
-
-        @keyframes blink {
-            50% { opacity: 0.3; }
-        }
-
-        /* --- MAIN LAYOUT --- */
-        .wrapper {
-            display: grid;
-            grid-template-columns: 320px 1fr 380px;
-            flex: 1;
-            overflow: hidden;
-            gap: 10px;
-            padding: 10px;
-        }
-
-        /* --- PANELS --- */
-        .panel {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .panel-header {
-            background-color: #0e1424;
-            padding: 10px;
-            font-weight: bold;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border);
-            letter-spacing: 1px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .panel-body {
-            padding: 15px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        /* --- FORMS & INPUTS --- */
-        .form-group {
-            margin-bottom: 12px;
-        }
-
-        label {
-            display: block;
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            font-weight: bold;
-        }
-
-        input, select, textarea {
-            width: 100%;
-            background-color: var(--bg-input);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 8px;
-            border-radius: 4px;
-            font-size: 13px;
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
-        }
-
-        .btn {
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-weight: bold;
-            text-transform: uppercase;
-            width: 100%;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background-color: #2563eb;
-        }
-
-        .btn-danger {
-            background-color: var(--emergency);
-        }
-        .btn-danger:hover {
-            background-color: #dc2626;
-        }
-
-        /* --- CALL QUEUE & TABLES --- */
-        .call-card {
-            background-color: #1a233d;
-            border-left: 4px solid var(--warning);
-            padding: 10px;
-            margin-bottom: 10px;
-            border-radius: 0 4px 4px 0;
-            cursor: pointer;
-        }
-
-        .call-card.priority-high {
-            border-left-color: var(--emergency);
-            animation: pulse-border 2s infinite;
-        }
-
-        @keyframes pulse-border {
-            50% { border-left-color: #7f1d1d; }
-        }
-
-        .cad-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            text-align: left;
-        }
-
-        .cad-table th {
-            background-color: #0e1424;
-            color: var(--text-muted);
-            padding: 8px;
-            text-transform: uppercase;
-        }
-
-        .cad-table td {
-            padding: 8px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .cad-table tr:hover {
-            background-color: #17203a;
-        }
-
-        /* --- UNIT BADGES --- */
-        .badge {
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 10px;
-            font-weight: bold;
-        }
-        .badge-pd { background-color: #1e3a8a; color: #93c5fd; }
-        .badge-fd { background-color: #7f1d1d; color: #fca5a5; }
-        .badge-ems { background-color: #064e3b; color: #6ee7b7; }
-        
-        .status-avail { color: var(--success); }
-        .status-disp { color: var(--warning); }
-        .status-or { color: var(--emergency); }
-
-        /* --- UTILITIES --- */
-        .flex-row {
-            display: flex;
-            gap: 10px;
-        }
-        .flex-row > * {
-            flex: 1;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1f2937; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 3px; }
     </style>
 </head>
-<body>
+<body class="bg-gray-950 text-gray-100 font-sans h-screen overflow-hidden">
 
-    <header>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <h1 style="font-size: 20px; color: var(--emergency);">METRO CAD</h1>
-            <span style="color: var(--text-muted);">|</span>
-            <span style="font-weight: bold;">OPERATOR TERMINAL #14</span>
-        </div>
-        <div class="system-status">
-            <div class="status-indicator">
-                <span class="dot blink"></span>
-                <span>NCIC DATABASE: CONNECTED</span>
-            </div>
-            <div class="status-indicator">
-                <span class="dot" style="background-color: var(--success); box-shadow: 0 0 8px var(--success);"></span>
-                <span>GPS LINK: ACTIVE</span>
-            </div>
-            <div id="clock" style="font-weight: bold; color: var(--warning);">00:00:00</div>
-        </div>
-    </header>
-
-    <div class="wrapper">
-        
-        <div class="panel">
-            <div class="panel-header">
-                <span>911 Live Call Intake</span>
-                <span style="color: var(--emergency); font-size: 12px;">● LIVE VOICE</span>
-            </div>
-            <div class="panel-body">
-                <div class="call-card priority-high" onclick="populateCall('911-8831', '455 NW 8th Ave', 'Domestic Dispute / Weapon Present', 'Caller states verbal fight escalated. Husband has a handgun in waistband.')">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="font-weight: bold; color: var(--emergency);">[PRIORITY 1] 911-8831</span>
-                        <span>02:14m</span>
-                    </div>
-                    <div style="font-size: 12px; color: var(--text-main);">455 NW 8th Ave</div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">Assault / Weapon Present</div>
+    <!-- ================= LOGIN PAGE ================= -->
+    <div id="login-page" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 px-4">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(30,41,59,0.5)_0%,rgba(2,6,23,1)_100%)]"></div>
+        <div class="relative w-full max-w-md bg-slate-900/80 border border-slate-800 rounded-xl p-8 shadow-2xl backdrop-blur-md">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 mb-4 text-2xl animate-pulse">
+                    <i class="fa-solid fa-shield-halved"></i>
                 </div>
-
-                <div class="call-card" onclick="populateCall('911-9012', 'I-95 Southbound MM 12', 'MVA - Multi-Vehicle Accident', '3 car collision. No severe injuries reported yet, fluid leaking on roadway.')">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="font-weight: bold; color: var(--warning);">[PRIORITY 2] 911-9012</span>
-                        <span>00:45m</span>
+                <h1 class="text-2xl font-bold tracking-wider text-slate-200">G.R.I.D. SYSTEM</h1>
+                <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">Global Intelligence Database</p>
+            </div>
+            
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Operator Username</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-user-secret"></i></span>
+                        <input type="text" id="username" required class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors" placeholder="Enter credential ID">
                     </div>
-                    <div style="font-size: 12px; color: var(--text-main);">I-95 Southbound MM 12</div>
-                    <div style="font-size: 11px; color: var(--text-muted); margin-top: 3px;">MVA / Traffic Blockage</div>
                 </div>
-
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 15px 0;">
-                
-                <form id="incident-form" onsubmit="createNewIncident(event)">
-                    <h3 style="font-size: 13px; text-transform: uppercase; margin-bottom: 10px; color: var(--primary);">Incident Generation</h3>
-                    <div class="form-group">
-                        <label>Call ID / Phone</label>
-                        <input type="text" id="form-call-id" placeholder="Auto-generated or Manual Entry">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Access Passphrase</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500"><i class="fa-solid fa-lock"></i></span>
+                        <input type="password" id="password" required class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500 transition-colors" placeholder="••••••••">
                     </div>
-                    <div class="form-group">
-                        <label>Location / Cross Streets</label>
-                        <input type="text" id="form-location" required placeholder="e.g., 123 Main St / Broad Rd">
-                    </div>
-                    <div class="flex-row">
-                        <div class="form-group">
-                            <label>Call Type</label>
-                            <select id="form-type">
-                                <option value="10-10">10-10 Fight in Progress</option>
-                                <option value="10-15">10-15 Disturbance</option>
-                                <option value="10-43">10-43 Medical Emergency</option>
-                                <option value="10-70">10-70 Fire Alarm</option>
-                                <option value="MVA">Motor Vehicle Accident</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Priority</label>
-                            <select id="form-priority">
-                                <option value="CRITICAL">1 - Critical</option>
-                                <option value="HIGH">2 - High</option>
-                                <option value="ROUTINE">3 - Routine</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Call Log / Dispatcher Notes</label>
-                        <textarea id="form-notes" rows="4" placeholder="Compiling caller statements..."></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-danger">Dispatch & Log Incident</button>
-                </form>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-header">Master Incident Database Log (Active Shifts)</div>
-            <div class="panel-body" style="padding: 0;">
-                <table class="cad-table">
-                    <thead>
-                        <tr>
-                            <th>INC #</th>
-                            <th>TIME</th>
-                            <th>PRI</th>
-                            <th>TYPE</th>
-                            <th>LOCATION</th>
-                            <th>STATUS</th>
-                            <th>DISPATCHED</th>
-                        </tr>
-                    </thead>
-                    <tbody id="incident-table-body">
-                        <tr>
-                            <td>#2026-089</td>
-                            <td>18:12</td>
-                            <td style="color: var(--emergency);">CRIT</td>
-                            <td>10-10 Fight</td>
-                            <td>2200 Block Elm St</td>
-                            <td class="status-or">ON SCENE</td>
-                            <td><span class="badge badge-pd">UNIT 1A12</span></td>
-                        </tr>
-                        <tr>
-                            <td>#2026-088</td>
-                            <td>18:05</td>
-                            <td style="color: var(--warning);">HIGH</td>
-                            <td>10-43 Medical</td>
-                            <td>89 Highland Apts</td>
-                            <td class="status-disp">EN ROUTE</td>
-                            <td><span class="badge badge-ems">MEDIC 4</span></td>
-                        </tr>
-                        <tr>
-                            <td>#2026-087</td>
-                            <td>17:44</td>
-                            <td style="color: var(--success);">ROUT</td>
-                            <td>10-70 Fire</td>
-                            <td>104 Industrial Pkwy</td>
-                            <td class="status-avail">CLEAR</td>
-                            <td><span class="badge badge-fd">ENG 9</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="panel">
-            <div class="panel-header">Active Active Units & NCIC Look-up</div>
-            <div class="panel-body">
-                <div style="background-color: #0d1222; padding: 10px; border-radius: 4px; border: 1px dashed var(--border); margin-bottom: 15px;">
-                    <label style="color: var(--primary);">NCIC Plate / Name Queries</label>
-                    <div class="flex-row" style="margin-top: 5px;">
-                        <input type="text" id="ncic-query" placeholder="Enter License Plate or Name...">
-                        <button onclick="searchNCIC()" class="btn" style="width: auto; padding: 0 15px;">Query</button>
-                    </div>
-                    <div id="ncic-results" style="font-size: 11px; margin-top: 8px; color: var(--text-muted);">System ready for remote background check check...</div>
                 </div>
-
-                <h3 style="font-size: 13px; text-transform: uppercase; margin-bottom: 10px;">Unit Status Matrix</h3>
-                
-                <table class="cad-table" style="font-size: 11px;">
-                    <thead>
-                        <tr>
-                            <th>UNIT</th>
-                            <th>DEPT</th>
-                            <th>ASSIGNMENT / AREA</th>
-                            <th>STATUS</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><b>1A12</b></td>
-                            <td><span class="badge badge-pd">POLICE</span></td>
-                            <td>Sector 3 East Patrol</td>
-                            <td class="status-or">BUSY/OS</td>
-                        </tr>
-                        <tr>
-                            <td><b>1B20</b></td>
-                            <td><span class="badge badge-pd">POLICE</span></td>
-                            <td>Traffic Enforcement</td>
-                            <td class="status-avail">AVAILABLE</td>
-                        </tr>
-                        <tr>
-                            <td><b>ENG 9</b></td>
-                            <td><span class="badge badge-fd">FIRE</span></td>
-                            <td>Station 9 Hazmat Team</td>
-                            <td class="status-avail">AVAILABLE</td>
-                        </tr>
-                        <tr>
-                            <td><b>MEDIC 4</b></td>
-                            <td><span class="badge badge-ems">EMS</span></td>
-                            <td>Metro West ALS Unit</td>
-                            <td class="status-disp">DISPATCHED</td>
-                        </tr>
-                        <tr>
-                            <td><b>MEDIC 9</b></td>
-                            <td><span class="badge badge-ems">EMS</span></td>
-                            <td>Metro East BLS Unit</td>
-                            <td class="status-avail">AVAILABLE</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+                <div id="login-error" class="hidden text-xs text-rose-500 font-medium bg-rose-500/10 border border-rose-500/20 rounded px-3 py-2">
+                    <i class="fa-solid fa-triangle-exclamation mr-1.5"></i> Invalid Operator Credentials. Access Denied.
+                </div>
+                <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-slate-950 font-bold uppercase tracking-wider text-xs py-3 rounded-lg shadow-lg shadow-amber-950/20 transition-all duration-200">
+                    Authorize Access
+                </button>
+            </form>
         </div>
-
     </div>
 
+    <!-- ================= MAIN APP CONTAINER ================= -->
+    <div id="app-container" class="hidden h-full flex flex-col">
+        <!-- Top Navigation Header -->
+        <header class="bg-slate-900 border-b border-slate-800 h-16 flex items-center justify-between px-6 shrink-0">
+            <div class="flex items-center space-x-3">
+                <i class="fa-solid fa-shield-halved text-amber-500 text-xl"></i>
+                <span class="font-bold tracking-wider text-sm uppercase text-slate-200">GRID // Mainframe Terminal</span>
+                <span class="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded text-[10px] uppercase font-bold tracking-wider">Secure Connection</span>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="text-right">
+                    <p class="text-xs font-semibold text-slate-300">Operator: <span class="text-amber-500">jaber</span></p>
+                    <p class="text-[10px] text-slate-500 uppercase tracking-wider">Clearance: Level 4 (Internal Security)</p>
+                </div>
+                <button id="logout-btn" class="text-xs font-semibold uppercase bg-slate-800 hover:bg-rose-950/40 hover:text-rose-400 border border-slate-700 hover:border-rose-900/50 px-3 py-1.5 rounded transition-all">
+                    <i class="fa-solid fa-right-from-bracket mr-1.5"></i>Disconnect
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <div class="flex flex-1 overflow-hidden">
+            <!-- Sidebar: Navigation & Metrics -->
+            <aside class="w-80 bg-slate-900/50 border-r border-slate-800 p-6 flex flex-col space-y-6 shrink-0 overflow-y-auto custom-scrollbar">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Search Registry</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500 text-xs"><i class="fa-solid fa-magnifying-glass"></i></span>
+                        <input type="text" id="search-input" class="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-amber-500" placeholder="Filter by name, ID, flag...">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">System Status Flags</label>
+                    <div class="space-y-1" id="filter-container">
+                        <button data-filter="all" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between bg-slate-800 border border-slate-700 text-amber-500 filter-btn">
+                            <span>All Records</span><span id="count-all" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px]">0</span>
+                        </button>
+                        <button data-filter="High Risk" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between hover:bg-slate-800 border border-transparent text-rose-400 filter-btn">
+                            <span>High Risk (Flagged)</span><span id="count-high" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px] text-rose-400">0</span>
+                        </button>
+                        <button data-filter="Moderate Risk" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between hover:bg-slate-800 border border-transparent text-amber-400 filter-btn">
+                            <span>Moderate Flags</span><span id="count-mod" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px] text-amber-400">0</span>
+                        </button>
+                        <button data-filter="Clear / Nominal" class="w-full text-left text-xs px-3 py-2 rounded font-medium flex justify-between hover:bg-slate-800 border border-transparent text-emerald-400 filter-btn">
+                            <span>Nominal / Clear</span><span id="count-clear" class="bg-slate-950 px-1.5 py-0.5 rounded text-[10px] text-emerald-400">0</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="border-t border-slate-800/80 pt-4 flex-1 flex flex-col justify-end">
+                    <div class="bg-slate-950 border border-slate-800/60 rounded-lg p-4 text-[11px] font-mono text-slate-400 space-y-2">
+                        <div class="flex justify-between"><span class="text-slate-600">SYS_CORE:</span><span class="text-emerald-500">ACTIVE</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">DB_INTEGRITY:</span><span>100% OK</span></div>
+                        <div class="flex justify-between"><span class="text-slate-600">ENC_ALGO:</span><span>AES-256-GCM</span></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Middle Panel: Directory Master List -->
+            <section class="w-96 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
+                <div class="p-4 border-b border-slate-800 bg-slate-900/30 flex justify-between items-center">
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-400">Subject Registry Directory</h2>
+                    <span id="visible-count" class="text-[10px] text-slate-500 font-mono">Showing 0 profiles</span>
+                </div>
+                <div id="profile-list" class="flex-1 overflow-y-auto custom-scrollbar divide-y divide-slate-900">
+                    <!-- Dynamic profiles insert here -->
+                </div>
+            </section>
+
+            <!-- Right Panel: Profile Detail Presentation -->
+            <main id="profile-detail" class="flex-1 bg-slate-950 overflow-y-auto custom-scrollbar p-8 relative">
+                <!-- Initial default state -->
+                <div id="detail-placeholder" class="absolute inset-0 flex flex-col items-center justify-center text-center p-6">
+                    <i class="fa-solid fa-id-card text-5xl text-slate-800 mb-4 animate-pulse"></i>
+                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider">No Profile Selected</h3>
+                    <p class="text-xs text-slate-600 mt-1 max-w-xs">Select an intelligence target profile from the left registry directory to inspect detailed telemetry, anomalies, and logs.</p>
+                </div>
+
+                <!-- Profile Data Presentation (Hidden by default) -->
+                <div id="detail-content" class="hidden space-y-8 max-w-4xl">
+                    <!-- Summary Top Block -->
+                    <div class="flex items-start justify-between border-b border-slate-800 pb-6">
+                        <div class="flex items-center space-x-5">
+                            <img id="det-photo" src="" alt="Subject Portrait" class="w-24 h-24 rounded-lg object-cover border-2 border-slate-700 bg-slate-900">
+                            <div>
+                                <h2 id="det-name" class="text-2xl font-bold tracking-wide text-slate-100">---</h2>
+                                <p class="text-xs text-slate-400 font-mono mt-0.5">UID: <span id="det-uid" class="text-amber-500">---</span></p>
+                                <div class="flex items-center gap-2 mt-3">
+                                    <span id="det-badge-risk" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">---</span>
+                                    <span id="det-badge-clearance" class="px-2 py-0.5 bg-slate-800 text-slate-300 border border-slate-700 rounded text-[10px] font-mono">---</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Core Grid Layout -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Left Block: Demographic Context -->
+                        <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 space-y-4">
+                            <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider border-b border-slate-800 pb-2 flex items-center">
+                                <i class="fa-solid fa-circle-user mr-2 text-slate-500"></i>Demographic & Civil Status
+                            </h3>
+                            <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Gender</span><span id="det-gender" class="text-slate-200 font-medium">---</span></div>
+                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Age / DOB</span><span id="det-dob" class="text-slate-200 font-medium">---</span></div>
+                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Primary Nationality</span><span id="det-nationality" class="text-slate-200 font-medium">---</span></div>
+                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Current Location</span><span id="det-location" class="text-slate-200 font-medium">---</span></div>
+                                <div class="col-span-2"><span class="block text-[10px] text-slate-500 uppercase font-mono">Registered Occupation</span><span id="det-occupation" class="text-slate-200 font-medium">---</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Right Block: Operational Overview -->
+                        <div class="bg-slate-900/40 border border-slate-800/80 rounded-xl p-5 space-y-4">
+                            <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider border-b border-slate-800 pb-2 flex items-center">
+                                <i class="fa-solid fa-fingerprint mr-2 text-slate-500"></i>Operational Overview
+                            </h3>
+                            <div class="grid grid-cols-2 gap-y-3 gap-x-4 text-xs">
+                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Estimated Worth</span><span id="det-networth" class="text-slate-200 font-mono">---</span></div>
+                                <div><span class="block text-[10px] text-slate-500 uppercase font-mono">Passport Index</span><span id="det-passport" class="text-slate-200 font-mono">---</span></div>
+                                <div class="col-span-2"><span class="block text-[10px] text-slate-500 uppercase font-mono">Observed Primary Affiliation</span><span id="det-affiliation" class="text-slate-200 font-medium">---</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Discovered Anomaly Alerts (Automatic Flags) -->
+                    <div class="bg-slate-900/30 border border-amber-900/30 rounded-xl p-5 space-y-3">
+                        <h3 class="text-xs font-bold uppercase text-amber-500 tracking-wider flex items-center">
+                            <i class="fa-solid fa-triangle-exclamation mr-2"></i>System-Engineered Flag Discrepancies
+                        </h3>
+                        <div id="det-flags" class="space-y-2">
+                            <!-- Injected by JS code -->
+                        </div>
+                    </div>
+
+                    <!-- Background dossier narration summaries -->
+                    <div class="space-y-3">
+                        <h3 class="text-xs font-bold uppercase text-slate-400 tracking-wider flex items-center">
+                            <i class="fa-solid fa-file-invoice mr-2 text-slate-500"></i>Intelligence Assessment Narrative
+                        </h3>
+                        <p id="det-narrative" class="text-xs text-slate-400 leading-relaxed bg-slate-900/20 border border-slate-800/50 rounded-xl p-5 font-sans">
+                            ---
+                        </p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- ================= SYSTEM APPLICATION SCRIPT (DATA & LOGIC) ================= -->
     <script>
-        // Update live operating system clock
-        function updateClock() {
-            const now = new Date();
-            const timeString = now.toTimeString().split(' ')[0];
-            document.getElementById('clock').textContent = 'ZULU TIME: ' + timeString;
+        // Authentication Configuration Constraints
+        const CREDS = { user: "jaber", pass: "jaber123" };
+
+        // Lists used to structurally construct diverse database assets cleanly
+        const firstNamesMale = ["Liam", "Alexander", "Marcus", "Viktor", "Elena", "Mateo", "Kenji", "Tariq", "Dmitry", "Ethan", "Gabriel", "Omar", "Carlos", "Siddharth", "Hans"];
+        const firstNamesFemale = ["Sophia", "Anya", "Natasha", "Amara", "Yuki", "Chloe", "Fatima", "Isabella", "Mei", "Zara", "Olivia", "Sonia", "Katarina", "Ingrid", "Layla"];
+        const lastNames = ["Vance", "Kovacs", "Chen", "Volkov", "Rodriguez", "Al-Saeed", "Tanaka", "Gomez", "Mercer", "Petrov", "Sterling", "Bakir", "Zimmer", "Nakamura", "Morozov"];
+        const nationalities = ["United States", "Russian Federation", "United Kingdom", "Germany", "Japan", "United Arab Emirates", "Canada", "Brazil", "France", "Australia", "Singapore"];
+        const urbanCenters = ["New York, USA", "Moscow, Russia", "London, UK", "Berlin, Germany", "Tokyo, Japan", "Dubai, UAE", "Paris, France", "Sydney, Australia", "Sao Paulo, Brazil"];
+        const occupations = ["Logistics Contractor", "Financial Asset Consultant", "Software Infrastructure Architect", "Maritime Broker", "Non-Governmental Coordinator", "Research Lead", "Risk Underwriter", "Independent Journalist"];
+        const affiliations = ["Global Logistics Group", "Independent Syndicate Cluster", "Continental Development Corp", "Frontier Resource Consortium", "Unclassified Civil Actor", "Aegis Threat Matrix Watchlist"];
+
+        const narrativeProfiles = [
+            "Subject routinely interacts with various high-value cross-border financial sectors. Shows unusual patterns of asset relocation to off-shore entities.",
+            "Subject's travel data reveals inconsistent intervals across international industrial transit nodes. Maintained zero static residency over the past fiscal quarter.",
+            "Civil and employment background flags indicate persistent encrypted communications using decentralized infrastructure networks.",
+            "Subject shows an entirely unblemished public file matching high-profile civil records, but anomalous discrepancies exist within domestic transactional records.",
+            "Monitored accounts show immediate spikes in off-hours encrypted data volume matching global digital market shift cycles.",
+            "Subject is currently flagged due to deep ties to defunct infrastructural enterprises whose physical assets are entirely unaccounted for.",
+            "Maintains normal public profile, though historical custom tracking alerts indicate multiple passport registries assigned to overlapping regional travel entries.",
+            "Subject acts as an intermediary node for private capital holding organizations. Marked by sharp asset liquidations prior to local market structural transformations."
+        ];
+
+        // Seed data initialization array
+        let internalDatabaseRegistry = [];
+
+        function generateMockDatabase() {
+            for (let i = 1; i <= 75; i++) {
+                const gender = Math.random() > 0.45 ? "Male" : "Female";
+                const firstName = gender === "Male" ? firstNamesMale[Math.floor(Math.random() * firstNamesMale.length)] : firstNamesFemale[Math.floor(Math.random() * firstNamesFemale.length)];
+                const lastName = lastNames[Math.floor(Math.random() * lastNames.length)];
+                const name = `${firstName} ${lastName}`;
+                
+                const age = Math.floor(Math.random() * 38) + 24;
+                const year = 2026 - age;
+                const dob = `${year}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`;
+                
+                // Deterministic stock profile image configuration assignment
+                const imageSeed = (gender === "Male" ? 10 + i : 50 + i);
+                const photoUrl = `https://picsum.photos/id/${imageSeed}/300/300`;
+
+                // Risk Allocation tier logic definitions
+                const randTier = Math.random();
+                let riskAssessment = "Clear / Nominal";
+                if (randTier > 0.75) riskAssessment = "High Risk";
+                else if (randTier > 0.35) riskAssessment = "Moderate Risk";
+
+                // Formulate logical realistic system anomalies for flagging UI engine
+                let systemFlags = [];
+                if (riskAssessment === "High Risk") {
+                    systemFlags.push({ typ: "CRITICAL", msg: "Unexplained off-shore shell structural wealth influx ($2.4M USD equivalent)." });
+                    systemFlags.push({ typ: "ANOMALY", msg: "Simultaneous customs entry check logs recorded in separate municipal sectors within 48 hours." });
+                    systemFlags.push({ typ: "SECURITY", msg: "Active operational correlation indexes match unvouched satellite network relays." });
+                } else if (riskAssessment === "Moderate Risk") {
+                    if (Math.random() > 0.5) {
+                        systemFlags.push({ typ: "WARNING", msg: "Persistent modifications to verified primary identification documents reported." });
+                    } else {
+                        systemFlags.push({ typ: "ANOMALY", msg: "Sudden closure of standard domestic commercial financial accounts." });
+                        systemFlags.push({ typ: "STABILITY", msg: "Frequent travel anomalies mapping to volatile sovereign logistics lanes." });
+                    }
+                } else {
+                    systemFlags.push({ typ: "NOMINAL", msg: "No structural anomalies detected. Behavioral indicators within base normal thresholds." });
+                }
+
+                internalDatabaseRegistry.push({
+                    uid: `GRID-NX-${8100 + i}`,
+                    name: name,
+                    gender: gender,
+                    dob: `${dob} (Age ${age})`,
+                    photo: photoUrl,
+                    nationality: nationalities[Math.floor(Math.random() * nationalities.length)],
+                    location: urbanCenters[Math.floor(Math.random() * urbanCenters.length)],
+                    occupation: occupations[Math.floor(Math.random() * occupations.length)],
+                    networth: `$${(Math.random() * 8 + 0.2).toFixed(1)}M USD`,
+                    passport: `PP-${Math.floor(Math.random() * 899999 + 100000)}`,
+                    affiliation: affiliations[Math.floor(Math.random() * affiliations.length)],
+                    risk: riskAssessment,
+                    clearance: riskAssessment === "High Risk" ? "Restricted / Intercept" : riskAssessment === "Moderate Risk" ? "Monitored Access" : "General Access",
+                    flags: systemFlags,
+                    narrative: narrativeProfiles[Math.floor(Math.random() * narrativeProfiles.length)] + " Detailed investigative verification protocols are currently managed by local sector operations command nodes under standard oversight guidelines."
+                });
+            }
         }
-        setInterval(updateClock, 1000);
-        updateClock();
 
-        // Feed quick data from calls into the active inputs
-        function populateCall(callId, location, type, notes) {
-            document.getElementById('form-call-id').value = callId;
-            document.getElementById('form-location').value = location;
-            document.getElementById('form-notes').value = notes;
+        // --- Core View Control Routines ---
+        let selectedFilter = "all";
+        let searchQuery = "";
+
+        function applySystemFilters() {
+            const filtered = internalDatabaseRegistry.filter(p => {
+                const matchesFilter = selectedFilter === "all" || p.risk === selectedFilter;
+                const matchesSearch = p.name.toLowerCase().includes(searchQuery) || 
+                                      p.uid.toLowerCase().includes(searchQuery) ||
+                                      p.location.toLowerCase().includes(searchQuery) ||
+                                      p.risk.toLowerCase().includes(searchQuery);
+                return matchesFilter && matchesSearch;
+            });
+
+            renderDirectoryList(filtered);
+            updateMetricCounters();
         }
 
-        // Handle Form Submissions to simulate inserting rows dynamically into DB
-        function createNewIncident(e) {
-            e.preventDefault();
-            
-            const time = new Date().toTimeString().split(' ')[0].substring(0,5);
-            const incNum = '#2026-' + Math.floor(100 + Math.random() * 900);
-            const location = document.getElementById('form-location').value;
-            const type = document.getElementById('form-type').value;
-            const priority = document.getElementById('form-priority').value;
-            
-            let priColor = 'var(--success)';
-            if(priority === 'CRITICAL') priColor = 'var(--emergency)';
-            if(priority === 'HIGH') priColor = 'var(--warning)';
-
-            const randomUnits = ['1A12', '1B20', 'ENG 9', 'MEDIC 4', 'MEDIC 9'];
-            const assignedUnit = randomUnits[Math.floor(Math.random() * randomUnits.length)];
-            const unitTypeClass = assignedUnit.includes('1') ? 'badge-pd' : (assignedUnit.includes('ENG') ? 'badge-fd' : 'badge-ems');
-            const unitDept = assignedUnit.includes('1') ? 'POLICE' : (assignedUnit.includes('ENG') ? 'FIRE' : 'EMS');
-
-            const tableBody = document.getElementById('incident-table-body');
-            const newRow = document.createElement('tr');
-            
-            newRow.innerHTML = `
-                <td>${incNum}</td>
-                <td>${time}</td>
-                <td style="color: ${priColor}; font-weight: bold;">${priority.substring(0,4)}</td>
-                <td>${type}</td>
-                <td>${location}</td>
-                <td class="status-disp" style="animation: blink 1.5s infinite">DISPATCHED</td>
-                <td><span class="badge ${unitTypeClass}">${assignedUnit}</span></td>
-            `;
-            
-            // Insert at the top of active terminal display logs
-            tableBody.insertBefore(newRow, tableBody.firstChild);
-            
-            // Clear inputs after clean dispatch commit
-            document.getElementById('incident-form').reset();
-            alert(`SYSTEM ALERT: Incident ${incNum} logged successfully. ${assignedUnit} routed.`);
+        function updateMetricCounters() {
+            document.getElementById("count-all").innerText = internalDatabaseRegistry.length;
+            document.getElementById("count-high").innerText = internalDatabaseRegistry.filter(p => p.risk === "High Risk").length;
+            document.getElementById("count-mod").innerText = internalDatabaseRegistry.filter(p => p.risk === "Moderate Risk").length;
+            document.getElementById("count-clear").innerText = internalDatabaseRegistry.filter(p => p.risk === "Clear / Nominal").length;
         }
 
-        // Mock NCIC Database verification function
-        function searchNCIC() {
-            const query = document.getElementById('ncic-query').value.toUpperCase().trim();
-            const resultsDiv = document.getElementById('ncic-results');
-            
-            if(!query) {
-                resultsDiv.innerHTML = "⚠️ ERROR: Empty prompt string.";
+        function renderDirectoryList(dataset) {
+            const container = document.getElementById("profile-list");
+            document.getElementById("visible-count").innerText = `Showing ${dataset.length} profiles`;
+            container.innerHTML = "";
+
+            if (dataset.length === 0) {
+                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-600 font-medium">No system assets match configuration search terms.</div>`;
                 return;
             }
 
-            resultsDiv.innerHTML = "⏳ SCANNING REPOSITORIES...";
-            
-            setTimeout(() => {
-                if(query.match(/[0-9]/) && query.length < 8) {
-                    // Looks like a plate lookup
-                    resultsDiv.innerHTML = `🚨 <b>NCIC HIT [PLATE: ${query}]</b><br>Vehicle: 2018 Black Dodge Charger<br>Owner: Miller, Marcus R.<br>Warrants: ACTIVE FELONY WARRANT (Armed & Dangerous)`;
-                    resultsDiv.style.color = "var(--emergency)";
-                } else {
-                    // Looks like a name or random text
-                    resultsDiv.innerHTML = `✅ <b>NCIC CLEAR [QUERY: ${query}]</b><br>No active alerts, protection orders, or stolen asset records matching parameter.`;
-                    resultsDiv.style.color = "var(--success)";
-                }
-            }, 800);
+            dataset.forEach(profile => {
+                let badgeColor = "text-emerald-400 bg-emerald-500/10 border-emerald-500/20";
+                if (profile.risk === "High Risk") badgeColor = "text-rose-400 bg-rose-500/10 border-rose-500/20";
+                else if (profile.risk === "Moderate Risk") badgeColor = "text-amber-400 bg-amber-500/10 border-amber-500/20";
+
+                const element = document.createElement("div");
+                element.className = "p-4 hover:bg-slate-900/60 cursor-pointer border-l-2 border-transparent transition-all duration-150 flex justify-between items-center bg-slate-900/10";
+                element.innerHTML = `
+                    <div class="flex items-center space-x-3 truncate">
+                        <img src="${profile.photo}" class="w-9 h-9 rounded object-cover bg-slate-800 shrink-0 border border-slate-700" onerror="this.src='https://via.placeholder.com/150'">
+                        <div class="truncate">
+                            <h4 class="text-xs font-bold text-slate-200 truncate">${profile.name}</h4>
+                            <p class="text-[10px] font-mono text-slate-500 truncate">${profile.uid} • ${profile.location}</p>
+                        </div>
+                    </div>
+                    <span class="text-[9px] font-bold tracking-wider uppercase border px-2 py-0.5 rounded shrink-0 ml-2 ${badgeColor}">${profile.risk.split(' ')[0]}</span>
+                `;
+                element.addEventListener("click", () => showProfileDetail(profile));
+                container.appendChild(element);
+            });
         }
+
+        function showProfileDetail(profile) {
+            document.getElementById("detail-placeholder").classList.add("hidden");
+            document.getElementById("detail-content").classList.remove("hidden");
+
+            document.getElementById("det-photo").src = profile.photo;
+            document.getElementById("det-name").innerText = profile.name;
+            document.getElementById("det-uid").innerText = profile.uid;
+            document.getElementById("det-gender").innerText = profile.gender;
+            document.getElementById("det-dob").innerText = profile.dob;
+            document.getElementById("det-nationality").innerText = profile.nationality;
+            document.getElementById("det-location").innerText = profile.location;
+            document.getElementById("det-occupation").innerText = profile.occupation;
+            document.getElementById("det-networth").innerText = profile.networth;
+            document.getElementById("det-passport").innerText = profile.passport;
+            document.getElementById("det-affiliation").innerText = profile.affiliation;
+            document.getElementById("det-badge-clearance").innerText = `ACCESS: ${profile.clearance}`;
+            document.getElementById("det-narrative").innerText = profile.narrative;
+
+            const riskBadge = document.getElementById("det-badge-risk");
+            riskBadge.innerText = profile.risk;
+            riskBadge.className = "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider";
+            if (profile.risk === "High Risk") riskBadge.classList.add("bg-rose-500/10", "text-rose-400", "border", "border-rose-500/20");
+            else if (profile.risk === "Moderate Risk") riskBadge.classList.add("bg-amber-500/10", "text-amber-400", "border", "border-amber-500/20");
+            else riskBadge.classList.add("bg-emerald-500/10", "text-emerald-400", "border", "border-emerald-500/20");
+
+            const flagsContainer = document.getElementById("det-flags");
+            flagsContainer.innerHTML = "";
+            profile.flags.forEach(f => {
+                let colorClass = "bg-emerald-500/5 text-emerald-400 border-emerald-500/10";
+                if (f.typ === "CRITICAL") colorClass = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+                else if (["WARNING", "ANOMALY"].includes(f.typ)) colorClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+
+                const flEl = document.createElement("div");
+                flEl.className = `p-2.5 rounded-lg border text-xs flex items-start space-x-2 ${colorClass}`;
+                flEl.innerHTML = `<span class="font-mono text-[9px] font-bold uppercase px-1 py-0.5 bg-black/20 rounded mt-0.5">${f.typ}</span><span class="leading-tight">${f.msg}</span>`;
+                flagsContainer.appendChild(flEl);
+            });
+        }
+
+        // --- Event Listeners and Interface Wireup ---
+        document.getElementById("login-form").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const u = document.getElementById("username").value;
+            const p = document.getElementById("password").value;
+
+            if (u === CREDS.user && p === CREDS.pass) {
+                document.getElementById("login-page").classList.add("hidden");
+                document.getElementById("app-container").classList.remove("hidden");
+                generateMockDatabase();
+                applySystemFilters();
+            } else {
+                const err = document.getElementById("login-error");
+                err.classList.remove("hidden");
+                setTimeout(() => err.classList.add("hidden"), 5000);
+            }
+        });
+
+        document.getElementById("logout-btn").addEventListener("click", () => {
+            document.getElementById("app-container").classList.add("hidden");
+            document.getElementById("login-page").classList.remove("hidden");
+            document.getElementById("password").value = "";
+        });
+
+        document.getElementById("search-input").addEventListener("input", (e) => {
+            searchQuery = e.target.value.toLowerCase();
+            applySystemFilters();
+        });
+
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.addEventListener("click", (e) => {
+                document.querySelectorAll(".filter-btn").forEach(b => {
+                    b.classList.remove("bg-slate-800", "border-slate-700", "text-amber-500");
+                    b.classList.add("border-transparent");
+                });
+                const target = e.currentTarget;
+                target.classList.remove("border-transparent");
+                target.classList.add("bg-slate-800", "border-slate-700", "text-amber-500");
+                
+                selectedFilter = target.getAttribute("data-filter");
+                applySystemFilters();
+            });
+        });
     </script>
 </body>
 </html>
